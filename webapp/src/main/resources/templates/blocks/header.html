@@ -1,0 +1,64 @@
+<div th:fragment="header">
+    <div>
+        <nav class="horizontal-nav">
+            <div class = "logo">
+                <a href="/"> Главная </a>
+            </div>
+            <ul class = "right-head">
+                <li><a href="#"> Поиск </a></li>
+                <li><a href="#"> + (новая задача проект)</a></li>
+                <li><a href="profile"> Профиль </a></li>
+            </ul>
+        </nav>
+    </div>
+    <style>
+        .horizontal-nav{
+        width: 100%;
+        height: 80px;
+        display:flex;
+        justify-content: space-between; /* Разделяет левую и правую части */
+        align-items: center !important;
+        background-color:#696969;
+        border-radius:5px;
+        border-radius: 0;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0 20px;
+        z-index: 2000;
+        }
+        .logo a {
+          color: white !important;
+          font-size: 30px !important;
+          font-weight: bold !important;
+          text-decoration: none !important;
+        }
+        .right-head{
+        display:flex;
+        list-style:none;
+        margin:0;
+        padding:0;
+        gap:15px;
+        }
+        .right-head a:focus {
+            background-color: transparent !important;
+            outline: none;
+        }
+        .right-head a:active {
+        background-color: transparent;
+        color: white;
+        }
+        .right-head li{
+            display: flex;
+        }
+        .right-head a{
+            color:white;
+            text-decoration: none;
+            display: flex;
+            align-items: !important;
+            white-space: nowrap;
+        }
+        .right-head a:hover {
+            background-color: #555;
+            border-radius: 3px;
+    </style>
+</div>

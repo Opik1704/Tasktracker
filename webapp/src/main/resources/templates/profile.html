@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            display: flex;
+            flex: 1;
+        }
+        .profile-container {
+            flex: 1;
+            padding: 30px;
+            background: #fff;
+            margin: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        h1 {
+            color: #444;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.8rem;
+        }
+        .profile-info {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .info-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #888;
+            display: flex;
+            align-items: center;
+        }
+        .info-label {
+            color: #666;
+            min-width: 140px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .info-value {
+            color: #333;
+            flex: 1;
+            font-size: 1.05rem;
+        }
+        .data {
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            margin-top: 20px;
+        }
+        .logout-link {
+            color: red;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+<header th:insert="blocks/header :: header"></header>
+<aside th:insert="blocks/sidebar :: sidebar"></aside>
+
+<div class="main-content">
+    <div class="profile-container">
+        <h1>Профиль пользователя</h1>
+        <div class="profile-info">
+            <div th:if="${user != null}" class="data">
+                <div class="info-item">
+                    <div class="info-label">Имя:</div>
+                    <div class="info-value" th:text="${user.name}">Иван Иванов</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value" th:text="${user.email}">ivan@example.com</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Отдел:</div>
+                    <div class="info-value" th:text="${user.role}">Разработка</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Роль:</div>
+                    <div class="info-value" th:text="${user.role}">Администратор</div>
+                </div>
+            </div>
+            <div th:if="${user == null}">
+                <p>
+                    Данные пользователя не найдены
+                </p>
+                <div class="data">
+                    <div class="info-item">
+                        <div class="info-label">Имя:</div>
+                        <div class="info-value">Тестовый пользователь</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value">test@test.com</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Отдел</div>
+                        <div class="info-value">Разработка</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Роль:</div>
+                        <div class="info-value">Гость </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="/authorization" class="logout-link">Выйти из аккаунта</a>
+    </div>
+</div>
+</body>
+</html>
