@@ -21,16 +21,18 @@ public class Tasks {
         this.artistId = artistId;
         this.deadline = deadline;
         this.comment = comment;
+//        this.status = status;
     }
 
     private LocalDateTime deadline;
     private String priority;
     private Long artistId;
     private String comment;
+//    private String status;
 
-    public String getTitle() {
-        return title;
-    }
+
+
+    public String getTitle() {return title;}
     public void setTitle(String title) {
         this.title = title;
     }
@@ -59,9 +61,13 @@ public class Tasks {
         this.deadline = deadline;
     }
     public String getComment() {
-        return title;
+        return comment;
     }
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+//    public void setStatus(String status){this.status=status;}
+//    public String getStatus(){return status;}
+
 }

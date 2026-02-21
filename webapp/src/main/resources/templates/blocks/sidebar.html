@@ -1,10 +1,10 @@
-<div th:fragment="sidebar">
+<div th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org">
     <div class="sidebar">
         <nav>
             <ul>
-                <li><a href="#" data-page="my_tasks">Мои задачи</a></li>
-                <li><a href="all_tasks" data-page="all_tasks">Все задачи(кабан доска)</a></li>
-                <li><a href="my_projects" data-page="my_projects">Мои проекты</a></li>
+                <li><a href="/user_tasks" data-page="my_tasks">Мои задачи</a></li>
+                <li><a href="all_tasks" data-page="all_tasks">Все задачи(тупа список)</a></li>
+                <li><a href="my_projects" data-page="my_projects">Мои проекты(при нажатии на проект будет кабан доска для проекта конкретного)</a></li>
             </ul>
         </nav>
     </div>

@@ -1,29 +1,42 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Вход</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <style>
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
     <div class="row">
         <div class="col-md-12">
             <h2>Вход</h2>
-            <p>Введите свою почту и пароль.</p>
-            <form action="" method="post">
+            <div th:if="${param.error != null}" class="error-message">
+                <strong>Ошибка входа!</strong><br>
+                Неверный email или пароль. Попробуйте снова.
+            </div>
+            <form th:action="@{/authorization}" method="post">
                 <div class="form-group">
                     <label>Электронная почта</label>
-                    <input type="email" name="email" class="form-control" required />
+                    <input type="email" name="email" class="form-control" required autocomplete="email"/>
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password" name="password" class="form-control" required autocomplete="current-password" >
                 </div>
                 <div class="form-group">
                     <input type="submit" name="submit" class="btn btn-primary" value="Войти">
                 </div>
-                <p>Нет аккаунта? <a href="register.php">Создайте его за минуту</a>.</p>
+                <p>Нет аккаунта? <a th:href="@{/registration}">Создайте его за минуту</a>.</p>
             </form>
         </div>
     </div>

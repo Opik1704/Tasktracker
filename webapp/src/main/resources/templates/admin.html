@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Админка</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            margin: 2px;
+            border-radius: 4px;
+            background-color: #e7f1ff;
+            color: #084298;
+            font-size: 0.9em;
+        }
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .role-selector {
+            margin: 10px 0;
+        }
+        .role-option {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header th:insert="blocks/header :: header"></header>
+<aside th:insert="blocks/sidebar :: sidebar"></aside>
+
+<div class="main-content">
+    <h1 class="mb-4">Администрирование пользователей</h1>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Email</th>
+            <th>Текущие роли</th>
+            <th>Изменить роли</th>
+            <th>Удаление</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}">1</td>
+            <td th:text="${user.firstName}">Иван</td>
+            <td th:text="${user.lastName}">Иванов</td>
+            <td th:text="${user.email}">ivan@mail.ru</td>
+            <td>
+                    <span th:each="role : ${user.roles}"
+                          class="role-badge"
+                          th:text="${role.name.replace('ROLE_', '')}">
+                    </span>
+            </td>
+            <td>
+                <!-- Форма для изменения ролей -->
+                <form th:action="@{/admin/update-roles}" method="post">
+                    <input type="hidden" name="userId" th:value="${user.id}">
+
+                    <div class="role-selector">
+                        <div th:each="role : ${allRoles}" class="role-option">
+                            <input type="checkbox"
+                                   th:id="'role_' + ${user.id} + '_' + ${role.id}"
+                                   name="roleIds"
+                                   th:value="${role.id}"
+                                   th:checked="${user.roles.contains(role)}">
+                            <label th:for="'role_' + ${user.id} + '_' + ${role.id}"
+                                   th:text="${role.name.replace('ROLE_', '')}">
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </form>
+            </td>
+            <td>
+                <!-- Форма удаления -->
+                <form th:action="@{/admin/delete}" method="post"
+                      onsubmit="return confirm('Удалить пользователя?')">
+                    <input type="hidden" name="userId" th:value="${user.id}">
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

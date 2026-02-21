@@ -1,5 +1,7 @@
 package com.site.webapp.controllers;
 
+import com.site.webapp.models.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,18 +15,8 @@ public class MainController {
         return "home";
     }
     @GetMapping("/profile")
-    public String profile(Model model){
-        model.addAttribute("Username","Димка");
+    public String profile(@AuthenticationPrincipal User currentUser, Model model){
+        model.addAttribute("user",currentUser);
         return "profile";
     }
-    @GetMapping("/registration")
-    public String registration(Model model){
-//        User user = new User();
-//        user.setName("Иван Иванов");
-//        user.setEmail();
-//        user.setRole("Администратор");
-//        model.addAttribute("user", user);
-        return "registration";
-    }
-
 }

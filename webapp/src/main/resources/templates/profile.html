@@ -12,13 +12,17 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
-            min-height: 100vh;
+<!--            min-height: 100vh;-->
             display: flex;
             flex-direction: column;
+            padding-top: 80px;
         }
         .main-content {
-            display: flex;
-            flex: 1;
+            margin-left: 250px;
+<!--            display: flex;-->
+<!--            flex: 1;-->
+            padding: 25px;
+            margin-left: 250px;
         }
         .profile-container {
             flex: 1;
@@ -55,6 +59,25 @@
             font-weight: 600;
             font-size: 0.95rem;
         }
+        .logout-wrapper {
+            text-align: center;      /* Выравнивание по центру */
+            margin-top: 30px;
+        }
+        .logout-btn {
+            background-color: #dc3545;  /* Красный цвет */
+            color: white;
+            border: none;
+            padding: 12px 40px;         /* Немного больше */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;  /* Плавное изменение */
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;  /* Темнее при наведении */
+        }
         .info-value {
             color: #333;
             flex: 1;
@@ -88,47 +111,31 @@
         <div class="profile-info">
             <div th:if="${user != null}" class="data">
                 <div class="info-item">
-                    <div class="info-label">Имя:</div>
-                    <div class="info-value" th:text="${user.name}">Иван Иванов</div>
+                    <div class="info-label">Имя и Фамилия:</div>
+                    <div class="info-value" th:text="${user.firstName + ' ' + user.lastName}"></div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Email:</div>
-                    <div class="info-value" th:text="${user.email}">ivan@example.com</div>
+                    <div class="info-value" th:text="${user.email}"></div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Отдел:</div>
-                    <div class="info-value" th:text="${user.role}">Разработка</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Роль:</div>
-                    <div class="info-value" th:text="${user.role}">Администратор</div>
-                </div>
+<!--                <div class="info-item">-->
+<!--                    <div class="info-label">Отдел:</div>-->
+<!--                    <div class="info-value" th:text="${user.role}">Разработка</div>-->
+<!--                </div>-->
+<!--                <div class="info-item">-->
+<!--                    <div class="info-label">Роль:</div>-->
+<!--                    <div class="info-value" th:text="${user.role}">Лох</div>-->
+<!--                </div>-->
             </div>
-            <div th:if="${user == null}">
-                <p>
-                    Данные пользователя не найдены
-                </p>
-                <div class="data">
-                    <div class="info-item">
-                        <div class="info-label">Имя:</div>
-                        <div class="info-value">Тестовый пользователь</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Email:</div>
-                        <div class="info-value">test@test.com</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Отдел</div>
-                        <div class="info-value">Разработка</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Роль:</div>
-                        <div class="info-value">Гость </div>
-                    </div>
-                </div>
+            <div th:if="${user == null}" class="data">
+                <p>Данные пользователя не найдены</p>
             </div>
         </div>
-        <a href="/authorization" class="logout-link">Выйти из аккаунта</a>
+        <div class="logout-wrapper">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">Выйти из аккаунта</button>
+            </form>
+        </div>
     </div>
 </div>
 </body>
