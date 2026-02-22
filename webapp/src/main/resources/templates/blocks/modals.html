@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="editTaskModal" class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактировать задачу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form th:action="@{/all_tasks/update}" method="post">
+                    <input type="hidden" name="id" id="editTaskId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Название</label>
+                        <input type="text" name="title" id="editTaskTitle" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Приоритет</label>
+                        <select name="priority" id="editTaskPriority" class="form-select">
+                            <option value="LOW">Низкий</option>
+                            <option value="MEDIUM">Средний</option>
+                            <option value="HIGH">Высокий</option>
+                            <option value="CRITICAL">Критичный</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Исполнитель</label>
+                        <select name="artistId" id="editTaskArtist" class="form-select" required>
+                            <option th:each="user : ${users}"
+                                    th:value="${user.id}"
+                                    th:text="${user.firstName + ' ' + user.lastName}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Дедлайн</label>
+                        <input type="datetime-local" name="deadline" id="editTaskDeadline" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Комментарий</label>
+                        <textarea name="comment" id="editTaskComment" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
