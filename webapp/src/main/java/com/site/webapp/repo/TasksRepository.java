@@ -7,6 +7,9 @@ import java.util.List;
 
 public interface TasksRepository extends CrudRepository<Tasks,Long> {
     List<Tasks> findByArtistId(Long artistId);
-    List<Tasks> findByArtistIdOrderByDeadlineAsc(Long artistId);
 
+    List<Tasks> findAllByOrderByIdAsc();
+    List<Tasks> findAllByOrderByIdDesc();
+    List<Tasks> findAllByOrderByDeadlineDesc();
+    List<Tasks> findAllByOrderByPriorityAsc();
 }

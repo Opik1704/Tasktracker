@@ -24,22 +24,122 @@
         margin-left: 250px;
         padding: 25px;
     }
-     .card {
-        margin-bottom: 10px !important;
+    h1 {
+        font-size: 3.1rem !important;
+        font-weight: bold !important;
+        color: #444 !important;
+        margin-top: 0;
+        margin-bottom: 25px;
     }
-    .card-body {
-        padding: 12px !important;
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px;
     }
-    .card-title {
-        font-size: 1.8rem !important;
-        margin-bottom: 8px !important;
-        font-weight: bold;
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        align-items: center;
     }
-    .card-subtitle {
-        font-size: 1.1rem !important;
-        margin-bottom: 8px !important;
+    .action-btn {
+        height: 50px;  /* Увеличена высота */
+        padding: 0 35px;  /* Увеличены боковые отступы */
+        border: none;
+        border-radius: 8px;  /* Чуть больше скругление */
+        font-size: 1.15rem;  /* Увеличен размер шрифта */
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;  /* Увеличен промежуток между текстом и иконкой */
+        line-height: 1;
+        white-space: nowrap;
+        transition: all 0.2s;
+        min-width: 240px;  /* Еще больше увеличена минимальная ширина */
+        letter-spacing: 0.3px;  /* Небольшой интервал между буквами */
     }
-     .priority-low {
+
+
+    .sort-btn {
+        background: #6c757d;
+        color: white;
+    }
+
+    .sort-btn:hover {
+        background: #5a6268;
+    }
+
+    .add-btn {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .add-btn:hover {
+        background-color: #0069d9;
+    }
+
+    .sort-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .sort-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        min-width: 240px;  /* Теперь совпадает с шириной кнопки */
+        background: white;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        border-radius: 6px;
+        z-index: 1000;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+    .sort-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.sort-dropdown::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; /* Размер мостика */
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: transparent;
+}
+    .sort-dropdown:hover .sort-menu {
+        display: block;
+    }
+
+    .sort-menu a {
+        color: #333;
+        padding: 8px 15px;  /* Уменьшены отступы */
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;  /* Чуть уменьшен шрифт */
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .sort-menu a:last-child {
+        border-bottom: none;
+    }
+
+    .sort-menu a:hover {
+        background: #f8f9fa;
+    }
+
+    .sort-menu a.active {
+        background: #007bff;
+        color: white;
+    }
+
+    .priority-trivial {
         color: #28a745;
         font-weight: bold;
     }
@@ -55,18 +155,77 @@
         color: #dc3545;
         font-weight: bold;
     }
+
     .task-meta {
         font-size: 0.9rem;
         color: #6c757d;
     }
+
+    .modal-dialog {
+        margin-top: 100px;
+    }
+
     .btn-group {
         display: flex;
-        gap: 5px;
-        padding: 0 12px 12px 12px;  /* Отступы как у card-body */
+        gap: 10px;
+        padding: 0 12px 12px 12px;
+        justify-content: space-between;
     }
-    .btn-sm {
-        padding: 3px 10px;
+
+    .btn-edit {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 4px;
         font-size: 0.85rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    .btn-edit:hover {
+        background-color: #0069d9;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 6px 30px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        flex: 0 1 auto;
+        min-width: 100px;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .card {
+        margin-bottom: 10px !important;
+    }
+    .card-body {
+        padding: 12px !important;
+    }
+    .card-title {
+        font-size: 1.8rem !important;
+        margin-bottom: 8px !important;
+        font-weight: bold;
+    }
+    .card-subtitle {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Стрелка вниз на кнопке сортировки */
+    .sort-arrow {
+        font-size: 14px;
+        margin-left: 5px;
     }
   </style>
 </head>
@@ -76,60 +235,83 @@
 <aside th:insert="blocks/sidebar :: sidebar"></aside>
 
 <div class="main-content">
-  <div class = "container">
-    <h1>Все задачи</h1>
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTaskModal">+ Добавить задачу</button>
+  <div class="container">
+    <div class="header-actions">
+      <h1>Все задачи</h1>
+      <div class="action-buttons">
+        <div class="sort-dropdown">
+          <button class="action-btn sort-btn">
+            Сортировка <span class="sort-arrow">▼</span>
+          </button>
+          <div class="sort-menu">
+            <a th:href="@{/all_tasks(sort='id_asc')}"
+               th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
+              Время добавления (новые)
+            </a>
+            <a th:href="@{/all_tasks(sort='id_desc')}"
+               th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
+              Время добавления (старые)
+            </a>
+            <a th:href="@{/all_tasks(sort='deadline')}"
+               th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
+              Дедлайн
+            </a>
+            <a th:href="@{/all_tasks(sort='priority')}"
+               th:classappend="${currentSort == 'priority'} ? 'active' : ''">
+              Приоритет
+            </a>
+          </div>
+        </div>
+        <button class="action-btn add-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+          + Добавить задачу
+        </button>
+      </div>
+    </div>
     <div th:each="el : ${tasks}" class="card mb-2">
       <div class="card-body">
         <h2 class="card-title" th:text="${el.title}"></h2>
-        <h6 class="card-subtitle mb-2"  th:text="${el.priority}"
-              th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
+        <h6 class="card-subtitle mb-2" th:text="${el.priority}"
+            th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
         </h6>
         <div class="d-flex justify-content-between align-items-center">
           <span>
-              <strong>Исполнитель:</strong>
-              <span th:if="${users != null and !#lists.isEmpty(users)}">
-                <span th:each="user : ${users}" th:if="${user.id == el.artistId}"
-                      th:text="${user.firstName + ' ' + user.lastName}">
-                </span>
+            <strong>Исполнитель:</strong>
+            <span th:if="${users != null and !#lists.isEmpty(users)}">
+              <span th:each="user : ${users}" th:if="${user.id == el.artistId}"
+                    th:text="${user.firstName + ' ' + user.lastName}"></span>
             </span>
             <span th:if="${users == null or #lists.isEmpty(users)}">Не назначен</span>
-            </span>
+          </span>
           <span>Дедлайн: <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong></span>
         </div>
         <div class="btn-group">
-          <a th:href="@{/all_tasks/edit/{id}(id=${el.id})}"
-             class="btn btn-sm btn-outline-primary me-2">
+          <button type="button"
+                  class="btn-edit"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editTaskModal"
+                  th:data-task-id="${el.id}"
+                  th:data-task-title="${el.title}"
+                  th:data-task-priority="${el.priority}"
+                  th:data-task-artist="${el.artistId}"
+                  th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
+                  th:data-task-comment="${el.comment}"
+                  th:data-current-sort="${currentSort}"
+                  onclick="fillEditModal(this)">
             Редактировать
-          </a>
-          <form th:action="@{/all_tasks/delete/{id}(id=${el.id})}"
+          </button>
+          <form th:action="@{/all_tasks/delete/{id}(id=${el.id}, sort=${currentSort})}"
                 method="post"
                 style="display: inline;"
                 onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
-            <button type="submit" class="btn btn-sm btn-outline-danger">
+            <button type="submit" class="btn-delete">
               Удалить
             </button>
           </form>
         </div>
       </div>
     </div>
-<!--    <div class="btn-group">-->
-<!--      <a th:href="@{/all_tasks/edit/{id}(id=${el.id})}"-->
-<!--         class="btn btn-sm btn-outline-primary me-2">-->
-<!--        Редактировать-->
-<!--      </a>-->
-<!--      <form th:action="@{/all_tasks/delete/{id}(id=${el.id})}"-->
-<!--            method="post"-->
-<!--            style="display: inline;"-->
-<!--            onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">-->
-<!--        <button type="submit" class="btn btn-sm btn-outline-danger">-->
-<!--          Удалить-->
-<!--        </button>-->
-<!--      </form>-->
-<!--    </div>-->
   </div>
 </div>
-
 <div class="modal fade" id="addTaskModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -145,14 +327,12 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Приоритет</label>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <select name="priority" class="form-select">
-                <option value="LOW">Низкий</option>
-                <option value="MEDIUM">Средний</option>
-                <option value="HIGH">Высокий</option>
-                <option value="CRITICAL">Критичный</option>
-              </select>
-            </div>
+            <select name="priority" class="form-select">
+              <option value="TRIVIAL">Низкий</option>
+              <option value="MEDIUM">Средний</option>
+              <option value="HIGH">Высокий</option>
+              <option value="CRITICAL">Критичный</option>
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Исполнитель</label>
@@ -164,26 +344,13 @@
               </option>
             </select>
           </div>
-<!--          <div class="mb-3">-->
-<!--            <label class="form-label">Исполнитель</label>-->
-<!--            <select name="artisdid" class="form-select" required>-->
-<!--              <option value="" disabled selected>Выберите исполнителя</option>-->
-<!--              <option th:each="user : ${users}"-->
-<!--                      th:value="${user.id}"-->
-<!--                      th:text="${user.name}">-->
-<!--              </option>-->
-<!--            </select>-->
-<!--          </div>-->
           <div class="mb-3">
             <label class="form-label">Дедлайн</label>
-            <input type="datetime-local" name="deadline" class="form-control" required
-                   min="1900-01-01T00:00"
-                   max="2100-01-01T00:00"
-                   th:value="${#temporals.format(LocalDateTime.now(), 'yyyy-MM-dd\'T\'HH:mm')}">
+            <input type="datetime-local" name="deadline" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Комментарий</label>
-            <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу" ></textarea>
+            <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу"></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
@@ -191,7 +358,18 @@
     </div>
   </div>
 </div>
-
+<div th:insert="blocks/modals :: editTaskModal"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function fillEditModal(button) {
+      document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
+      document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');
+      document.getElementById('editTaskPriority').value = button.getAttribute('data-task-priority');
+      document.getElementById('editTaskArtist').value = button.getAttribute('data-task-artist');
+      document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
+      document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
+  }
+</script>
+
 </body>
 </html>
