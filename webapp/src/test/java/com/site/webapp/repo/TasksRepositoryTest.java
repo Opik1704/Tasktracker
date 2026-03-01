@@ -4,6 +4,7 @@ import com.site.webapp.models.Tasks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,6 @@ class TasksRepositoryTest {
     }
     @Test
     void findByArtistId() {
-//        Tasks task1 = new Tasks("Task1","HIGH",1L,LocalDateTime.now(),null);
-//        Tasks task4 = new Tasks("Task4","CRITICAL",1L,LocalDateTime.now(),null);
-//        Tasks task3 = new Tasks("Task3","MEDIUM",2L,LocalDateTime.now(),null);
-//        tasksRepository.save(task1);
-//        tasksRepository.save(task3);
-//        tasksRepository.save(task4);
         List<Tasks> artist1tasks = tasksRepository.findByArtistId(1L);
         List<Tasks> artist2tasks = tasksRepository.findByArtistId(2L);
         List<Tasks> artist3tasks = tasksRepository.findByArtistId(1000L);
@@ -45,21 +40,18 @@ class TasksRepositoryTest {
         assertEquals(0,artist2tasks.size());
         assertTrue(artist3tasks.isEmpty());
     }
-
     @Test
     void findAllByOrderByIdAsc() {
         List<Tasks> sortedTasks = tasksRepository.findAllByOrderByIdAsc();
         assertTrue(sortedTasks.get(0).getId() < sortedTasks.get(1).getId());
         assertTrue(sortedTasks.get(1).getId() < sortedTasks.get(2).getId());
     }
-
     @Test
     void findAllByOrderByIdDesc() {
         List<Tasks> sortedDescTasks = tasksRepository.findAllByOrderByIdDesc();
         assertTrue(sortedDescTasks.get(0).getId() > sortedDescTasks.get(1).getId());
         assertTrue(sortedDescTasks.get(1).getId() > sortedDescTasks.get(2).getId());
     }
-
     @Test
     void findAllByOrderByDeadlineDesc() {
         LocalDateTime now = LocalDateTime.now();
