@@ -3,6 +3,8 @@ package com.site.webapp.controllers;
 import com.site.webapp.models.Tasks;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TasksRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,12 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
-public class TaskController{
+public class TaskController extends LoggingController{
     @Autowired
     private TasksRepository tasksRepository;
 
@@ -28,8 +29,8 @@ public class TaskController{
 
     @GetMapping("/all_tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,Model model){
+        addUserToMDC();
         Iterable<Tasks> tasks;
-//        String currentSort = sort;
         List<User> users = userService.allUsers();
         if("deadline".equals(sort)){
             tasks = tasksRepository.findAllByOrderByDeadlineDesc();
@@ -93,12 +94,4 @@ public class TaskController{
         model.addAttribute("users",users);
         return "user_tasks";
     }
-
-//    @GetMapping("/user_tasks")
-//    public String userTasks(Model model){
-//        Iterable<Tasks> tasks = tasksRepository.findAllById(user.id);
-//        model.addAttribute("tasks",tasks);
-//        return "user_tasks";
-//    }
-
 }
