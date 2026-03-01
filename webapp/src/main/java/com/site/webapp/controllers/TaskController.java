@@ -62,7 +62,7 @@ public class TaskController{
     }
     @PostMapping("all_tasks/update")
     public String updateTask(@RequestParam Long id,
-                            @RequestParam String title,
+                             @RequestParam String title,
                              @RequestParam String priority,
                              @RequestParam Long artistId,
                              @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime deadline,
