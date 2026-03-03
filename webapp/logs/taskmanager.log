@@ -15255,3 +15255,907 @@ Caused by: java.lang.ClassNotFoundException: Could not load requested class: org
 2026-03-03 19:51:35 [] INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
 2026-03-03 19:51:35 [] INFO  - HikariPool-1 - Shutdown initiated...
 2026-03-03 19:51:35 [] INFO  - HikariPool-1 - Shutdown completed.
+2026-03-03 20:29:39 [] INFO  - Starting WebappApplicationTests using Java 21.0.10 with PID 22304 (started by Дима in C:\Users\Дима\Downloads\webappII\webapp)
+2026-03-03 20:29:39 [] DEBUG - Running with Spring Boot v4.0.0, Spring v7.0.1
+2026-03-03 20:29:39 [] INFO  - No active profile set, falling back to 1 default profile: "default"
+2026-03-03 20:29:40 [] INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-03 20:29:40 [] INFO  - Finished Spring Data repository scanning in 40 ms. Found 3 JPA repository interfaces.
+2026-03-03 20:29:40 [] INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-03 20:29:40 [] INFO  - HHH000412: Hibernate ORM core version 7.1.8.Final
+2026-03-03 20:29:41 [] INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-03 20:29:41 [] INFO  - HikariPool-1 - Starting...
+2026-03-03 20:29:41 [] INFO  - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@147375b3
+2026-03-03 20:29:41 [] INFO  - HikariPool-1 - Start completed.
+2026-03-03 20:29:41 [] WARN  - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-03 20:29:41 [] INFO  - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:1408/tasks]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.2
+	Default catalog/schema: tasks/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DatasourceConnectionProviderImpl
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-03 20:29:42 [] INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-03 20:29:42 [] INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-03 20:29:42 [] INFO  - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-03 20:29:43 [] WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-03 20:29:43 [] INFO  - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-03-03 20:29:43 [] WARN  - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-03-03 20:29:43 [] INFO  - Started WebappApplicationTests in 4.404 seconds (process running for 5.741)
+2026-03-03 20:29:44 [] INFO  - Could not detect default configuration classes for test class [com.site.webapp.repo.UserRepositoryTest]: UserRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-03-03 20:29:44 [] INFO  - Found @SpringBootConfiguration com.site.webapp.WebappApplication for test class com.site.webapp.repo.UserRepositoryTest
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        user_roles 
+    where
+        user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        user_roles 
+    where
+        user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        user_roles 
+    where
+        user_id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        users 
+    where
+        id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        users 
+    where
+        id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        users 
+    where
+        id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    delete 
+    from
+        users 
+    where
+        id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] INFO  - Could not detect default configuration classes for test class [com.site.webapp.controllers.RegistrationControllerTest]: RegistrationControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-03-03 20:29:44 [] INFO  - Found @SpringBootConfiguration com.site.webapp.WebappApplication for test class com.site.webapp.controllers.RegistrationControllerTest
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] INFO  - Could not detect default configuration classes for test class [com.site.webapp.service.UserServiceTest]: UserServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-03-03 20:29:44 [] INFO  - Found @SpringBootConfiguration com.site.webapp.WebappApplication for test class com.site.webapp.service.UserServiceTest
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:44 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:44 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:45 [] INFO  - Could not detect default configuration classes for test class [com.site.webapp.controllers.TaskControllerTest]: TaskControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-03-03 20:29:45 [] INFO  - Found @SpringBootConfiguration com.site.webapp.WebappApplication for test class com.site.webapp.controllers.TaskControllerTest
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        nextval('tasks_seq')
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        count(*) 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.id,
+        r1_0.name 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        users
+        (email, first_name, last_name, password) 
+    values
+        (?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        user_roles
+        (user_id, role_id) 
+    values
+        (?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    where
+        t1_0.artist_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password 
+    from
+        users u1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.name 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    where
+        r1_0.user_id=?
+2026-03-03 20:29:45 [] INFO  - Could not detect default configuration classes for test class [com.site.webapp.repo.TasksRepositoryTest]: TasksRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-03-03 20:29:45 [] INFO  - Found @SpringBootConfiguration com.site.webapp.WebappApplication for test class com.site.webapp.repo.TasksRepositoryTest
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    order by
+        t1_0.id desc
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    order by
+        t1_0.deadline desc
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    order by
+        t1_0.priority
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    order by
+        t1_0.id
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    insert 
+    into
+        tasks
+        (artist_id, comment, deadline, priority, title, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    delete 
+    from
+        tasks 
+    where
+        id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    where
+        t1_0.artist_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    where
+        t1_0.artist_id=?
+2026-03-03 20:29:45 [] DEBUG - 
+    select
+        t1_0.id,
+        t1_0.artist_id,
+        t1_0.comment,
+        t1_0.deadline,
+        t1_0.priority,
+        t1_0.title 
+    from
+        tasks t1_0 
+    where
+        t1_0.artist_id=?
+2026-03-03 20:29:45 [] INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-03 20:29:45 [] INFO  - HikariPool-1 - Shutdown initiated...
+2026-03-03 20:29:45 [] INFO  - HikariPool-1 - Shutdown completed.
