@@ -70,6 +70,8 @@ class TaskControllerTest {
         User user = new User();
         user.setEmail("simple@test.com");
         user.setPassword("123456");
+        user.setFirstName("Семен");
+        user.setLastName("Семеныч");
         userService.saveUser(user);
 
         tasksRepository.save(new Tasks("Простая задача", "LOW", user.getId(), LocalDateTime.now(), null));

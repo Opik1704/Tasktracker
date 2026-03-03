@@ -4,9 +4,13 @@ import com.site.webapp.models.User;
 import com.site.webapp.repo.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@Transactional
 class UserServiceTest {
     @Autowired
     private UserService userService;
@@ -18,7 +22,8 @@ class UserServiceTest {
         User user = new User();
         user.setEmail("test@mail.ru");
         user.setPassword("password");
-
+        user.setFirstName("Имя");
+        user.setLastName("Фамилия");
         boolean result = userService.saveUser(user);
         assertTrue(result);
         assertNotNull(userRepository.findByEmail("test@mail.ru"));
@@ -29,6 +34,8 @@ class UserServiceTest {
         User user = new User();
         user.setEmail("find@mail.com");
         user.setPassword("password");
+        user.setFirstName("Имя");
+        user.setLastName("Фамилия");
         userService.saveUser(user);
         Long id = user.getId();
 
@@ -43,6 +50,8 @@ class UserServiceTest {
         User user = new User();
         user.setEmail("search@test.com");
         user.setPassword("123456");
+        user.setFirstName("Имя");
+        user.setLastName("Фамилия");
         userService.saveUser(user);
 
         User found = userService.findByEmail("search@test.com");
@@ -55,6 +64,8 @@ class UserServiceTest {
         User user1 = new User();
         user1.setEmail("duplicate@mail.com");
         user1.setPassword("123456");
+        user1.setFirstName("Имя");
+        user1.setLastName("Фамилия");
         userService.saveUser(user1);
 
         User user2 = new User();
@@ -69,6 +80,8 @@ class UserServiceTest {
         User user = new User();
         user.setEmail("delete@mail.com");
         user.setPassword("123456");
+        user.setFirstName("Имя");
+        user.setLastName("Фамилия");
         userService.saveUser(user);
         Long id = user.getId();
         boolean deleted = userService.deleteUser(id);

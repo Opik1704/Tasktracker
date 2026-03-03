@@ -84,7 +84,7 @@ public class TaskController extends LoggingController{
     @PostMapping("/all_tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
         tasksRepository.deleteById(id);
-        return "redirect:/all_tasks?sort=sort=" + sort;
+        return "redirect:/all_tasks?sort=" + sort;
     }
     @GetMapping("/user_tasks")
     public String userTasks(@AuthenticationPrincipal User currentUser, Model model){
