@@ -3,9 +3,9 @@ package com.site.webapp.repo;
 import com.site.webapp.models.Tasks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest
 @Transactional
 class TasksRepositoryTest {
 
@@ -21,23 +21,25 @@ class TasksRepositoryTest {
     private TasksRepository tasksRepository;
     @BeforeEach
     void setUp() {
-        Tasks task1 = new Tasks("Task1","HIGH",1L,LocalDateTime.now(),null);
-        Tasks task4 = new Tasks("Task4","CRITICAL",1L,LocalDateTime.now(),null);
+        tasksRepository.deleteAll();
+        Tasks task1 = new Tasks("Task1","HIGH",10L,LocalDateTime.now(),null);
+        Tasks task4 = new Tasks("Task4","CRITICAL",10L,LocalDateTime.now(),null);
         Tasks task3 = new Tasks("Task3","MEDIUM",2L,LocalDateTime.now(),null);
-        Tasks task5 = new Tasks("Task5","TRIVIAL",4L,LocalDateTime.now(),null);
+        Tasks task5 = new Tasks("Task5","TRIVIAL",40L,LocalDateTime.now(),null);
         tasksRepository.save(task1);
         tasksRepository.save(task3);
         tasksRepository.save(task4);
+        tasksRepository.save(task5);
 
     }
     @Test
     void findByArtistId() {
-        List<Tasks> artist1tasks = tasksRepository.findByArtistId(1L);
+        List<Tasks> artist1tasks = tasksRepository.findByArtistId(10L);
         List<Tasks> artist2tasks = tasksRepository.findByArtistId(2L);
         List<Tasks> artist3tasks = tasksRepository.findByArtistId(1000L);
         assertEquals(2,artist1tasks.size());
         assertEquals(1,artist2tasks.size());
-        assertEquals(0,artist2tasks.size());
+        assertEquals(0,artist3tasks.size());
         assertTrue(artist3tasks.isEmpty());
     }
     @Test
@@ -61,12 +63,18 @@ class TasksRepositoryTest {
         tasksRepository.save(task7);
 
         List<Tasks> sortedByDeadline = tasksRepository.findAllByOrderByDeadlineDesc();
-        assertTrue(sortedByDeadline.get(0).getDeadline().isBefore(sortedByDeadline.get(1).getDeadline()) );
+        assertTrue(sortedByDeadline.get(1).getDeadline().isBefore(sortedByDeadline.get(0).getDeadline()) );
     }
 
     @Test
     void findAllByOrderByPriorityAsc() {
         List<Tasks> sortedByPriority = tasksRepository.findAllByOrderByPriorityAsc();
+
+        System.out.println("Всего задач: " + sortedByPriority.size());
+
+        for (Tasks task : sortedByPriority) {
+            System.out.println(task.getPriority());
+        }
         assertEquals("CRITICAL",sortedByPriority.get(0).getPriority());
         assertEquals("HIGH",sortedByPriority.get(1).getPriority());
         assertEquals("MEDIUM",sortedByPriority.get(2).getPriority());
