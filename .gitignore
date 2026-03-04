@@ -1,5 +1,53 @@
-# Default ignored files
-/shelf/
-/.idea/workspace.xml
-# Environment-dependent path to Maven home directory
-/mavenHomeManager.xml
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### Logs ###
+logs/
+**/logs/
+*.log
+*.log.*
+!**/src/main/**/logs/
+!**/src/test/**/logs/
+
+### Environment & Secrets ###
+.env
+*.env
+application-secret.properties
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### System files ###
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+### VS Code ###
+.vscode/
+ а куда добавлять .logs и .idea
