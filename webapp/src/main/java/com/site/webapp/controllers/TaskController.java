@@ -50,6 +50,7 @@ public class TaskController extends LoggingController{
         model.addAttribute("currentSort",sort);
         return "all_tasks";
     }
+
     @PostMapping("/all_tasks")
     public String addTask(@RequestParam String title,
                           @RequestParam String priority,
