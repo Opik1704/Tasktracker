@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 public class ProfileController extends LoggingController {
     @GetMapping("/profile")
-    public String profile(@AuthenticationPrincipal User currentUser, Model model){
+    public String profile(@AuthenticationPrincipal User currentUser, Model model) {
         addUserToMDC();
         try {
-            log.info("Пользователь {} открыл свой профиль",getCurrentUserEmail()):
+            log.info("Пользователь {} открыл свой профиль", getCurrentUserEmail());
             model.addAttribute("user", currentUser);
             return "profile";
-        }
-        finally {
+        } finally {
             clearMDC();
         }
     }
+
     @PostMapping("/profile")
-    public String updateProfile(@AuthenticationPrincipal User currentUser, @RequestParam String firstName,@RequestParam String lastName,Model model){
+    public String updateProfile(@AuthenticationPrincipal User currentUser, @RequestParam String firstName, @RequestParam String lastName, Model model) {
         addUserToMDC();
         try {
             log.info("Пользователь");
@@ -29,5 +29,6 @@ public class ProfileController extends LoggingController {
         finally {
             clearMDC();
         }
+        return firstName;
     }
 }
