@@ -28,7 +28,7 @@ public class TaskController extends LoggingController{
     private UserService userService;
 
     @GetMapping("/all_tasks")
-    public String allTasks(@RequestParam(defaultValue = "id") String sort,Model model){
+    public String allTasks(@RequestParam(defaultValue = "id") String sort,@RequestParam(required = false) String search,Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
         try {
@@ -37,26 +37,36 @@ public class TaskController extends LoggingController{
 
             List<Tasks> tasks;
             List<User> users = userService.allUsers();
-
-            if ("deadline".equals(sort)) {
-                log.debug("Сортировка по дедлайну(убывание)");
-                tasks = tasksRepository.findAllByOrderByDeadlineDesc();
-            } else if ("priority".equals(sort)) {
-                log.debug("Сортировка по приоритету(убывание)");
-                tasks = tasksRepository.findAllByOrderByPriorityAsc();
-            } else if ("id_desc".equals(sort)) {
-                log.debug("Сортировка по id (убывание)");
-                tasks = tasksRepository.findAllByOrderByIdDesc();
-            } else {
-                log.debug("Сортировка по умолчанию (по id возрастание)");
-                tasks = tasksRepository.findAllByOrderByIdAsc();
-                sort = "id_asc";
+            if (search != null && !search.trim().isEmpty()){
+                log.debug("Поиск по запросу: '{}'", search);
+                tasks = tasksRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase( search.trim(), search.trim());
             }
+            else {
+                if ("deadline".equals(sort)) {
+                    log.debug("Сортировка по дедлайну(убывание)");
+                    tasks = tasksRepository.findAllByOrderByDeadlineDesc();
+                } else if ("priority".equals(sort)) {
+                    log.debug("Сортировка по приоритету(убывание)");
+                    tasks = tasksRepository.findAllByOrderByPriorityAsc();
+                } else if ("id_desc".equals(sort)) {
+                    log.debug("Сортировка по id (убывание)");
+                    tasks = tasksRepository.findAllByOrderByIdAsc();
+//                    tasks = tasksRepository.findAllByOrderByIdDesc();
+                } else {
+                    log.debug("Сортировка по умолчанию (по id возрастание)");
+                    tasks = tasksRepository.findAllByOrderByIdDesc();
+//                    tasks = tasksRepository.findAllByOrderByIdAsc();
+                    sort = "id_asc";
+                }
+            }
+
             long duration = System.currentTimeMillis() - startTime;
             log.info("Загружено {} задач за {} мс", tasks.size(),duration);
+
             model.addAttribute("tasks", tasks);
             model.addAttribute("users", users);
             model.addAttribute("currentSort", sort);
+            model.addAttribute("search",search);
             return "all_tasks";
         }
         finally {
@@ -135,18 +145,42 @@ public class TaskController extends LoggingController{
         }
     }
     @GetMapping("/user_tasks")
-    public String userTasks(@AuthenticationPrincipal User currentUser, Model model){
+    public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
         try {
+            List<Tasks> tasks;
+            List<User> users = userService.allUsers();
+
             log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
-            List<Tasks> tasks = tasksRepository.findByArtistId(currentUser.getId());
-            List<User> users = userService.allUsers();
+            if(search != null && !search.trim().isEmpty()){
+                log.debug("Поиск среди своих задач по запросу {}",search);
+                tasks = tasksRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(currentUser.getId(),search.trim(),currentUser.getId(),search.trim());
+            }
+            else{
+                if ("deadline".equals(sort)) {
+                    log.debug("Сортировка по дедлайну(убывание)");
+                    tasks = tasksRepository.findByArtistIdOrderByDeadlineAsc(currentUser.getId());
+                } else if ("priority".equals(sort)) {
+                    log.debug("Сортировка по приоритету(убывание)");
+                    tasks = tasksRepository.findByArtistIdOrderByPriorityAsc(currentUser.getId());
+                } else if ("id_desc".equals(sort)) {
+                    log.debug("Сортировка по id (убывание)");
+                    tasks = tasksRepository.findByArtistIdOrderByIdAsc(currentUser.getId());
+                } else {
+                    log.debug("Сортировка по умолчанию (по id возрастание)");
+                    tasks = tasksRepository.findByArtistIdOrderByIdDesc(currentUser.getId());
+                    sort = "id_asc";
+                }
+            }
+
             long duration = System.currentTimeMillis() - startTime;
             log.info("Загружено {} задач за {} мс",tasks.size(),duration);
             model.addAttribute("tasks", tasks);
             model.addAttribute("users", users);
+            model.addAttribute("currentSort",sort);
+            model.addAttribute("search",search);
             return "user_tasks";
         }
         finally {

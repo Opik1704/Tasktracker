@@ -87,6 +87,50 @@
         <h1>
             Мои задачи
         </h1>
+        <div class="action-panel">
+            <div class="search-wrapper">
+                <form class="search-form" th:action="@{/user_tasks}" method="get">
+                    <input type="text" class="search-input" name="search"
+                           placeholder="Поиск среди своих задач..."
+                           th:value="${search}">
+                    <input type="hidden" name="sort" th:value="${currentSort}">
+                    <button type="submit" class="btn-search">🔍 Найти</button>
+                    <a th:if="${search}" th:href="@{/user_tasks(sort=${currentSort})}"
+                       class="clear-btn">✖</a>
+                </form>
+            </div>
+            <div class="sort-wrapper">
+                <div class="sort-dropdown">
+                    <button class="sort-btn">
+                        <span th:text="${currentSort == 'id_asc' ? 'По ID (новые)' :
+                                         currentSort == 'id_desc' ? 'По ID (старые)' :
+                                         currentSort == 'deadline' ? 'По дедлайну' :
+                                         currentSort == 'priority' ? 'По приоритету' : 'Сортировка'}">
+                            Сортировка
+                        </span>
+                        <span>▼</span>
+                    </button>
+                    <div class="sort-menu">
+                        <a th:href="@{/user_tasks(sort='id_asc', search=${searchQuery})}"
+                           th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
+                            По ID (сначала новые)
+                        </a>
+                        <a th:href="@{/user_tasks(sort='id_desc', search=${searchQuery})}"
+                           th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
+                            По ID (сначала старые)
+                        </a>
+                        <a th:href="@{/user_tasks(sort='deadline', search=${searchQuery})}"
+                           th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
+                            По дедлайну (ближайшие)
+                        </a>
+                        <a th:href="@{/user_tasks(sort='priority', search=${searchQuery})}"
+                           th:classappend="${currentSort == 'priority'} ? 'active' : ''">
+                            По приоритету (Critical → Low)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div th:each="el : ${tasks}" class = "card mb-2">
             <div class="card-body">
                 <h2 class="card-title" th:text="${el.title}"></h2>
