@@ -267,6 +267,20 @@
         </button>
       </div>
     </div>
+    <div class="search-section">
+      <form class="search-form" th:action="@{/all_tasks}" method="get">
+        <input type="text" class="search-input" name="search"
+               placeholder="Поиск по названию или комментарию"
+               th:value="${search}">
+        <input type="hidden" name="sort" th:value="${currentSort}">
+        <button type="submit" class="search-btn">🔍 Найти</button>
+        <a th:if="${search}" th:href="@{/all_tasks(sort=${currentSort})}"
+           class="clear-btn">✖ Сбросить</a>
+      </form>
+      <div th:if="${searchQuery}" class="search-info">
+        Результаты поиска по запросу: <strong>"${searchQuery}"</strong>
+      </div>
+    </div>
     <div th:each="el : ${tasks}" class="card mb-2">
       <div class="card-body">
         <h2 class="card-title" th:text="${el.title}"></h2>

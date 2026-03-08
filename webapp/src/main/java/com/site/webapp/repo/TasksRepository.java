@@ -12,4 +12,12 @@ public interface TasksRepository extends CrudRepository<Tasks,Long> {
     List<Tasks> findAllByOrderByIdDesc();
     List<Tasks> findAllByOrderByDeadlineDesc();
     List<Tasks> findAllByOrderByPriorityAsc();
+
+    List<Tasks> findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(String title, String comment);
+
+    List<Tasks> findByArtistIdOrderByIdAsc(Long artistId);
+    List<Tasks> findByArtistIdOrderByIdDesc(Long artistId);
+    List<Tasks> findByArtistIdOrderByDeadlineAsc(Long artistId);
+    List<Tasks> findByArtistIdOrderByPriorityAsc(Long artistId);
+    List<Tasks> findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(Long artistId, String title, Long artistId2, String comment);
 }
