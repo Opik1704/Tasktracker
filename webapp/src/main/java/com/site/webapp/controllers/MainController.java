@@ -8,15 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-public class MainController {
+public class MainController extends LoggingController {
     @GetMapping("/")
     public String home(Model model) {
+        log.info("Пользователь {} открыл главную страницу",getCurrentUserEmail());
         model.addAttribute("title", "Главная страница");
         return "home";
-    }
-    @GetMapping("/profile")
-    public String profile(@AuthenticationPrincipal User currentUser, Model model){
-        model.addAttribute("user",currentUser);
-        return "profile";
     }
 }

@@ -8,6 +8,8 @@ import com.site.webapp.repo.UserRepository;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +23,8 @@ import java.util.*;
 
 @Service
 public class UserService implements UserDetailsService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @PersistenceContext
     private EntityManager em;
@@ -37,47 +41,75 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
+        log.info("Попытка входа пользователя с email: {}", email);
         User user = userRepository.findByEmail(email);
-
         if (user == null){
+            log.warn("Пользователь с email {} не найден",email);
             throw new UsernameNotFoundException("User not found" + email);
         }
+        log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
         return user;
     }
 
     public User findUserById(Long userId){
+        log.debug("Поиск пользователя по ID: {}", userId);
         Optional<User> userFromDb = userRepository.findById(userId);
-        return userFromDb.orElse(null);
+        if (userFromDb.isPresent()) {
+            log.debug("Пользователь найден: {}", userFromDb.get().getEmail());
+            return userFromDb.get();
+        } else {
+            log.debug("Пользователь с ID {} не найден", userId);
+            return null;
+        }
     }
     public User findByEmail(String email) {
+        log.debug("Поиск пользователя по email: {}", email);
         return userRepository.findByEmail(email);
     }
     public List<User> allUsers(){
-        return userRepository.findAll();
+        log.debug("Запрос списка всех пользователей");
+        List<User> users = userRepository.findAll();
+        log.debug("Найдено {} пользователей", users.size());
+        return users;
     }
     public List<Role> getAllRoles() {
+        log.debug("Запрос списка всех ролей");
         return roleRepository.findAll();
     }
     public boolean saveUser(User user){
+        log.info("Попытка регистрации с email: {}", user.getEmail());
+
         User userFromDB = userRepository.findByEmail(user.getEmail());
         if (userFromDB != null){
+            log.warn("Регистрация невозможна email {} уже существует",user.getEmail());
             return false;
         }
-        Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RuntimeException("Роль EMPLOYEE не найдена"));
-        user.setRoles(Collections.singleton(employeeRole));
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return true;
+        try{
+            Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RuntimeException("Роль EMPLOYEE не найдена"));
+            user.setRoles(Collections.singleton(employeeRole));
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            log.info("Пользователь {} успешно зарегистрирован с ID: {}",user.getEmail(), user.getId());
+            return true;
+        }catch (Exception e){
+            log.error("Ошибка при регистрации пользователя {}",e.getMessage(),e);
+            return false;
+        }
     }
     public boolean deleteUser(Long userId){
+        log.info("Удаление пользователя с ID: {}", userId);
         if (userRepository.findById(userId).isPresent()){
             userRepository.deleteById(userId);
+            log.info("Пользователь ID {} успешно удален", userId);
             return true;
         }
+        log.warn("Пользователь ID {} не найден", userId);
         return false;
     }
 
     public void updateUserRoles(Long userId, List<Long> roleIds) {
+        log.info("Обновление ролей для пользователя ID: {}", userId);
+        log.debug("Новые роли: {}", roleIds);
         User user = findUserById(userId);
         if(user != null){
             Set<Role> newRoles = new HashSet<>();
@@ -89,8 +121,13 @@ public class UserService implements UserDetailsService {
                     }
                 }
             }
+            log.debug("Старые роли: {}", user.getRoles());
             user.setRoles(newRoles);
             userRepository.save(user);
+            log.info("✅ Роли пользователя ID {} обновлены", userId);
+        }
+        else{
+            log.warn("Пользователь ID {} не найден", userId);
         }
     }
 }
