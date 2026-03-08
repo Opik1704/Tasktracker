@@ -17,6 +17,26 @@
             display: flex;
             flex-direction: column;
         }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        .action-btn {
+            height: 50px;
+            padding: 0 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.15rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 240px;
+        }
         .main-content {
             display: flex;
             flex: 1;
@@ -32,7 +52,7 @@
         }
         .card {
             margin-bottom: 10px !important;
-        }
+        }м
         .card-body {
             padding: 12px !important;
         }
@@ -44,8 +64,8 @@
             font-size: 1.1rem !important;
             margin-bottom: 8px !important;
         }
-        .priority-low {
-            color: #28a745;
+        .priority-trivial {
+            color: #6c757d;
             font-weight: bold;
         }
         .priority-medium {
@@ -77,6 +97,14 @@
             font-size: 0.9rem;
             margin-left: 10px;
         }
+        .my-tasks-badge {
+            background-color: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -86,46 +114,45 @@
     <div class="container">
         <h1>
             Мои задачи
+            <span class="my-tasks-badge" th:text="${#lists.size(tasks)} + ' задач'"></span>
         </h1>
         <div class="action-panel">
             <div class="search-wrapper">
-                <form class="search-form" th:action="@{/user_tasks}" method="get">
-                    <input type="text" class="search-input" name="search"
-                           placeholder="Поиск среди своих задач..."
-                           th:value="${search}">
-                    <input type="hidden" name="sort" th:value="${currentSort}">
-                    <button type="submit" class="btn-search">🔍 Найти</button>
-                    <a th:if="${search}" th:href="@{/user_tasks(sort=${currentSort})}"
-                       class="clear-btn">✖</a>
+                <form th:action="@{/user_tasks}" method="get" class="search-form">
+                    <input type="text" name="search" class="search-input"
+                           placeholder="Поиск по названию или комментарию"
+                           th:value="${searchQuery}">
+                    <button type="submit" class="btn btn-primary">🔍 Найти</button>
+                    <a th:href="@{/user_tasks}" th:if="${searchQuery}"
+                       class="btn btn-secondary">Сбросить</a>
                 </form>
+            </div>
+            <div th:if="${#lists.isEmpty(tasks)}" class="alert alert-info text-center">
+                <h4>У вас пока нет задач</h4>
+                <p>Перейдите в раздел "Все задачи", чтобы создать новую задачу и назначить её себе.</p>
+                <a href="/all_tasks" class="btn btn-primary mt-3">Перейти к задачам</a>
             </div>
             <div class="sort-wrapper">
                 <div class="sort-dropdown">
-                    <button class="sort-btn">
-                        <span th:text="${currentSort == 'id_asc' ? 'По ID (новые)' :
-                                         currentSort == 'id_desc' ? 'По ID (старые)' :
-                                         currentSort == 'deadline' ? 'По дедлайну' :
-                                         currentSort == 'priority' ? 'По приоритету' : 'Сортировка'}">
-                            Сортировка
-                        </span>
-                        <span>▼</span>
+                    <button class="action-btn sort-btn">
+                        Сортировка <span class="sort-arrow">▼</span>
                     </button>
                     <div class="sort-menu">
-                        <a th:href="@{/user_tasks(sort='id_asc', search=${searchQuery})}"
+                        <a th:href="@{/user_tasks(sort='id_asc')}"
                            th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
-                            По ID (сначала новые)
+                            Время добавления (новые)
                         </a>
-                        <a th:href="@{/user_tasks(sort='id_desc', search=${searchQuery})}"
+                        <a th:href="@{/user_tasks(sort='id_desc')}"
                            th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
-                            По ID (сначала старые)
+                            Время добавления (старые)
                         </a>
-                        <a th:href="@{/user_tasks(sort='deadline', search=${searchQuery})}"
+                        <a th:href="@{/user_tasks(sort='deadline')}"
                            th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
-                            По дедлайну (ближайшие)
+                            Дедлайн
                         </a>
-                        <a th:href="@{/user_tasks(sort='priority', search=${searchQuery})}"
+                        <a th:href="@{/user_tasks(sort='priority')}"
                            th:classappend="${currentSort == 'priority'} ? 'active' : ''">
-                            По приоритету (Critical → Low)
+                            Приоритет
                         </a>
                     </div>
                 </div>
