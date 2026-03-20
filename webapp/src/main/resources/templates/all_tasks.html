@@ -318,7 +318,13 @@
         </button>
       </form>
     </div>
-    <div th:each="el : ${tasks}" class="card mb-2">
+    <div th:if="${#lists.isEmpty(tasks)}"
+         style="text-align: center; padding: 50px; background: white; border-radius: 8px; border: 1px dashed #ccc; margin-top: 20px; width: 100%;">
+      <h3 style="color: #6c757d;">Задача не найдена</h3>
+      <p style="color: #999;">Попробуйте изменить запрос или <a th:href="@{/all-tasks}" style="color: #007bff; text-decoration: none;">сбросить поиск</a></p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card mb-2">
       <div class="card-body">
         <h2 class="card-title" th:text="${el.title}"></h2>
         <h6 class="card-subtitle mb-2" th:text="${el.priority}"
