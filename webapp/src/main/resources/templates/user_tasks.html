@@ -5,175 +5,189 @@
     <title>Мои задачи</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { 
+        margin: 0;
+        padding: 0;
+        box-sizing:
+        border-box;
+         }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+         font-family: Arial, sans-serif;
+         background-color: #f5f5f5;
+         min-height: 100vh;
+         display: flex;
+         flex-direction: column;
+         }
+
+        .main-content {
+         display: flex;
+         flex: 1;
+         margin-left: 250px;
+         padding: 25px;
+             }
+        .container { flex: 1;
+         }
+
+        h1 { font-size: 3.1rem !important;
+        font-weight: bold !important;
+        color: #444 !important;
+         margin-bottom: 25px;
         }
         .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 20px;
-        }
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px; }
+        /* Стили кнопок */
         .action-btn {
-            height: 50px;
-            padding: 0 35px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.15rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-width: 240px;
+            height: 50px; padding: 0 35px; border: none; border-radius: 8px;
+            font-size: 1.15rem; font-weight: 500; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 10px; min-width: 240px; transition: all 0.2s;
         }
-        .main-content {
-            display: flex;
-            flex: 1;
-            margin-left: 250px;
-            padding: 25px;
+        .sort-btn {
+         background: #6c757d;
+         color: white;
+         }
+        .sort-btn:hover {
+         background: #5a6268;
+         }
+
+        /* Выпадающее меню сортировки */
+        .sort-dropdown { position: relative; display: inline-block; }
+        .sort-dropdown::after { content: ''; position: absolute; bottom: -10px; left: 0; width: 100%; height: 10px; background: transparent; }
+        .sort-dropdown:hover .sort-menu { display: block; }
+        .sort-menu {
+            display: none; position: absolute; right: 0; top: 100%; min-width: 240px;
+            background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 5px;
         }
-        .container {
-            flex: 1;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+        .sort-menu a {
+            color: #333; padding: 12px 15px; text-decoration: none; display: block;
+            border-bottom: 1px solid #eee; font-size: 0.95rem; text-align: left;
         }
-        .card {
-            margin-bottom: 10px !important;
-        }м
-        .card-body {
-            padding: 12px !important;
+        .sort-menu a:hover { background: #f8f9fa; }
+        .sort-menu a.active { background: #007bff; color: white; }
+
+        /* Поиск */
+        .search-container {
+         margin: 20px 0;
+         display: flex;
+         max-width: 400px;
+         }
+        .search-input {
+            flex: 1; padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+            outline: none;
         }
-        .card-title {
-            font-size: 1.8rem !important;
-            margin-bottom: 8px !important;
+        .search-btn {
+            background-color: #f8f9fa; border: 1px solid #ccc; border-left: none;
+            padding: 0 15px; border-radius: 0 5px 5px 0; cursor: pointer;
+            display: flex; align-items: center;
         }
-        .card-subtitle {
-            font-size: 1.1rem !important;
-            margin-bottom: 8px !important;
-        }
-        .priority-trivial {
-            color: #6c757d;
-            font-weight: bold;
-        }
-        .priority-medium {
-            color: #ffc107;
-            font-weight: bold;
-        }
-        .priority-high {
-            color: #fd7e14;
-            font-weight: bold;
-        }
-        .priority-critical {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        .btn-group {
-            display: flex;
-            gap: 5px;
-            padding: 0 12px 12px 12px;
-        }
-        .btn-sm {
-            padding: 3px 10px;
-            font-size: 0.85rem;
-        }
-        .my-tasks-badge {
-            background-color: #17a2b8;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
-        .my-tasks-badge {
-            background-color: #17a2b8;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
+
+        /* Приоритеты */
+        .priority-trivial { color: #28a745; font-weight: bold; }
+        .priority-medium { color: #ffc107; font-weight: bold; }
+        .priority-high { color: #fd7e14; font-weight: bold; }
+        .priority-critical { color: #dc3545; font-weight: bold; }
+
+        /* Карточки */
+        .card { margin-bottom: 10px !important; border: 1px solid #ddd; }
+        .card-body { padding: 15px !important; }
+        .card-title { font-size: 1.8rem !important; font-weight: bold; margin-bottom: 8px; }
     </style>
 </head>
 <body>
+
 <header th:insert="blocks/header :: header"></header>
 <aside th:insert="blocks/sidebar :: sidebar"></aside>
-<div class = "main-content">
+
+<div class="main-content">
     <div class="container">
-        <h1>
-            Мои задачи
-            <span class="my-tasks-badge" th:text="${#lists.size(tasks)} + ' задач'"></span>
-        </h1>
-        <div class="action-panel">
-            <div class="search-wrapper">
-                <form th:action="@{/user-tasks}" method="get" class="search-form">
-                    <input type="text" name="search" class="search-input"
-                           placeholder="Поиск по названию или комментарию"
-                           th:value="${searchQuery}">
-                    <button type="submit" class="btn btn-primary">🔍 Найти</button>
-                    <a th:href="@{/user-tasks}" th:if="${searchQuery}"
-                       class="btn btn-secondary">Сбросить</a>
-                </form>
+        <div class="header-actions">
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="mb-0">Мои задачи</h1>
+                <span th:unless="${#lists.isEmpty(tasks)}" class="badge bg-info text-dark"
+                      style="font-size: 1rem; padding: 8px 12px;" th:text="${tasks.size() + ' задач'}"></span>
             </div>
-            <div th:if="${#lists.isEmpty(tasks)}" class="alert alert-info text-center">
-                <h4>У вас пока нет задач</h4>
-                <p>Перейдите в раздел "Все задачи", чтобы создать новую задачу и назначить её себе.</p>
-                <a href="/all-tasks" class="btn btn-primary mt-3">Перейти к задачам</a>
-            </div>
-            <div class="sort-wrapper">
-                <div class="sort-dropdown">
-                    <button class="action-btn sort-btn">
-                        Сортировка <span class="sort-arrow">▼</span>
-                    </button>
-                    <div class="sort-menu">
-                        <a th:href="@{/user-tasks(sort='id_asc')}"
-                           th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
-                            Время добавления (новые)
-                        </a>
-                        <a th:href="@{/user-tasks(sort='id_desc')}"
-                           th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
-                            Время добавления (старые)
-                        </a>
-                        <a th:href="@{/user-tasks(sort='deadline')}"
-                           th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
-                            Дедлайн
-                        </a>
-                        <a th:href="@{/user-tasks(sort='priority')}"
-                           th:classappend="${currentSort == 'priority'} ? 'active' : ''">
-                            Приоритет
-                        </a>
-                    </div>
+
+            <div class="sort-dropdown">
+                <button class="action-btn sort-btn">
+                    Сортировка <span class="sort-arrow">▼</span>
+                </button>
+                <div class="sort-menu">
+                    <a th:href="@{/user-tasks(sort='id_asc')}" th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">Новые</a>
+                    <a th:href="@{/user-tasks(sort='id_desc')}" th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">Старые</a>
+                    <a th:href="@{/user-tasks(sort='deadline')}" th:classappend="${currentSort == 'deadline'} ? 'active' : ''">Дедлайн</a>
+                    <a th:href="@{/user-tasks(sort='priority')}" th:classappend="${currentSort == 'priority'} ? 'active' : ''">Приоритет</a>
                 </div>
             </div>
         </div>
-        <div th:each="el : ${tasks}" class = "card mb-2">
+
+        <div class="search-container">
+            <form th:action="@{/user-tasks}" method="get" style="display: flex; width: 100%;">
+                <input type="text" name="search" class="search-input"
+                       th:value="${searchQuery}" placeholder="Поиск в моих задачах...">
+                <button type="submit" class="search-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="#555"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+                    <span style="margin-left: 8px; font-weight: 500; color: #444;">Найти</span>
+                </button>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(tasks)}"
+             style="text-align: center; padding: 50px; background: white; border-radius: 8px; border: 1px dashed #ccc; margin-top: 20px; width: 100%;">
+            <h3 style="color: #6c757d;">🔍 Задача не найдена</h3>
+            <p style="color: #999;">Попробуйте изменить запрос или <a th:href="@{/user-tasks}">сбросить поиск</a></p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card shadow-sm mb-3">
             <div class="card-body">
-                <h2 class="card-title" th:text="${el.title}"></h2>
-                <h6 class="card-subtitle mb-2"
-                    th:text="${el.priority}"
-                    th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
-                </h6>
-                <div class="d-flex justify-content-between align-items-center">
-          <span>
-            <strong>Моя задача</strong>
-          </span>
-                    <span>Дедлайн: <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong></span>
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="card-title" th:text="${el.title}"></h2>
+                        <h6 class="card-subtitle mb-2" th:text="${el.priority}"
+                            th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
+                        </h6>
+                        <p class="text-secondary" th:text="${el.comment}" style="margin-top: 10px;"></p>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">Дедлайн:</small>
+                        <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" style="min-width: 120px;"
+                            data-bs-toggle="modal" data-bs-target="#editTaskModal"
+                            th:data-task-id="${el.id}" th:data-task-title="${el.title}"
+                            th:data-task-priority="${el.priority}"
+                            th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
+                            th:data-task-comment="${el.comment}" onclick="fillEditModal(this)">
+                        Редактировать
+                    </button>
+                    <form th:action="@{/user-tasks/delete/{id}(id=${el.id})}" method="post"
+                          onsubmit="return confirm('Удалить задачу?');">
+                        <button type="submit" class="btn btn-danger btn-sm" style="min-width: 120px;">Удалить</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div th:insert="blocks/modals :: editTaskModal"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function fillEditModal(button) {
+        document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
+        document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');
+        document.getElementById('editTaskPriority').value = button.getAttribute('data-task-priority');
+        document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
+        document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
+    }
+</script>
 </body>
 </html>
