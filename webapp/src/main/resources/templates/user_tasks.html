@@ -118,19 +118,19 @@
         </h1>
         <div class="action-panel">
             <div class="search-wrapper">
-                <form th:action="@{/user_tasks}" method="get" class="search-form">
+                <form th:action="@{/user-tasks}" method="get" class="search-form">
                     <input type="text" name="search" class="search-input"
                            placeholder="Поиск по названию или комментарию"
                            th:value="${searchQuery}">
                     <button type="submit" class="btn btn-primary">🔍 Найти</button>
-                    <a th:href="@{/user_tasks}" th:if="${searchQuery}"
+                    <a th:href="@{/user-tasks}" th:if="${searchQuery}"
                        class="btn btn-secondary">Сбросить</a>
                 </form>
             </div>
             <div th:if="${#lists.isEmpty(tasks)}" class="alert alert-info text-center">
                 <h4>У вас пока нет задач</h4>
                 <p>Перейдите в раздел "Все задачи", чтобы создать новую задачу и назначить её себе.</p>
-                <a href="/all_tasks" class="btn btn-primary mt-3">Перейти к задачам</a>
+                <a href="/all-tasks" class="btn btn-primary mt-3">Перейти к задачам</a>
             </div>
             <div class="sort-wrapper">
                 <div class="sort-dropdown">
@@ -138,19 +138,19 @@
                         Сортировка <span class="sort-arrow">▼</span>
                     </button>
                     <div class="sort-menu">
-                        <a th:href="@{/user_tasks(sort='id_asc')}"
+                        <a th:href="@{/user-tasks(sort='id_asc')}"
                            th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
                             Время добавления (новые)
                         </a>
-                        <a th:href="@{/user_tasks(sort='id_desc')}"
+                        <a th:href="@{/user-tasks(sort='id_desc')}"
                            th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
                             Время добавления (старые)
                         </a>
-                        <a th:href="@{/user_tasks(sort='deadline')}"
+                        <a th:href="@{/user-tasks(sort='deadline')}"
                            th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
                             Дедлайн
                         </a>
-                        <a th:href="@{/user_tasks(sort='priority')}"
+                        <a th:href="@{/user-tasks(sort='priority')}"
                            th:classappend="${currentSort == 'priority'} ? 'active' : ''">
                             Приоритет
                         </a>
@@ -171,21 +171,6 @@
           </span>
                     <span>Дедлайн: <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong></span>
                 </div>
-            </div>
-
-            <div class="btn-group">
-                <a th:href="@{/all_tasks/edit/{id}(id=${el.id})}"
-                   class="btn btn-sm btn-outline-primary">
-                    Редактировать
-                </a>
-                <form th:action="@{/all_tasks/delete/{id}(id=${el.id})}"
-                      method="post"
-                      style="display: inline;"
-                      onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        Удалить
-                    </button>
-                </form>
             </div>
         </div>
     </div>

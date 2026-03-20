@@ -11,19 +11,21 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping("/registration")
 public class RegistrationController extends LoggingController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/registration")
+    @GetMapping
     public String registration(Model model){
         log.info("Открыта страница регистрации");
         model.addAttribute("userForm",new RegistrationDto());
         return "registration";
     }
-    @PostMapping("/registration")
+    @PostMapping
     public String addUser(@ModelAttribute("userForm") @Valid RegistrationDto registrationDto, BindingResult bindingResult, Model model) {
         log.info("Регистрация пользователя с email {}",registrationDto.getEmail());
         if (bindingResult.hasErrors()) {

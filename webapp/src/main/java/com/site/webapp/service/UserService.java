@@ -106,7 +106,34 @@ public class UserService implements UserDetailsService {
         log.warn("Пользователь ID {} не найден", userId);
         return false;
     }
-
+    public void updateUserInfo(Long userId,String firstName,String lastName){
+        log.info("Обновление данных для пользователя ID: {}", userId);
+        User user = findUserById(userId);
+        if(user != null){
+            log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            userRepository.save(user);
+        }
+        else{
+            log.warn("Пользователь ID {} не найден", userId);
+        }
+    }
+    public String updatePassword(Long userId, String oldPassword,String newPassword,String confirmPassword){
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            log.warn("Неверный старый пароль для пользователя: {}", user.getEmail());
+            return "oldPasswordError";
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            log.warn("Новые пароли не совпадают для пользователя {}", user.getEmail());
+            return "matchError";
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        log.info("Пароль для пользователя {} успешно обновлен", user.getEmail());
+        return "success";
+    }
     public void updateUserRoles(Long userId, List<Long> roleIds) {
         log.info("Обновление ролей для пользователя ID: {}", userId);
         log.debug("Новые роли: {}", roleIds);

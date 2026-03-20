@@ -221,12 +221,53 @@
         font-size: 1.1rem !important;
         margin-bottom: 8px !important;
     }
-
-    /* Стрелка вниз на кнопке сортировки */
     .sort-arrow {
         font-size: 14px;
         margin-left: 5px;
     }
+    .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 0; /* Соединяем инпут и кнопку */
+            max-width: 400px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px; /* Скругляем только левые углы */
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+        }
+
+        .search-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-left: none; /* Убираем двойную границу между ними */
+            padding: 0 15px;
+            border-radius: 0 5px 5px 0; /* Скругляем только правые углы */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .search-btn:hover {
+            background-color: #e2e6ea;
+        }
+
+        .search-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: #555;
+        }
   </style>
 </head>
 
@@ -244,19 +285,19 @@
             Сортировка <span class="sort-arrow">▼</span>
           </button>
           <div class="sort-menu">
-            <a th:href="@{/all_tasks(sort='id_asc')}"
+            <a th:href="@{/all-tasks(sort='id_asc')}"
                th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
               Время добавления (новые)
             </a>
-            <a th:href="@{/all_tasks(sort='id_desc')}"
+            <a th:href="@{/all-tasks(sort='id_desc')}"
                th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
               Время добавления (старые)
             </a>
-            <a th:href="@{/all_tasks(sort='deadline')}"
+            <a th:href="@{/all-tasks(sort='deadline')}"
                th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
               Дедлайн
             </a>
-            <a th:href="@{/all_tasks(sort='priority')}"
+            <a th:href="@{/all-tasks(sort='priority')}"
                th:classappend="${currentSort == 'priority'} ? 'active' : ''">
               Приоритет
             </a>
@@ -267,19 +308,15 @@
         </button>
       </div>
     </div>
-    <div class="search-section">
-      <form class="search-form" th:action="@{/all_tasks}" method="get">
-        <input type="text" class="search-input" name="search"
-               placeholder="Поиск по названию или комментарию"
-               th:value="${search}">
-        <input type="hidden" name="sort" th:value="${currentSort}">
-        <button type="submit" class="search-btn">🔍 Найти</button>
-        <a th:if="${search}" th:href="@{/all_tasks(sort=${currentSort})}"
-           class="clear-btn">✖ Сбросить</a>
+    <div class="search-container">
+      <form th:action="@{/all-tasks}" method="get" style="display: flex; width: 100%;">
+        <input type="text" name="search" class="search-input"
+               th:value="${searchQuery}" placeholder="Поиск по названию...">
+        <button type="submit" class="search-btn">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+          <span style="margin-left: 5px; font-weight: 500; color: #444;">Найти</span>
+        </button>
       </form>
-      <div th:if="${searchQuery}" class="search-info">
-        Результаты поиска по запросу: <strong>"${searchQuery}"</strong>
-      </div>
     </div>
     <div th:each="el : ${tasks}" class="card mb-2">
       <div class="card-body">
@@ -313,7 +350,7 @@
                   onclick="fillEditModal(this)">
             Редактировать
           </button>
-          <form th:action="@{/all_tasks/delete/{id}(id=${el.id}, sort=${currentSort})}"
+          <form th:action="@{/all-tasks/delete/{id}(id=${el.id}, sort=${currentSort})}"
                 method="post"
                 style="display: inline;"
                 onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
@@ -334,7 +371,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form th:action="@{/all_tasks}" method="post">
+        <form th:action="@{/all-tasks}" method="post">
           <div class="mb-3">
             <label class="form-label">Название задачи</label>
             <input type="text" name="title" class="form-control" required>
@@ -360,8 +397,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Дедлайн</label>
-            <input type="datetime-local" name="deadline" class="form-control" required>
-          </div>
+            <input type="datetime-local" name="deadline" min="2024-01-01T00:00" max="2099-12-31T23:59" required>          </div>
           <div class="mb-3">
             <label class="form-label">Комментарий</label>
             <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу"></textarea>
