@@ -36,6 +36,7 @@ public class TaskController extends LoggingController{
             log.debug("Параметры: sort = {}",sort);
 
             List<Tasks> tasks;
+
             List<User> users = userService.allUsers();
             if (search != null && !search.trim().isEmpty()){
                 log.debug("Поиск по запросу: '{}'", search);
