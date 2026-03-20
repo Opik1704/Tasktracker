@@ -1,34 +1,74 @@
 package com.site.webapp.controllers;
 
 import com.site.webapp.models.User;
+import com.site.webapp.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+@Controller
+@RequestMapping("/profile")
 public class ProfileController extends LoggingController {
-    @GetMapping("/profile")
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @GetMapping
     public String profile(@AuthenticationPrincipal User currentUser, Model model) {
         addUserToMDC();
         try {
+            User freshUser = userService.findUserById(currentUser.getId());
             log.info("Пользователь {} открыл свой профиль", getCurrentUserEmail());
-            model.addAttribute("user", currentUser);
+            model.addAttribute("user", freshUser);
             return "profile";
         } finally {
             clearMDC();
         }
     }
 
-    @PostMapping("/profile")
-    public String updateProfile(@AuthenticationPrincipal User currentUser, @RequestParam String firstName, @RequestParam String lastName, Model model) {
+    @PostMapping("/update-info")
+    public String updateProfile(@AuthenticationPrincipal User currentUser,
+                                @RequestParam String firstName,
+                                @RequestParam String lastName) {
         addUserToMDC();
         try {
-            log.info("Пользователь");
-        }
-        finally {
+            log.info("Пользователь {} обновляет данные", currentUser.getEmail());
+            userService.updateUserInfo(currentUser.getId(),firstName,lastName);
+            return "redirect:/profile";
+        } finally {
             clearMDC();
         }
-        return firstName;
     }
+
+    @PostMapping("/change-password")
+    public String changePassword(@AuthenticationPrincipal User currentUser,
+                                 @RequestParam String oldPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String confirmPassword,
+                                 Model model) {
+        addUserToMDC();
+        try {
+            String result = userService.updatePassword(
+                    currentUser.getId(),
+                    oldPassword,
+                    newPassword,
+                    confirmPassword
+            );
+
+            if ("success".equals(result)) {
+                return "redirect:/profile?passwordSuccess";
+            } else {
+                return "redirect:/profile?" + result;
+            }
+        } finally {
+            clearMDC();
+        }
+    }
+
 }

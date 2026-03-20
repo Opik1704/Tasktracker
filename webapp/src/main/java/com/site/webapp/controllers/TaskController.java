@@ -27,7 +27,7 @@ public class TaskController extends LoggingController{
     @Autowired
     private UserService userService;
 
-    @GetMapping("/all_tasks")
+    @GetMapping("/all-tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,@RequestParam(required = false) String search,Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
@@ -74,7 +74,7 @@ public class TaskController extends LoggingController{
         }
     }
 
-    @PostMapping("/all_tasks")
+    @PostMapping("/all-tasks")
     public String addTask(@RequestParam String title,
                           @RequestParam String priority,
                           @RequestParam Long artistId,
@@ -90,12 +90,12 @@ public class TaskController extends LoggingController{
             tasksRepository.save(task);
 
             log.info("✅ Задача создана с ID: {}", task.getId());
-            return "redirect:/all_tasks";
+            return "redirect:/all-tasks";
         }finally {
             clearMDC();
         }
     }
-    @PostMapping("all_tasks/update")
+    @PostMapping("/all-tasks/update")
     public String updateTask(@RequestParam Long id,
                              @RequestParam String title,
                              @RequestParam String priority,
@@ -121,7 +121,7 @@ public class TaskController extends LoggingController{
                     task.getTitle(),task.getPriority(),task.getArtistId(),task.getDeadline(),task.getComment());
             tasksRepository.save(task);
             log.info("Задача id {} успешно обновлена", id);
-            return "redirect:/all_tasks?sort=" + sort;
+            return "redirect:/all-tasks?sort=" + sort;
         }
         catch (Exception e){
             log.error("Ошибка при обновлении задачи {}: {}",id,e.getMessage(),e);
@@ -131,20 +131,20 @@ public class TaskController extends LoggingController{
             clearMDC();
         }
     }
-    @PostMapping("/all_tasks/delete/{id}")
+    @PostMapping("/all-tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
         addUserToMDC();
         try {
             log.info("Удаление задачи");
             tasksRepository.deleteById(id);
             log.info("Задача id {} удалена",id);
-            return "redirect:/all_tasks?sort=" + sort;
+            return "redirect:/all-tasks?sort=" + sort;
         }
         finally {
             clearMDC();
         }
     }
-    @GetMapping("/user_tasks")
+    @GetMapping("/user-tasks")
     public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
