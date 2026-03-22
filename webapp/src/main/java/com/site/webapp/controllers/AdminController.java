@@ -3,6 +3,7 @@ package com.site.webapp.controllers;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.User;
 import com.site.webapp.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,9 +63,13 @@ public class AdminController extends LoggingController{
         }
     }
     @PostMapping("/update-roles")
-    public String editUsersRole(@RequestParam Long userId, @RequestParam(required = false) List<Long> roleIds){
+    public String editUsersRole(@RequestParam Long userId, @RequestParam(required = false) List<Long> roleIds, HttpServletRequest request){
         addUserToMDC();
         try {
+            if (!request.isUserInRole("ADMIN")) {
+                log.warn("Пользователь пытался изменить роли без прав ADMIN! User ID: {}", userId);
+                return "redirect:/access-denied";
+            }
             log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
             userService.updateUserRoles(userId,roleIds);
             log.info("✅ Роли пользователя ID {} обновлены", userId);
