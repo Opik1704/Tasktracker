@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class TaskController extends LoggingController{
     private UserService userService;
 
     @GetMapping("/all-tasks")
-    public String allTasks(@RequestParam(defaultValue = "id") String sort,@RequestParam(required = false) String search,Model model){
+    public String allTasks(@RequestParam(defaultValue = "id") String sort, @RequestParam(required = false) String search, Principal principal, Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
         try {
@@ -68,6 +69,10 @@ public class TaskController extends LoggingController{
             model.addAttribute("users", users);
             model.addAttribute("currentSort", sort);
             model.addAttribute("search",search);
+            if (principal != null) {
+                User currentUser = userService.findByEmail(principal.getName());
+                model.addAttribute("currentUser", currentUser);
+            }
             return "all_tasks";
         }
         finally {
@@ -144,6 +149,18 @@ public class TaskController extends LoggingController{
         finally {
             clearMDC();
         }
+    }
+    @GetMapping("/my-favorites")
+    public String showFavorites(Principal principal, Model model) {
+        if (principal == null) return "redirect:/login";
+
+        User currentUser = userService.findByEmail(principal.getName());
+
+        model.addAttribute("tasks", currentUser.getFavouriteTasks());
+        model.addAttribute("users", userService.allUsers());
+        model.addAttribute("currentUser", currentUser);
+
+        return "favorites";
     }
     @GetMapping("/user-tasks")
     public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
