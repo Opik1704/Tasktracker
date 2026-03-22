@@ -268,6 +268,30 @@
             height: 16px;
             fill: #555;
         }
+      .favorite-btn {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: transform 0.2s;
+          padding: 0;
+          margin-right: 15px;
+          line-height: 1;
+      }
+      .favorite-btn:hover {
+          transform: scale(1.2);
+      }
+      .star-filled {
+          color: #ffc107; /* Желтый */
+      }
+      .star-empty {
+          color: #ccc; /* Серый */
+      }
+      .title-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+      }
   </style>
 </head>
 
@@ -323,11 +347,20 @@
       <h3 style="color: #6c757d;">Задача не найдена</h3>
       <p style="color: #999;">Попробуйте изменить запрос или <a th:href="@{/all-tasks}" style="color: #007bff; text-decoration: none;">сбросить поиск</a></p>
     </div>
-
     <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card mb-2">
       <div class="card-body">
-        <h2 class="card-title" th:text="${el.title}"></h2>
-        <h6 class="card-subtitle mb-2" th:text="${el.priority}"
+        <div class="title-wrapper">
+          <form th:action="@{/tasks/favorite/{id}(id=${el.id})}" method="post" style="display: inline;">
+            <button type="submit" class="favorite-btn">
+                <span th:if="${currentUser != null}"
+                      th:class="${currentUser.favouriteTasks.contains(el)} ? 'star-filled' : 'star-empty'"
+                      th:text="${currentUser.favouriteTasks.contains(el)} ? '★' : '☆'">
+                </span>
+            </button>
+          </form>
+          <h2 class="card-title" th:text="${el.title}" style="margin-bottom: 0 !important;"></h2>
+        </div>
+        <h6 class="card-subtitle mb-2 mt-2" th:text="${el.priority}"
             th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
         </h6>
         <div class="d-flex justify-content-between align-items-center">
