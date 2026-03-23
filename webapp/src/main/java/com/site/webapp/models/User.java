@@ -55,6 +55,7 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     private Set<Tasks> favouriteTasks = new HashSet<>();
+
     public Set<Tasks> getFavouriteTasks() {
         return favouriteTasks;
     }
