@@ -158,16 +158,18 @@ public class TaskController extends LoggingController{
     }
 
     @GetMapping("/user-tasks")
-    public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
-        addUserToMDC();
-        long startTime = System.currentTimeMillis();
+    public String userTasks(@AuthenticationPrincipal User currentUser,
+                            @RequestParam(defaultValue = "id_asc") String sort,
+                            @RequestParam(required = false) String search,
+                            Model model){
         if (currentUser == null) return "redirect:/authorization";
-
+        addUserToMDC();
         try {
             log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
             List<Tasks> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
             model.addAttribute("tasks", tasks);
+            model.addAttribute("currentUser", currentUser);
             model.addAttribute("currentSort",sort);
             model.addAttribute("search",search);
             return "user_tasks";

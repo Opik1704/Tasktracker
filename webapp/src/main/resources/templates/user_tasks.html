@@ -162,7 +162,7 @@
         <div class="search-container">
             <form th:action="@{/user-tasks}" method="get" style="display: flex; width: 100%;">
                 <input type="text" name="search" class="search-input"
-                       th:value="${searchQuery}" placeholder="Поиск в моих задачах...">
+                       th:value="${search}" placeholder="Поиск в моих задачах...">
                 <button type="submit" class="search-btn">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="#555"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
                     <span style="margin-left: 8px; font-weight: 500; color: #444;">Найти</span>
