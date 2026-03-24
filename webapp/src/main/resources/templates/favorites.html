@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Избранное</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            margin-left: 250px;
+            padding: 25px;
+        }
+        .container { flex: 1; }
+
+        h1 {
+            font-size: 3.1rem !important;
+            font-weight: bold !important;
+            color: #444 !important;
+            margin-bottom: 25px;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        /* Стили кнопок */
+        .action-btn {
+            height: 50px; padding: 0 35px; border: none; border-radius: 8px;
+            font-size: 1.15rem; font-weight: 500; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 10px; min-width: 240px; transition: all 0.2s;
+        }
+        .sort-btn {
+            background: #6c757d;
+            color: white;
+        }
+        .sort-btn:hover {
+            background: #5a6268;
+        }
+
+        /* Выпадающее меню сортировки */
+        .sort-dropdown { position: relative; display: inline-block; }
+        .sort-dropdown::after { content: ''; position: absolute; bottom: -10px; left: 0; width: 100%; height: 10px; background: transparent; }
+        .sort-dropdown:hover .sort-menu { display: block; }
+        .sort-menu {
+            display: none; position: absolute; right: 0; top: 100%; min-width: 240px;
+            background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 5px;
+        }
+        .sort-menu a {
+            color: #333; padding: 12px 15px; text-decoration: none; display: block;
+            border-bottom: 1px solid #eee; font-size: 0.95rem; text-align: left;
+        }
+        .sort-menu a:hover { background: #f8f9fa; }
+        .sort-menu a.active { background: #007bff; color: white; }
+
+        /* Поиск (если нужен в избранном) */
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            max-width: 400px;
+        }
+        .search-input {
+            flex: 1; padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+        .search-btn {
+            background-color: #f8f9fa; border: 1px solid #ccc; border-left: none;
+            padding: 0 15px; border-radius: 0 5px 5px 0; cursor: pointer;
+            display: flex; align-items: center;
+        }
+
+        /* Приоритеты */
+        .priority-trivial { color: #28a745; font-weight: bold; }
+        .priority-medium { color: #ffc107; font-weight: bold; }
+        .priority-high { color: #fd7e14; font-weight: bold; }
+        .priority-critical { color: #dc3545; font-weight: bold; }
+
+        /* Карточки */
+        .card { margin-bottom: 10px !important; border: 1px solid #ddd; border-left: 6px solid #ffc107 !important; }
+        .card-body { padding: 15px !important; }
+        .card-title { font-size: 1.8rem !important; font-weight: bold; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<header th:insert="~{blocks/header :: header}"></header>
+<aside th:insert="~{blocks/sidebar :: sidebar}"></aside>
+
+<div class="main-content">
+    <div class="container">
+        <div class="header-actions">
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="mb-0">Избранное</h1>
+                <span th:unless="${#lists.isEmpty(tasks)}" class="badge bg-warning text-dark"
+                      style="font-size: 1rem; padding: 8px 12px;" th:text="${tasks.size() + ' задач'}"></span>
+            </div>
+
+            <div class="sort-dropdown">
+                <button class="action-btn sort-btn">
+                    Сортировка <span class="sort-arrow">▼</span>
+                </button>
+                <div class="sort-menu">
+                    <a th:href="@{/favorites(sort='recent')}" th:classappend="${currentSort == 'recent'} ? 'active' : ''">Новые</a>
+                    <a th:href="@{/favorites(sort='deadline')}" th:classappend="${currentSort == 'deadline'} ? 'active' : ''">Дедлайн</a>
+                    <a th:href="@{/favorites(sort='priority')}" th:classappend="${currentSort == 'priority'} ? 'active' : ''">Приоритет</a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(tasks)}"
+             style="text-align: center; padding: 50px; background: white; border-radius: 8px; border: 1px dashed #ccc; margin-top: 20px; width: 100%;">
+            <h3 style="color: #6c757d;">⭐ В избранном пока пусто</h3>
+            <p style="color: #999;">Добавляйте задачи в избранное, нажимая на звёздочку в общем списке.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h2 class="card-title mb-0" th:text="${el.title}"></h2>
+                        <h6 class="card-subtitle mb-2 mt-1" th:text="${el.priority}"
+                            th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
+                        </h6>
+                    </div>
+
+                    <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post"
+                          th:onsubmit="return confirm('Убрать задачу «' + [[${el.title}]] + '» из избранного?');">
+                        <button type="submit" class="favorite-btn" style="background: none; border: none; font-size: 2.2rem; cursor: pointer; padding: 0; line-height: 1; color: #ffc107;">
+                            ★
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mb-2 text-muted">
+                    <small>Исполнитель:</small>
+                    <span th:each="user : ${users}" th:if="${user.id == el.artistId}"
+                          th:text="${user.firstName + ' ' + user.lastName}" class="fw-bold text-dark"></span>
+                    <span th:if="${el.artistId == null}" class="text-secondary">Не назначен</span>
+                </div>
+
+                <p class="text-secondary" th:text="${el.comment}" th:if="${el.comment != null and el.comment != ''}"></p>
+
+                <div class="d-flex justify-content-between align-items-end mt-3">
+                    <div class="d-flex gap-2">
+                        <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post"
+                              th:onsubmit="return confirm('Вы уверены, что хотите убрать эту задачу из избранного?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" style="min-width: 150px; font-weight: 500;">
+                                Убрать из избранного
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="text-end">
+                        <small class="text-muted d-block">Дедлайн:</small>
+                        <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

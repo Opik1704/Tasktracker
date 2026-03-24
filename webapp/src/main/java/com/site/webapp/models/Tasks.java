@@ -1,6 +1,7 @@
 package com.site.webapp.models;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import jakarta.persistence.*;
 
@@ -31,7 +32,18 @@ public class Tasks {
 //    private String status;
 
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tasks task = (Tasks) o;
+        return Objects.equals(id, task.id); // Сравнение по ID
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
     public String getTitle() {return title;}
     public void setTitle(String title) {
         this.title = title;

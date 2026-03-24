@@ -145,33 +145,47 @@
 
         <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card shadow-sm mb-3">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <h2 class="card-title" th:text="${el.title}"></h2>
-                        <h6 class="card-subtitle mb-2" th:text="${el.priority}"
+                        <h2 class="card-title mb-0" th:text="${el.title}"></h2>
+                        <h6 class="card-subtitle mb-2 mt-1" th:text="${el.priority}"
                             th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
                         </h6>
-                        <p class="text-secondary" th:text="${el.comment}" style="margin-top: 10px;"></p>
                     </div>
+
+                    <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post">
+                        <input type="hidden" name="redirectUrl" value="/user-tasks">
+                        <button type="submit" class="favorite-btn" style="background: none; border: none; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">
+                <span th:if="${currentUser != null and currentUser.favouriteTasks.contains(el)}"
+                      style="color: #ffc107;">★</span>
+                            <span th:unless="${currentUser != null and currentUser.favouriteTasks.contains(el)}"
+                                  style="color: #ccc;">☆</span>
+                        </button>
+                    </form>
+                </div>
+
+                <p class="text-secondary" th:text="${el.comment}" th:if="${el.comment != null and el.comment != ''}"></p>
+
+                <div class="d-flex justify-content-between align-items-end mt-3">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" style="min-width: 120px;"
+                                data-bs-toggle="modal" data-bs-target="#editTaskModal"
+                                th:data-task-id="${el.id}" th:data-task-title="${el.title}"
+                                th:data-task-priority="${el.priority}"
+                                th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
+                                th:data-task-comment="${el.comment}" onclick="fillEditModal(this)">
+                            Редактировать
+                        </button>
+                        <form th:action="@{/user-tasks/delete/{id}(id=${el.id})}" method="post"
+                              onsubmit="return confirm('Удалить задачу?');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="min-width: 120px;">Удалить</button>
+                        </form>
+                    </div>
+
                     <div class="text-end">
                         <small class="text-muted d-block">Дедлайн:</small>
                         <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong>
                     </div>
-                </div>
-
-                <div class="mt-3 d-flex gap-2">
-                    <button type="button" class="btn btn-primary btn-sm" style="min-width: 120px;"
-                            data-bs-toggle="modal" data-bs-target="#editTaskModal"
-                            th:data-task-id="${el.id}" th:data-task-title="${el.title}"
-                            th:data-task-priority="${el.priority}"
-                            th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
-                            th:data-task-comment="${el.comment}" onclick="fillEditModal(this)">
-                        Редактировать
-                    </button>
-                    <form th:action="@{/user-tasks/delete/{id}(id=${el.id})}" method="post"
-                          onsubmit="return confirm('Удалить задачу?');">
-                        <button type="submit" class="btn btn-danger btn-sm" style="min-width: 120px;">Удалить</button>
-                    </form>
                 </div>
             </div>
         </div>

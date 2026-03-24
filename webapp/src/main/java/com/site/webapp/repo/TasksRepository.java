@@ -12,7 +12,6 @@ public interface TasksRepository extends CrudRepository<Tasks,Long> {
     List<Tasks> findAllByOrderByIdDesc();
     List<Tasks> findAllByOrderByDeadlineDesc();
     List<Tasks> findAllByOrderByPriorityAsc();
-
     List<Tasks> findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(String title, String comment);
 
     List<Tasks> findByArtistIdOrderByIdAsc(Long artistId);

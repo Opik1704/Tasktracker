@@ -2,8 +2,10 @@ package com.site.webapp.service;
 
 import com.site.webapp.config.EncoderConfig;
 import com.site.webapp.models.Role;
+import com.site.webapp.models.Tasks;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.RoleRepository;
+import com.site.webapp.repo.TasksRepository;
 import com.site.webapp.repo.UserRepository;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -31,12 +34,14 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final TasksRepository tasksRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,RoleRepository roleRepository,PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository,RoleRepository roleRepository,TasksRepository tasksRepository,PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tasksRepository = tasksRepository;
     }
 
     @Override
@@ -76,6 +81,7 @@ public class UserService implements UserDetailsService {
         log.debug("Запрос списка всех ролей");
         return roleRepository.findAll();
     }
+
     public boolean saveUser(User user){
         log.info("Попытка регистрации с email: {}", user.getEmail());
 
@@ -105,6 +111,32 @@ public class UserService implements UserDetailsService {
         }
         log.warn("Пользователь ID {} не найден", userId);
         return false;
+    }
+    @Transactional(readOnly = true)
+    public List<Tasks> getFavoriteTasksForUser(String email) {
+        log.info("Взятие избранных задач для пользователя с email: {}", email);
+
+        User user = userRepository.findByEmail(email);
+        if (user == null) return new ArrayList<>();
+
+        return new ArrayList<>(user.getFavouriteTasks());
+    }
+    @Transactional
+    public void toggleFavorite(String email, Long taskId) {
+        log.info("Переключение избранного для пользователя {} и задачи {}", email, taskId);
+
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
+
+        Tasks task = tasksRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        if (user.getFavouriteTasks().contains(task)) {
+            user.getFavouriteTasks().remove(task);
+            log.info("Задача удалена из избранного");
+        } else {
+            user.getFavouriteTasks().add(task);
+            log.info("Задача добавлена в избранное");
+        }
     }
     public void updateUserInfo(Long userId,String firstName,String lastName){
         log.info("Обновление данных для пользователя ID: {}", userId);

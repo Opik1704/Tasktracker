@@ -271,21 +271,23 @@
       .favorite-btn {
           background: none;
           border: none;
-          font-size: 1.5rem;
+          font-size: 2.2rem;
           cursor: pointer;
           transition: transform 0.2s;
           padding: 0;
-          margin-right: 15px;
           line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
       }
       .favorite-btn:hover {
           transform: scale(1.2);
       }
       .star-filled {
-          color: #ffc107; /* Желтый */
+          color: #ffc107;
       }
       .star-empty {
-          color: #ccc; /* Серый */
+          color: #ccc;
       }
       .title-wrapper {
           display: flex;
@@ -313,15 +315,15 @@
                th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
               Время добавления (новые)
             </a>
-            <a th:href="@{/all-tasks(sort='id_desc')}"
+            <a th:href="@{/all-tasks(sort='id_desc')}  "
                th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
               Время добавления (старые)
             </a>
-            <a th:href="@{/all-tasks(sort='deadline')}"
+            <a th:href="@{/all-tasks(sort='deadline')} "
                th:classappend="${currentSort == 'deadline'} ? 'active' : ''">
               Дедлайн
             </a>
-            <a th:href="@{/all-tasks(sort='priority')}"
+            <a th:href="@{/all-tasks(sort='priority')}  "
                th:classappend="${currentSort == 'priority'} ? 'active' : ''">
               Приоритет
             </a>
@@ -332,7 +334,7 @@
         </button>
       </div>
     </div>
-    <div class="search-container">
+    <div class="search-container" id="task-list">
       <form th:action="@{/all-tasks}" method="get" style="display: flex; width: 100%;">
         <input type="text" name="search" class="search-input"
                th:value="${searchQuery}" placeholder="Поиск по названию...">
@@ -347,34 +349,34 @@
       <h3 style="color: #6c757d;">Задача не найдена</h3>
       <p style="color: #999;">Попробуйте изменить запрос или <a th:href="@{/all-tasks}" style="color: #007bff; text-decoration: none;">сбросить поиск</a></p>
     </div>
-    <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card mb-2">
+    <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card mb-2" th:id="'task-' + ${el.id}">
       <div class="card-body">
-        <div class="title-wrapper">
-          <form th:action="@{/tasks/favorite/{id}(id=${el.id})}" method="post" style="display: inline;">
-            <button type="submit" class="favorite-btn">
-                <span th:if="${currentUser != null}"
-                      th:class="${currentUser.favouriteTasks.contains(el)} ? 'star-filled' : 'star-empty'"
-                      th:text="${currentUser.favouriteTasks.contains(el)} ? '★' : '☆'">
-                </span>
+        <div class="title-wrapper mb-2" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <h2 class="card-title mb-0" th:text="${el.title}"></h2>
+          <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post">
+            <button type="submit" class="favorite-btn" style="margin-right: 0;">
+              <span th:if="${currentUser != null and currentUser.favouriteTasks.contains(el)}" class="star-filled">★</span>
+              <span th:unless="${currentUser != null and currentUser.favouriteTasks.contains(el)}" class="star-empty">☆</span>
             </button>
           </form>
-          <h2 class="card-title" th:text="${el.title}" style="margin-bottom: 0 !important;"></h2>
         </div>
-        <h6 class="card-subtitle mb-2 mt-2" th:text="${el.priority}"
+        <h6 class="card-subtitle mb-3" th:text="${el.priority}"
             th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
         </h6>
-        <div class="d-flex justify-content-between align-items-center">
-          <span>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <span>
             <strong>Исполнитель:</strong>
             <span th:if="${users != null and !#lists.isEmpty(users)}">
-              <span th:each="user : ${users}" th:if="${user.id == el.artistId}"
-                    th:text="${user.firstName + ' ' + user.lastName}"></span>
+                <span th:each="user : ${users}" th:if="${user.id == el.artistId}"
+                      th:text="${user.firstName + ' ' + user.lastName}"></span>
             </span>
-            <span th:if="${users == null or #lists.isEmpty(users)}">Не назначен</span>
-          </span>
+            <span th:if="${el.artistId == null}">Не назначен</span>
+        </span>
           <span>Дедлайн: <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong></span>
         </div>
-        <div class="btn-group">
+
+        <div class="btn-group-container d-flex gap-2">
           <button type="button"
                   class="btn-edit"
                   data-bs-toggle="modal"
@@ -393,7 +395,7 @@
                 method="post"
                 style="display: inline;"
                 onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
-            <button type="submit" class="btn-delete">
+            <button type="submit" class="btn-delete" style="padding: 6px 20px;">
               Удалить
             </button>
           </form>

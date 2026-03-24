@@ -4,6 +4,7 @@ import com.site.webapp.models.Tasks;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TasksRepository;
 import com.site.webapp.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,10 @@ public class TaskController extends LoggingController{
     private UserService userService;
 
     @GetMapping("/all-tasks")
-    public String allTasks(@RequestParam(defaultValue = "id") String sort, @RequestParam(required = false) String search, Principal principal, Model model){
+    public String allTasks(@RequestParam(defaultValue = "id") String sort,
+                           @RequestParam(required = false) String search,
+                           Principal principal,
+                           Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
         try {
@@ -101,6 +105,7 @@ public class TaskController extends LoggingController{
             clearMDC();
         }
     }
+
     @PostMapping("/all-tasks/update")
     public String updateTask(@RequestParam Long id,
                              @RequestParam String title,
@@ -131,12 +136,13 @@ public class TaskController extends LoggingController{
         }
         catch (Exception e){
             log.error("Ошибка при обновлении задачи {}: {}",id,e.getMessage(),e);
-            throw e;
+            return "redirect:/all-tasks?sort=" + sort + "&error=true";
         }
         finally {
             clearMDC();
         }
     }
+
     @PostMapping("/all-tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
         addUserToMDC();
@@ -150,18 +156,69 @@ public class TaskController extends LoggingController{
             clearMDC();
         }
     }
-    @GetMapping("/my-favorites")
-    public String showFavorites(Principal principal, Model model) {
-        if (principal == null) return "redirect:/login";
 
-        User currentUser = userService.findByEmail(principal.getName());
 
-        model.addAttribute("tasks", currentUser.getFavouriteTasks());
-        model.addAttribute("users", userService.allUsers());
-        model.addAttribute("currentUser", currentUser);
+    @GetMapping("/favorites")
+    public String favorites(@RequestParam(required = false) String sort,
+                            Principal principal,
+                            Model model) {
+        addUserToMDC();
+        try {
+            String email = principal.getName();
+            log.info("Пользователь {} просматривает избранные задачи", email);
 
-        return "favorites";
+            List<Tasks> tasks = userService.getFavoriteTasksForUser(email);
+            if ("deadline".equals(sort)) {
+                tasks.sort((t1, t2) -> {
+                    if (t1.getDeadline() == null) return 1;
+                    if (t2.getDeadline() == null) return -1;
+                    return t1.getDeadline().compareTo(t2.getDeadline());
+                });
+            } else if ("priority".equals(sort)) {
+                tasks.sort((t1, t2) -> t1.getPriority().compareTo(t2.getPriority()));
+            }
+            if ("recent".equals(sort)) {
+                tasks.sort((t1, t2) -> t2.getId().compareTo(t1.getId()));
+            }
+            List<User> users = userService.allUsers();
+
+            model.addAttribute("tasks", tasks);
+            model.addAttribute("users", users);
+            model.addAttribute("pageTitle", "Избранные задачи");
+
+            return "favorites";
+        } finally {
+            clearMDC();
+        }
     }
+    @PostMapping("/favorites/toggle/{taskId}")
+    public String toggleFavorite(@PathVariable Long taskId,
+                                 Principal principal,
+                                 HttpServletRequest request) {
+        addUserToMDC();
+        try {
+            if (principal == null) {
+                log.warn("Попытка изменить избранное без авторизации");
+                return "redirect:/login";
+            }
+            String email = principal.getName();
+            log.info("Пользователь {} переключает избранное для задачи {}",email, taskId);
+            userService.toggleFavorite(email, taskId);
+
+            String referer = request.getHeader("Referer");
+            if (referer != null) {
+                return "redirect:" + referer;
+            }
+            return "redirect:/all-tasks";
+        }catch (Exception e){
+            log.error("Ошибка при добавлении задачи {} в избранное: {}", taskId, e.getMessage(), e);
+            return "redirect:/all-tasks";
+        }
+        finally {
+            clearMDC();
+        }
+    }
+
     @GetMapping("/user-tasks")
     public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
         addUserToMDC();
