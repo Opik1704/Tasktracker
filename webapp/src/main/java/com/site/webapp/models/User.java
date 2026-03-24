@@ -3,6 +3,8 @@ package com.site.webapp.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.constraints.Size;
 import org.springframework.security.core.GrantedAuthority;
@@ -48,12 +50,14 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-    @ManyToMany()
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_favourite_tasks",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<Tasks> favouriteTasks = new HashSet<>();
 
     public Set<Tasks> getFavouriteTasks() {
