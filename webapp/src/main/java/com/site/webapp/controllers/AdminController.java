@@ -30,6 +30,7 @@ public class AdminController extends LoggingController{
             List<User> users = userService.allUsers();
             List<Role> allRoles = userService.getAllRoles();
             log.debug("Найдено {} пользователей",users.size());
+
             model.addAttribute("users", users);
             model.addAttribute("allRoles", allRoles);
             return "admin";
@@ -44,17 +45,9 @@ public class AdminController extends LoggingController{
         addUserToMDC();
         try {
             log.info("Администратор {} удаляет пользователя ID: {}", getCurrentUserEmail(), userId);
-            if(currentAdmin.getId().equals(userId)){
-                log.warn("Попытка удаления самого себя заблокирована для ID: {}", userId);
-                return "redirect:/admin";
-            }
-            User user = userService.findUserById(userId);
-            if (user != null) {
-                log.debug("Удаляемый пользователь: {} {}", user.getFirstName(), user.getLastName());
-                userService.deleteUser(userId);
-                log.info("Пользователь if {} успешно удален", userId);
-            } else {
-                log.warn("Пользователь if {} не найден", userId);
+            boolean deleted = userService.deleteUser(userId, currentAdmin.getId(),currentAdmin.getEmail());
+            if (!deleted) {
+                log.warn("Не удалось удалить пользователя ID: {}", userId);
             }
             return "redirect:/admin";
         }
@@ -66,10 +59,6 @@ public class AdminController extends LoggingController{
     public String editUsersRole(@RequestParam Long userId, @RequestParam(required = false) List<Long> roleIds, HttpServletRequest request){
         addUserToMDC();
         try {
-            if (!request.isUserInRole("ADMIN")) {
-                log.warn("Пользователь пытался изменить роли без прав ADMIN! User ID: {}", userId);
-                return "redirect:/access-denied";
-            }
             log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
             userService.updateUserRoles(userId,roleIds);
             log.info("✅ Роли пользователя ID {} обновлены", userId);
