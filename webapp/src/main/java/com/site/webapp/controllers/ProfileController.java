@@ -17,8 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ProfileController extends LoggingController {
     @Autowired
     private UserService userService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+
     @GetMapping
     public String profile(@AuthenticationPrincipal User currentUser, Model model) {
         addUserToMDC();
