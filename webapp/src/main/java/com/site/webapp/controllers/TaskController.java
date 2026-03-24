@@ -3,6 +3,7 @@ package com.site.webapp.controllers;
 import com.site.webapp.models.Tasks;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TasksRepository;
+import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ import java.util.List;
 @Controller
 public class TaskController extends LoggingController{
     @Autowired
-    private TasksRepository tasksRepository;
+    private TaskService taskService;
 
     @Autowired
     private UserService userService;
@@ -40,37 +41,10 @@ public class TaskController extends LoggingController{
             log.info("Пользователь,запросил список всех задач");
             log.debug("Параметры: sort = {}",sort);
 
-            List<Tasks> tasks;
-
-            List<User> users = userService.allUsers();
-            if (search != null && !search.trim().isEmpty()){
-                log.debug("Поиск по запросу: '{}'", search);
-                tasks = tasksRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase( search.trim(), search.trim());
-            }
-            else {
-                if ("deadline".equals(sort)) {
-                    log.debug("Сортировка по дедлайну(убывание)");
-                    tasks = tasksRepository.findAllByOrderByDeadlineDesc();
-                } else if ("priority".equals(sort)) {
-                    log.debug("Сортировка по приоритету(убывание)");
-                    tasks = tasksRepository.findAllByOrderByPriorityAsc();
-                } else if ("id_desc".equals(sort)) {
-                    log.debug("Сортировка по id (убывание)");
-                    tasks = tasksRepository.findAllByOrderByIdAsc();
-//                    tasks = tasksRepository.findAllByOrderByIdDesc();
-                } else {
-                    log.debug("Сортировка по умолчанию (по id возрастание)");
-                    tasks = tasksRepository.findAllByOrderByIdDesc();
-//                    tasks = tasksRepository.findAllByOrderByIdAsc();
-                    sort = "id_asc";
-                }
-            }
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("Загружено {} задач за {} мс", tasks.size(),duration);
+            List<Tasks> tasks = taskService.getAllTasks(sort,search);
 
             model.addAttribute("tasks", tasks);
-            model.addAttribute("users", users);
+            model.addAttribute("users",userService.allUsers());
             model.addAttribute("currentSort", sort);
             model.addAttribute("search",search);
             if (principal != null) {
@@ -95,11 +69,7 @@ public class TaskController extends LoggingController{
         try {
             log.info("Создание новой задачи");
             log.debug("Данные: title='{}', priority={}, artistId={}, deadline={}",title, priority, artistId, deadline);
-
-            Tasks task = new Tasks(title, priority, artistId, deadline, comment);
-            tasksRepository.save(task);
-
-            log.info("✅ Задача создана с ID: {}", task.getId());
+            taskService.saveTask(new Tasks(title, priority, artistId, deadline, comment));
             return "redirect:/all-tasks";
         }finally {
             clearMDC();
@@ -119,19 +89,7 @@ public class TaskController extends LoggingController{
         try {
             log.info("Обновление задачи id {}",id);
             log.info("Пользователь {} обновляет задачу",getCurrentUserEmail());
-
-            Tasks task = tasksRepository.findById(id).orElseThrow(() -> new RuntimeException("Задача не найдена"));
-            log.debug("Старые данные title={},priority = {},artistId = {},deadline = {},comment = {}",
-                    task.getTitle(),task.getPriority(),task.getArtistId(),task.getDeadline(),task.getComment());
-            task.setTitle(title);
-            task.setPriority(priority);
-            task.setArtistId(artistId);
-            task.setDeadline(deadline);
-            task.setComment(comment);
-            log.debug("Новые данные title={},priority = {},artistId = {},deadline = {},comment = {}",
-                    task.getTitle(),task.getPriority(),task.getArtistId(),task.getDeadline(),task.getComment());
-            tasksRepository.save(task);
-            log.info("Задача id {} успешно обновлена", id);
+            taskService.updateTask(id,title,priority,artistId,deadline,comment);
             return "redirect:/all-tasks?sort=" + sort;
         }
         catch (Exception e){
@@ -148,7 +106,7 @@ public class TaskController extends LoggingController{
         addUserToMDC();
         try {
             log.info("Удаление задачи");
-            tasksRepository.deleteById(id);
+            taskService.deleteTask(id);
             log.info("Задача id {} удалена",id);
             return "redirect:/all-tasks?sort=" + sort;
         }
@@ -162,30 +120,15 @@ public class TaskController extends LoggingController{
     public String favorites(@RequestParam(required = false) String sort,
                             Principal principal,
                             Model model) {
+        if (principal == null) return "redirect:/authorization";
         addUserToMDC();
         try {
             String email = principal.getName();
-            log.info("Пользователь {} просматривает избранные задачи", email);
+            log.info("Пользователь {} просматривает избранное (сортировка: {})", email, sort);
 
-            List<Tasks> tasks = userService.getFavoriteTasksForUser(email);
-            if ("deadline".equals(sort)) {
-                tasks.sort((t1, t2) -> {
-                    if (t1.getDeadline() == null) return 1;
-                    if (t2.getDeadline() == null) return -1;
-                    return t1.getDeadline().compareTo(t2.getDeadline());
-                });
-            } else if ("priority".equals(sort)) {
-                tasks.sort((t1, t2) -> t1.getPriority().compareTo(t2.getPriority()));
-            }
-            if ("recent".equals(sort)) {
-                tasks.sort((t1, t2) -> t2.getId().compareTo(t1.getId()));
-            }
-            List<User> users = userService.allUsers();
-
-            model.addAttribute("tasks", tasks);
-            model.addAttribute("users", users);
+            model.addAttribute("tasks", taskService.getSortedFavorites(email, sort));
+            model.addAttribute("users", userService.allUsers());
             model.addAttribute("pageTitle", "Избранные задачи");
-
             return "favorites";
         } finally {
             clearMDC();
@@ -195,26 +138,21 @@ public class TaskController extends LoggingController{
     public String toggleFavorite(@PathVariable Long taskId,
                                  Principal principal,
                                  HttpServletRequest request) {
+        if (principal == null) {
+            log.warn("Попытка изменить избранное без авторизации");
+            return "redirect:/authorization";
+        }
         addUserToMDC();
         try {
-            if (principal == null) {
-                log.warn("Попытка изменить избранное без авторизации");
-                return "redirect:/login";
-            }
             String email = principal.getName();
             log.info("Пользователь {} переключает избранное для задачи {}",email, taskId);
-            userService.toggleFavorite(email, taskId);
-
+            taskService.toggleFavorite(principal.getName(),taskId);
             String referer = request.getHeader("Referer");
             if (referer != null) {
                 return "redirect:" + referer;
             }
             return "redirect:/all-tasks";
-        }catch (Exception e){
-            log.error("Ошибка при добавлении задачи {} в избранное: {}", taskId, e.getMessage(), e);
-            return "redirect:/all-tasks";
-        }
-        finally {
+        }finally {
             clearMDC();
         }
     }
@@ -223,37 +161,13 @@ public class TaskController extends LoggingController{
     public String userTasks(@AuthenticationPrincipal User currentUser,@RequestParam(defaultValue = "id_asc") String sort,@RequestParam(required = false) String search, Model model){
         addUserToMDC();
         long startTime = System.currentTimeMillis();
-        try {
-            List<Tasks> tasks;
-            List<User> users = userService.allUsers();
+        if (currentUser == null) return "redirect:/authorization";
 
+        try {
             log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
-            if(search != null && !search.trim().isEmpty()){
-                log.debug("Поиск среди своих задач по запросу {}",search);
-                tasks = tasksRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(currentUser.getId(),search.trim(),currentUser.getId(),search.trim());
-            }
-            else{
-                if ("deadline".equals(sort)) {
-                    log.debug("Сортировка по дедлайну(убывание)");
-                    tasks = tasksRepository.findByArtistIdOrderByDeadlineAsc(currentUser.getId());
-                } else if ("priority".equals(sort)) {
-                    log.debug("Сортировка по приоритету(убывание)");
-                    tasks = tasksRepository.findByArtistIdOrderByPriorityAsc(currentUser.getId());
-                } else if ("id_desc".equals(sort)) {
-                    log.debug("Сортировка по id (убывание)");
-                    tasks = tasksRepository.findByArtistIdOrderByIdAsc(currentUser.getId());
-                } else {
-                    log.debug("Сортировка по умолчанию (по id возрастание)");
-                    tasks = tasksRepository.findByArtistIdOrderByIdDesc(currentUser.getId());
-                    sort = "id_asc";
-                }
-            }
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("Загружено {} задач за {} мс",tasks.size(),duration);
+            List<Tasks> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
             model.addAttribute("tasks", tasks);
-            model.addAttribute("users", users);
             model.addAttribute("currentSort",sort);
             model.addAttribute("search",search);
             return "user_tasks";

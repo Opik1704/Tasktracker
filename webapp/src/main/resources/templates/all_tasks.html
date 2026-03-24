@@ -339,12 +339,12 @@
             Сортировка <span class="sort-arrow">▼</span>
           </button>
           <div class="sort-menu">
-            <a th:href="@{/all-tasks(sort='id_asc')}"
-               th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
+            <a th:href="@{/all-tasks(sort='id_desc')}"
+               th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
               Время добавления (новые)
             </a>
-            <a th:href="@{/all-tasks(sort='id_desc')}  "
-               th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">
+            <a th:href="@{/all-tasks(sort='id_asc')}  "
+               th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">
               Время добавления (старые)
             </a>
             <a th:href="@{/all-tasks(sort='deadline')} "

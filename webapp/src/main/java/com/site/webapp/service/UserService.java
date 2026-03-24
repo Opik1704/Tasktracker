@@ -139,24 +139,6 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void toggleFavorite(String email, Long taskId) {
-        log.info("Переключение избранного для пользователя {} и задачи {}", email, taskId);
-
-        User user = userRepository.findByEmail(email);
-        if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
-
-        Tasks task = tasksRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Задача не найдена"));
-        if (user.getFavouriteTasks().contains(task)) {
-            user.getFavouriteTasks().remove(task);
-            log.info("Задача удалена из избранного");
-        } else {
-            user.getFavouriteTasks().add(task);
-            log.info("Задача добавлена в избранное");
-        }
-    }
-
-    @Transactional
     public void updateUserInfo(Long userId,String firstName,String lastName){
         log.info("Обновление данных для пользователя ID: {}", userId);
         User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("Пользователь не найден"));
