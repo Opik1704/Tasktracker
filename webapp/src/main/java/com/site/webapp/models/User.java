@@ -59,9 +59,11 @@ public class User implements UserDetails {
     public Set<Tasks> getFavouriteTasks() {
         return favouriteTasks;
     }
-
     public void setFavouriteTasks(Set<Tasks> favouriteTasks) {
         this.favouriteTasks = favouriteTasks;
+    }
+    public boolean isTaskFavorite(Long taskId) {
+        return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
     }
 
     public User() {
