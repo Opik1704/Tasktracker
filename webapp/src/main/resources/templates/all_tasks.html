@@ -294,6 +294,34 @@
           align-items: center;
           justify-content: flex-start;
       }
+    .back-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: none; /* Скрипт изменит это на 'flex' при скролле */
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        border: none;
+        z-index: 9999; /* Чтобы кнопка была поверх всех карточек */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .back-to-top:hover {
+        background-color: #0056b3;
+        transform: translateY(-5px);
+        color: white;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
   </style>
 </head>
 
@@ -460,7 +488,25 @@
       document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
       document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
   }
-</script>
+      const mybutton = document.getElementById("backToTopBtn");
 
+    window.onscroll = function() {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            mybutton.style.display = "flex";
+        } else {
+            mybutton.style.display = "none";
+        }
+    };
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+</script>
+<button onclick="scrollToTop()" id="backToTopBtn" class="back-to-top" title="Наверх">
+  ↑
+</button>
 </body>
 </html>
