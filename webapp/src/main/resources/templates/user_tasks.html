@@ -151,8 +151,8 @@
                     Сортировка <span class="sort-arrow">▼</span>
                 </button>
                 <div class="sort-menu">
-                    <a th:href="@{/user-tasks(sort='id_asc')}" th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">Новые</a>
-                    <a th:href="@{/user-tasks(sort='id_desc')}" th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">Старые</a>
+                    <a th:href="@{/user-tasks(sort='id_desc')}" th:classappend="${currentSort == 'id_desc'} ? 'active' : ''">Новые</a>
+                    <a th:href="@{/user-tasks(sort='id_asc')}" th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">Старые</a>
                     <a th:href="@{/user-tasks(sort='deadline')}" th:classappend="${currentSort == 'deadline'} ? 'active' : ''">Дедлайн</a>
                     <a th:href="@{/user-tasks(sort='priority')}" th:classappend="${currentSort == 'priority'} ? 'active' : ''">Приоритет</a>
                 </div>
