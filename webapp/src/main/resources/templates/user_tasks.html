@@ -5,7 +5,7 @@
     <title>Мои задачи</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * { 
+        * {
         margin: 0;
         padding: 0;
         box-sizing:
@@ -96,7 +96,40 @@
         /* Карточки */
         .card { margin-bottom: 10px !important; border: 1px solid #ddd; }
         .card-body { padding: 15px !important; }
-        .card-title { font-size: 1.8rem !important; font-weight: bold; margin-bottom: 8px; }
+        .card-title { font-size: 1.8rem !important; font-weight: bold; margin-bottom: 8px;
+         }
+         .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #007bff; /* Синий цвет как у твоих кнопок */
+            color: white;
+            border-radius: 50%;
+            display: none; /* Скрыта по умолчанию, скрипт её покажет */
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            cursor: pointer;
+            border: none;
+        }
+
+        .back-to-top:hover {
+            background-color: #0056b3;
+            transform: translateY(-5px);
+            color: white;
+        }
+
+        /* Чтобы скролл был плавным, а не резким прыжком */
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body>
@@ -202,6 +235,23 @@
         document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
         document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
     }
+    const mybutton = document.getElementById("backToTopBtn");
+    window.onscroll = function() {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            mybutton.style.display = "flex";
+        } else {
+            mybutton.style.display = "none";
+        }
+    };
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
 </script>
+<button onclick="scrollToTop()" id="backToTopBtn" class="back-to-top" title="Наверх">
+    ↑
+</button>
 </body>
 </html>
