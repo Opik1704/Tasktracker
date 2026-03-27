@@ -5,13 +5,19 @@
                 <a href="/"> Главная </a>
             </div>
             <ul class = "right-head">
-<!--                <li><a href="#"> Поиск </a></li>-->
+                <li class="bell-item">
+                    <a href="/notifications" class="bell-link">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge" th:if="${notificationsCount > 0}" th:text="${notificationsCount}"></span>
+                    </a>
+                </li>
                 <li><a href="#"> + (новая задача проект)</a></li>
                 <li><a href="profile"> Профиль </a></li>
             </ul>
         </nav>
     </div>
     <style>
+
         .horizontal-nav{
         position: fixed;
         top: 0;
@@ -19,7 +25,7 @@
         width: 100%;
         height: 80px;
         display:flex;
-        justify-content: space-between; /* Разделяет левую и правую части */
+        justify-content: space-between;
         align-items: center;
         background-color:#696969;
         border-radius:5px;
@@ -33,6 +39,7 @@
             margin: 0;
             padding-top: 80px;
             background: #f5f6fa;
+        }
         .logo {
             display: flex;
             align-items: center;
@@ -52,7 +59,7 @@
         list-style:none;
         margin:0;
         padding:0;
-        gap:15px;
+        gap:20px;
         }
         .right-head a:focus {
             background-color: transparent !important;

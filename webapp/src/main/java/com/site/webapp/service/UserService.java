@@ -83,7 +83,6 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public boolean saveUser(User user){
-
         User userFromDB = userRepository.findByEmail(user.getEmail());
         if (userFromDB != null){
             log.warn("Регистрация невозможна email {} уже существует",user.getEmail());

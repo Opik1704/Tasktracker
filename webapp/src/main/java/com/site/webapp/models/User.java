@@ -1,5 +1,6 @@
 package com.site.webapp.models;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -49,7 +50,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -123,10 +124,12 @@ public class User implements UserDetails {
     }
 
     @Override
+    @Nonnull
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getRoles();
     }
     @Override
+    @Nonnull
     public String getUsername() {
         return getEmail();
     }
@@ -160,4 +163,5 @@ public class User implements UserDetails {
                 ", roles=" + roles +
                 '}';
     }
+
 }
