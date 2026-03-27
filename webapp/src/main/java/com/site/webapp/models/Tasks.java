@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "tasks")
@@ -11,12 +15,28 @@ public class Tasks {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @NotBlank(message = "Название задачи не может быть пустым")
     @Column(nullable = false)
     private String title;
 
-    public Tasks() {
-    }
-        public Tasks(String title, String priority, Long artistId, LocalDateTime deadline, String comment){
+    @NotBlank(message = "Укажите приоритет")
+    private String priority;
+
+    private Long artistId;
+
+    @Future(message = "Дедлайн не может быть в прошлом")
+    @NotNull(message = "Дата дедлайна обязательна")
+    private LocalDateTime deadline;
+
+    @Size(max = 500, message = "Комментарий слишком длинный")
+    private String comment;
+
+//    private String status;
+
+public Tasks() {
+}
+    public Tasks(String title, String priority, Long artistId, LocalDateTime deadline, String comment){
         this.title = title;
         this.priority = priority;
         this.artistId = artistId;
@@ -24,13 +44,6 @@ public class Tasks {
         this.comment = comment;
 //        this.status = status;
     }
-
-    private LocalDateTime deadline;
-    private String priority;
-    private Long artistId;
-    private String comment;
-//    private String status;
-
 
     @Override
     public boolean equals(Object o) {
