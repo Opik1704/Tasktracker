@@ -6,6 +6,7 @@ import com.site.webapp.repo.TasksRepository;
 import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,17 +61,20 @@ public class TaskController extends LoggingController{
     }
 
     @PostMapping("/all-tasks")
-    public String addTask(@RequestParam String title,
-                          @RequestParam String priority,
-                          @RequestParam Long artistId,
-                          @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime deadline,
-                          @RequestParam(required = false) String comment,
-                          Model model){
+    public String addTask(@Valid Tasks task, BindingResult bindingResult,Principal principal, Model model){
         addUserToMDC();
         try {
-            log.info("Создание новой задачи");
-            log.debug("Данные: title='{}', priority={}, artistId={}, deadline={}",title, priority, artistId, deadline);
-            taskService.saveTask(new Tasks(title, priority, artistId, deadline, comment));
+            if (bindingResult.hasErrors()) {
+                log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
+                model.addAttribute("tasks", taskService.getAllTasks("id", null));
+                model.addAttribute("users", userService.allUsers());
+                if (principal != null) {
+                    model.addAttribute("currentUser", userService.findByEmail(principal.getName()));
+                }
+                return "all_tasks";
+            }
+            taskService.saveTask(task);
+            log.info("Задача успешно создана");
             return "redirect:/all-tasks";
         }finally {
             clearMDC();
@@ -77,23 +82,21 @@ public class TaskController extends LoggingController{
     }
 
     @PostMapping("/all-tasks/update")
-    public String updateTask(@RequestParam Long id,
-                             @RequestParam String title,
-                             @RequestParam String priority,
-                             @RequestParam Long artistId,
-                             @RequestParam  @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime deadline,
-                             @RequestParam(required = false) String comment,
+    public String updateTask(@Valid Tasks task,
+                             BindingResult bindingResult,
                              @RequestParam(defaultValue = "id_asc") String sort,
                              Model model) {
         addUserToMDC();
         try {
-            log.info("Обновление задачи id {}",id);
-            log.info("Пользователь {} обновляет задачу",getCurrentUserEmail());
-            taskService.updateTask(id,title,priority,artistId,deadline,comment);
+            if (bindingResult.hasErrors()) {
+                log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
+                return "redirect:/all-tasks?sort=" + sort + "&error=validation";
+            }
+            taskService.updateTask(task.getId(), task.getTitle(), task.getPriority(),task.getArtistId(), task.getDeadline(), task.getComment());
             return "redirect:/all-tasks?sort=" + sort;
         }
         catch (Exception e){
-            log.error("Ошибка при обновлении задачи {}: {}",id,e.getMessage(),e);
+            log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
             return "redirect:/all-tasks?sort=" + sort + "&error=true";
         }
         finally {
