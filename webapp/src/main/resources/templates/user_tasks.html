@@ -8,8 +8,7 @@
         * {
         margin: 0;
         padding: 0;
-        box-sizing:
-        border-box;
+        box-sizing: order-box;
          }
         body {
          font-family: Arial, sans-serif;
@@ -134,8 +133,8 @@
 </head>
 <body>
 
-<header th:insert="blocks/header :: header"></header>
-<aside th:insert="blocks/sidebar :: sidebar"></aside>
+<header th:insert="~{blocks/header :: header}"></header>
+<aside th:insert="~{blocks/sidebar :: sidebar}"></aside>
 
 <div class="main-content">
     <div class="container">
