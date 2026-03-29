@@ -1,16 +1,12 @@
 package com.site.webapp.controllers;
 
-import com.site.webapp.models.Tasks;
+import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
-import com.site.webapp.repo.TasksRepository;
 import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -43,7 +38,7 @@ public class TaskController extends LoggingController{
             log.info("Пользователь,запросил список всех задач");
             log.debug("Параметры: sort = {}",sort);
 
-            List<Tasks> tasks = taskService.getAllTasks(sort,search);
+            List<Task> tasks = taskService.getAllTasks(sort,search);
 
             model.addAttribute("tasks", tasks);
             model.addAttribute("users",userService.allUsers());
@@ -61,7 +56,7 @@ public class TaskController extends LoggingController{
     }
 
     @PostMapping("/all-tasks")
-    public String addTask(@Valid Tasks task, BindingResult bindingResult,Principal principal, Model model){
+    public String addTask(@Valid Task task, BindingResult bindingResult, Principal principal, Model model){
         addUserToMDC();
         try {
             if (bindingResult.hasErrors()) {
@@ -82,7 +77,7 @@ public class TaskController extends LoggingController{
     }
 
     @PostMapping("/all-tasks/update")
-    public String updateTask(@Valid Tasks task,
+    public String updateTask(@Valid Task task,
                              BindingResult bindingResult,
                              @RequestParam(defaultValue = "id_asc") String sort,
                              Model model) {
@@ -170,7 +165,7 @@ public class TaskController extends LoggingController{
         try {
             log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
-            List<Tasks> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
+            List<Task> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
             model.addAttribute("tasks", tasks);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("currentSort",sort);

@@ -1,8 +1,8 @@
 package com.site.webapp.service;
 
-import com.site.webapp.models.Tasks;
+import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
-import com.site.webapp.repo.TasksRepository;
+import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,43 +18,43 @@ import java.util.List;
 @Service
 public class TaskService {
     private static final Logger log = LoggerFactory.getLogger(TaskService.class);
-    private final TasksRepository tasksRepository;
+    private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
-    public TaskService(TasksRepository tasksRepository,UserRepository userRepository) {
-        this.tasksRepository = tasksRepository;
+    public TaskService(TaskRepository taskRepository, UserRepository userRepository) {
+        this.taskRepository = taskRepository;
         this.userRepository = userRepository;
     }
 
 
-    public List<Tasks> getAllTasks(String sort, String search) {
+    public List<Task> getAllTasks(String sort, String search) {
         if (search != null && !search.trim().isEmpty()) {
-            return tasksRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(
+            return taskRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(
                     search.trim(), search.trim());
         }
         return getSortedTasks(sort);
     }
 
-    private List<Tasks> getSortedTasks(String sort){
+    private List<Task> getSortedTasks(String sort){
         return switch (sort) {
-            case "deadline" -> tasksRepository.findAllByOrderByDeadlineDesc();
-            case "priority" -> tasksRepository.findAllByOrderByPriorityAsc();
-            case "id_desc" -> tasksRepository.findAllByOrderByIdDesc();
-            case "id_asc" -> tasksRepository.findAllByOrderByIdAsc();
-            default -> tasksRepository.findAllByOrderByIdDesc();
+            case "deadline" -> taskRepository.findAllByOrderByDeadlineDesc();
+            case "priority" -> taskRepository.findAllByOrderByPriorityAsc();
+            case "id_desc" -> taskRepository.findAllByOrderByIdDesc();
+            case "id_asc" -> taskRepository.findAllByOrderByIdAsc();
+            default -> taskRepository.findAllByOrderByIdDesc();
         };
     }
 
     @Transactional
-    public void saveTask(Tasks task) {
-        tasksRepository.save(task);
+    public void saveTask(Task task) {
+        taskRepository.save(task);
         log.info("✅ Задача создана с ID: {}", task.getId());
     }
 
     @Transactional
     public void updateTask(Long id, String title, String priority, Long artistId, LocalDateTime deadline, String comment) {
 
-        Tasks task = tasksRepository.findById(id).orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Задача не найдена"));
 
         task.setTitle(title);
         task.setPriority(priority);
@@ -62,34 +62,34 @@ public class TaskService {
         task.setDeadline(deadline);
         task.setComment(comment);
 
-        tasksRepository.save(task);
+        taskRepository.save(task);
         log.info("Задача id {} успешно обновлена", id);
 
     }
     @Transactional
     public void deleteTask(Long id) {
-        tasksRepository.deleteById(id);
+        taskRepository.deleteById(id);
         log.info("Задача id {} удалена",id);
     }
 
     @Transactional(readOnly = true)
-    public List<Tasks> getSortedFavorites(String email, String sort) {
+    public List<Task> getSortedFavorites(String email, String sort) {
         User user = userRepository.findByEmail(email);
         if (user == null) return new ArrayList<>();
 
-        List<Tasks> favorites = new ArrayList<>(user.getFavouriteTasks());
+        List<Task> favorites = new ArrayList<>(user.getFavouriteTasks());
 
         return switch (sort != null ? sort : "default") {
             case "deadline" -> {
-                favorites.sort(Comparator.comparing(Tasks::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())));
+                favorites.sort(Comparator.comparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())));
                 yield favorites;
             }
             case "priority" -> {
-                favorites.sort(Comparator.comparing(Tasks::getPriority));
+                favorites.sort(Comparator.comparing(Task::getPriority));
                 yield favorites;
             }
             case "recent" -> {
-                favorites.sort(Comparator.comparing(Tasks::getId).reversed());
+                favorites.sort(Comparator.comparing(Task::getId).reversed());
                 yield favorites;
             }
             default -> favorites;
@@ -102,7 +102,7 @@ public class TaskService {
         User user = userRepository.findByEmail(email);
         if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
 
-        Tasks task = tasksRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Задача не найдена"));
         if (user.getFavouriteTasks().contains(task)) {
             user.getFavouriteTasks().remove(task);
             log.info("Пользователь {} удалил задачу {} из избранного", email, taskId);
@@ -111,20 +111,20 @@ public class TaskService {
             log.info("Пользователь {} добавил задачу {} в избранное", email, taskId);
         }
     }
-    public List<Tasks> getAllUserTasks(Long userId, String sort,String search){
+    public List<Task> getAllUserTasks(Long userId, String sort, String search){
         if (search != null && !search.trim().isEmpty()) {
-            return tasksRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(
+            return taskRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(
                     userId,search.trim(),userId,search.trim());
         }
         return getSortedUserTask(userId, sort);
     }
-    private List<Tasks> getSortedUserTask(Long userId,String sort){
+    private List<Task> getSortedUserTask(Long userId, String sort){
         return switch (sort) {
-            case "deadline" -> tasksRepository.findByArtistIdOrderByDeadlineAsc(userId);
-            case "priority" -> tasksRepository.findByArtistIdOrderByPriorityAsc(userId);
-            case "id_desc" -> tasksRepository.findByArtistIdOrderByIdDesc(userId);
-            case "id_asc" -> tasksRepository.findByArtistIdOrderByIdAsc(userId);
-            default -> tasksRepository.findAllByOrderByIdDesc();
+            case "deadline" -> taskRepository.findByArtistIdOrderByDeadlineAsc(userId);
+            case "priority" -> taskRepository.findByArtistIdOrderByPriorityAsc(userId);
+            case "id_desc" -> taskRepository.findByArtistIdOrderByIdDesc(userId);
+            case "id_asc" -> taskRepository.findByArtistIdOrderByIdAsc(userId);
+            default -> taskRepository.findAllByOrderByIdDesc();
         };
     }
 }

@@ -59,12 +59,12 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Set<Tasks> favouriteTasks = new HashSet<>();
+    private Set<Task> favouriteTasks = new HashSet<>();
 
-    public Set<Tasks> getFavouriteTasks() {
+    public Set<Task> getFavouriteTasks() {
         return favouriteTasks;
     }
-    public void setFavouriteTasks(Set<Tasks> favouriteTasks) {
+    public void setFavouriteTasks(Set<Task> favouriteTasks) {
         this.favouriteTasks = favouriteTasks;
     }
     public boolean isTaskFavorite(Long taskId) {
