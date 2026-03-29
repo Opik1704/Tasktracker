@@ -1,5 +1,4 @@
 package com.site.webapp.models;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -11,7 +10,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "tasks")
-public class Tasks {
+public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -34,9 +33,9 @@ public class Tasks {
 
 //    private String status;
 
-public Tasks() {
+public Task() {
 }
-    public Tasks(String title, String priority, Long artistId, LocalDateTime deadline, String comment){
+    public Task(String title, String priority, Long artistId, LocalDateTime deadline, String comment){
         this.title = title;
         this.priority = priority;
         this.artistId = artistId;
@@ -49,7 +48,7 @@ public Tasks() {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Tasks task = (Tasks) o;
+        Task task = (Task) o;
         return Objects.equals(id, task.id); // Сравнение по ID
     }
 

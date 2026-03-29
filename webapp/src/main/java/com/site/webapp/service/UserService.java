@@ -1,25 +1,20 @@
 package com.site.webapp.service;
 
-import com.site.webapp.config.EncoderConfig;
 import com.site.webapp.dto.RegistrationDto;
 import com.site.webapp.models.Role;
-import com.site.webapp.models.Tasks;
+import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.RoleRepository;
-import com.site.webapp.repo.TasksRepository;
+import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
-import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,14 +31,14 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final TasksRepository tasksRepository;
+    private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,RoleRepository roleRepository,TasksRepository tasksRepository,PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, TaskRepository taskRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.tasksRepository = tasksRepository;
+        this.taskRepository = taskRepository;
     }
 
     @Override
@@ -128,7 +123,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public List<Tasks> getFavoriteTasksForUser(String email) {
+    public List<Task> getFavoriteTasksForUser(String email) {
         log.info("Взятие избранных задач для пользователя с email: {}", email);
 
         User user = userRepository.findByEmail(email);
