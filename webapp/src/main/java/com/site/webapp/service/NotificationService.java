@@ -40,4 +40,12 @@ public class NotificationService {
         log.info("Пользователю {} отметил сообщения как прочитанные", user.getEmail());
     }
 
+    public long getUnreadCount(Long userId) {
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
+
+    public List<Notification> getLastNotifications(Long userId) {
+        return notificationRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+    }
+
 }

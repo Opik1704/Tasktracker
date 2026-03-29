@@ -77,12 +77,13 @@
           font-weight: bold !important;
           text-decoration: none !important;
         }
-        .right-head{
-        display:flex;
-        list-style:none;
-        margin:0;
-        padding:0;
-        gap:20px;
+        .right-head {
+            display: flex;
+            align-items: center; /* Центрирует всё по вертикали */
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 25px; /* Расстояние между элементами */
         }
         .right-head a:focus {
             background-color: transparent !important;
@@ -122,17 +123,24 @@
         background-color: #f8f9fa;
         color: #000;
         }
+        .bell-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
         .bell-item .dropdown-menu {
             border: none;
             border-radius: 8px;
             margin-top: 10px !important;
         }
-        .dropdown-menu::-webkit-scrollbar {
-            width: 5px;
-        }
+        .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+            }
         .dropdown-menu::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 10px;
-}
+        }
     </style>
 </div>
