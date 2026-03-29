@@ -16,7 +16,7 @@ public class NotificationController extends LoggingController {
     @Autowired
     private NotificationService notificationService;
 
-        @PostMapping("/notifications/mark-read")
+        @PostMapping("/notifications/mark-all-read")
     public String markAllAsRead(@RequestHeader(value = "referer", required = false) String referer) {
         User user = getCurrentUser();
         if (user != null) {
@@ -26,6 +26,6 @@ public class NotificationController extends LoggingController {
         if (referer != null && !referer.isEmpty()) {
             return "redirect:" + referer;
         }
-        return "redirect:/all-tasks";
+        return "redirect:/";
     }
 }
