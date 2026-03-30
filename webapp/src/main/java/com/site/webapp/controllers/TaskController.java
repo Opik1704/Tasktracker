@@ -7,7 +7,6 @@ import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -30,24 +29,21 @@ public class TaskController extends LoggingController{
     @GetMapping("/all-tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,
                            @RequestParam(required = false) String search,
-                           Principal principal,
                            Model model){
         addUserToMDC();
-        long startTime = System.currentTimeMillis();
         try {
             log.info("Пользователь,запросил список всех задач");
             log.debug("Параметры: sort = {}",sort);
 
             List<Task> tasks = taskService.getAllTasks(sort,search);
+            User currentUser = getCurrentUser();
 
             model.addAttribute("tasks", tasks);
             model.addAttribute("users",userService.allUsers());
             model.addAttribute("currentSort", sort);
             model.addAttribute("search",search);
-            if (principal != null) {
-                User currentUser = userService.findByEmail(principal.getName());
-                model.addAttribute("currentUser", currentUser);
-            }
+            model.addAttribute("currentUser", currentUser);
+
             return "all_tasks";
         }
         finally {
@@ -156,10 +152,10 @@ public class TaskController extends LoggingController{
     }
 
     @GetMapping("/user-tasks")
-    public String userTasks(@AuthenticationPrincipal User currentUser,
-                            @RequestParam(defaultValue = "id_asc") String sort,
+    public String userTasks(@RequestParam(defaultValue = "id_asc") String sort,
                             @RequestParam(required = false) String search,
                             Model model){
+        User currentUser = getCurrentUser();
         if (currentUser == null) return "redirect:/authorization";
         addUserToMDC();
         try {

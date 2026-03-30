@@ -188,10 +188,8 @@
                     <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post">
                         <input type="hidden" name="redirectUrl" value="/user-tasks">
                         <button type="submit" class="favorite-btn" style="background: none; border: none; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">
-                <span th:if="${currentUser != null and currentUser.favouriteTasks.contains(el)}"
-                      style="color: #ffc107;">★</span>
-                            <span th:unless="${currentUser != null and currentUser.favouriteTasks.contains(el)}"
-                                  style="color: #ccc;">☆</span>
+                            <span th:if="${currentUser != null and currentUser.favouriteTasks != null and currentUser.favouriteTasks.contains(el)}" style="color: #ffc107;">★</span>
+                            <span th:unless="${currentUser != null and currentUser.favouriteTasks != null and currentUser.favouriteTasks.contains(el)}" style="color: #ccc;">☆</span>
                         </button>
                     </form>
                 </div>
@@ -204,7 +202,7 @@
                                 data-bs-toggle="modal" data-bs-target="#editTaskModal"
                                 th:data-task-id="${el.id}" th:data-task-title="${el.title}"
                                 th:data-task-priority="${el.priority}"
-                                th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
+                                th:data-task-deadline="${el.deadline != null ?#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm'): ''}"
                                 th:data-task-comment="${el.comment}" onclick="fillEditModal(this)">
                             Редактировать
                         </button>
@@ -216,7 +214,7 @@
 
                     <div class="text-end">
                         <small class="text-muted d-block">Дедлайн:</small>
-                        <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong>
+                        <strong th:text="${el.deadline != null ? #temporals.format(el.deadline, 'dd.MM.yyyy HH:mm') : 'Срок не задан' }"></strong>
                     </div>
                 </div>
             </div>
