@@ -16,7 +16,7 @@ public class NotificationController extends LoggingController {
     @Autowired
     private NotificationService notificationService;
 
-        @PostMapping("/notifications/mark-all-read")
+    @GetMapping("/mark-all-read")
     public String markAllAsRead(@RequestHeader(value = "referer", required = false) String referer) {
         User user = getCurrentUser();
         if (user != null) {
