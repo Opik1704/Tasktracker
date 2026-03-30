@@ -2,7 +2,6 @@ package com.site.webapp.controllers;
 
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
-import com.site.webapp.service.NotificationService;
 import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,9 +26,6 @@ public class TaskController extends LoggingController{
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private NotificationService notificationService;
 
     @GetMapping("/all-tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,
@@ -174,9 +170,6 @@ public class TaskController extends LoggingController{
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("currentSort",sort);
             model.addAttribute("search",search);
-
-            model.addAttribute("notificationsCount", notificationService.getUnreadCount(currentUser.getId()));
-            model.addAttribute("lastNotifications", notificationService.getLastNotifications(currentUser.getId()));
             return "user_tasks";
         }
         finally {
