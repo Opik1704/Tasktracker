@@ -1,18 +1,23 @@
 package com.site.webapp.controllers;
 
 import com.site.webapp.models.User;
+import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public abstract class LoggingController {
+    @Autowired
+    UserRepository userRepository;
     protected final Logger log = LoggerFactory.getLogger(getClass());
     protected User getCurrentUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth != null && auth.getPrincipal() instanceof User){
-            return (User) auth.getPrincipal();
+            String email = auth.getName();
+            return userRepository.findWithFavouriteTasksByEmail(email).orElse(null);
         }
         return null;
     }

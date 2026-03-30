@@ -182,7 +182,7 @@ public class UserService implements UserDetailsService {
         log.debug("Пользователь {}: роли изменены с {} на {}", user.getEmail(), user.getRoles(), newRoles);
         user.setRoles(newRoles);
         userRepository.save(user);
-        log.info("✅ Роли пользователя ID {} обновлены", userId);
+        log.info("Роли пользователя ID {} обновлены", userId);
     }
 
     public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
