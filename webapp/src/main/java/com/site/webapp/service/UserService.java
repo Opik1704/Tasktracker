@@ -23,6 +23,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Service
@@ -197,14 +201,18 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(userId).orElseThrow();
 
         if (file != null && !file.isEmpty()) {
-            File uploadDir = new File(uploadPath + "/avatars");
 
-            if (!uploadDir.exists()) uploadDir.mkdirs();
+            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+            Path avatarsDir = root.resolve("avatars");
 
+            if (!Files.exists(avatarsDir)) {
+                Files.createDirectories(avatarsDir);
+            }
             String uuidFile = UUID.randomUUID().toString();
             String resultFilename = uuidFile + "." + file.getOriginalFilename();
 
-            file.transferTo(new File(uploadDir + "/" + resultFilename));
+            Path filePath = avatarsDir.resolve(resultFilename);
+            Files.copy(file.getInputStream(), filePath,     StandardCopyOption.REPLACE_EXISTING);
 
             user.setOriginalAvatarFileName(file.getOriginalFilename());
             user.setStoredAvatarFileName(resultFilename);

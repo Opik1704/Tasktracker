@@ -184,6 +184,18 @@
         <div th:if="${param.error}" class="alert alert-danger">Ошибка при обновлении данных!</div>
         <div class="profile-info">
             <div class="form-section">
+                <h2>Фото профиля</h2>
+                <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <img th:if="${user.storedAvatarFileName != null}"
+                             th:src="@{'/uploads/avatars/' + ${user.storedAvatarFileName}}"
+                             style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                        <input type="file" name="avatar" class="form-control" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="save-btn">Обновить фото</button>
+                </form>
+            </div>
+            <div class="form-section">
                 <h2>Редактировать данные</h2>
                 <form th:action="@{/profile/update-info}" method="post">
                     <div class="form-group">
