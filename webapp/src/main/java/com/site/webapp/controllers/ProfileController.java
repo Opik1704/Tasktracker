@@ -89,9 +89,10 @@ public class ProfileController extends LoggingController {
             userService.updateAvatar(currentUser.getId(), file);
             redirectAttributes.addFlashAttribute("success", "Аватарка успешно обновлена!");
             return "redirect:/profile";
+
         }catch (Exception e) {
             log.error("Ошибка при обновлении аватарки для {}: {}", currentUser.getEmail(), e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Не удалось загрузить файл");
+            redirectAttributes.addFlashAttribute("error", "Ошибка при сохранении файла: " + e.getMessage());
             return "redirect:/profile";
         }finally {
             clearMDC();

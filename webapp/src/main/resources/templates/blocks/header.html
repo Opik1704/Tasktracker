@@ -36,6 +36,17 @@
                     </ul>
                 </li>
                 <li><a href="#"> + (новая задача проект)</a></li>
+                <div class="user-profile-header" style="display: flex; align-items: center; gap: 10px;">
+                    <a th:href="@{/profile}">
+                        <img th:if="${userAvatar != null}"
+                             th:src="@{'/uploads/avatars/' + ${userAvatar}}"
+                             class="avatar-circle">
+
+                        <i th:unless="${userAvatar != null}"
+                           class="bi bi-person-circle"
+                           style="font-size: 2rem; color: white;"></i>
+                    </a>
+                </div>
                 <li><a href="profile"> Профиль </a></li>
             </ul>
         </nav>
