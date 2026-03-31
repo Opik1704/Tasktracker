@@ -12,13 +12,17 @@ import jakarta.persistence.PersistenceContext;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -183,6 +187,31 @@ public class UserService implements UserDetailsService {
         user.setRoles(newRoles);
         userRepository.save(user);
         log.info("Роли пользователя ID {} обновлены", userId);
+    }
+
+    @Value("${app.upload.dir}")
+    private String uploadPath;
+
+    @Transactional
+    public void updateAvatar(Long userId, MultipartFile file) throws IOException {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        if (file != null && !file.isEmpty()) {
+            File uploadDir = new File(uploadPath + "/avatars");
+
+            if (!uploadDir.exists()) uploadDir.mkdirs();
+
+            String uuidFile = UUID.randomUUID().toString();
+            String resultFilename = uuidFile + "." + file.getOriginalFilename();
+
+            file.transferTo(new File(uploadDir + "/" + resultFilename));
+
+            user.setOriginalAvatarFileName(file.getOriginalFilename());
+            user.setStoredAvatarFileName(resultFilename);
+
+            userRepository.save(user);
+        }
+
     }
 
     public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){

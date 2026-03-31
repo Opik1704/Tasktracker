@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/profile")
@@ -66,6 +70,30 @@ public class ProfileController extends LoggingController {
                 return "redirect:/profile?" + result;
             }
         } finally {
+            clearMDC();
+        }
+    }
+
+    @PostMapping("/update-avatar")
+    public String updateAvatar(@AuthenticationPrincipal User currentUser,
+                               @RequestParam("avatar") MultipartFile file,
+                               RedirectAttributes redirectAttributes){
+        addUserToMDC();
+        try{
+            log.info("Пользователь {} обновляет аватарку", currentUser.getEmail());
+            if (file.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Файл не выбран");
+                return "redirect:/profile";
+            }
+
+            userService.updateAvatar(currentUser.getId(), file);
+            redirectAttributes.addFlashAttribute("success", "Аватарка успешно обновлена!");
+            return "redirect:/profile";
+        }catch (Exception e) {
+            log.error("Ошибка при обновлении аватарки для {}: {}", currentUser.getEmail(), e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Не удалось загрузить файл");
+            return "redirect:/profile";
+        }finally {
             clearMDC();
         }
     }
