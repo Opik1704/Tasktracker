@@ -5,11 +5,14 @@ services:
     container_name: taskmanager-app
     ports:
       - "1024:1024"
+    volumes:
+      - ./task-data/uploads:/app/uploads_tasks
     environment:
       DB_URL: ${DB_URL}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       PORT: 1024
+      APP_UPLOAD_DIR: /app/uploads_tasks
     depends_on:
       - postgres
     restart: always

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "tasks")
@@ -19,10 +20,13 @@ public class Task {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
     @NotBlank(message = "Укажите приоритет")
     private String priority;
 
     private Long artistId;
+
+    private Long ownerId;
 
     @Future(message = "Дедлайн не может быть в прошлом")
     @NotNull(message = "Дата дедлайна обязательна")
@@ -31,17 +35,37 @@ public class Task {
     @Size(max = 500, message = "Комментарий слишком длинный")
     private String comment;
 
-//    private String status;
+    @Column(length = 255)
+    private String originalFileName;
+
+    @Column(length = 255, unique = true)
+    private String storedFileName;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskStatus status = TaskStatus.NEW;
+
+    public enum TaskStatus {
+        NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
+    }
 
 public Task() {
 }
-    public Task(String title, String priority, Long artistId, LocalDateTime deadline, String comment){
+    public Task(String title, String priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment,String originalFileName,String storedFileName){
         this.title = title;
         this.priority = priority;
         this.artistId = artistId;
+        this.ownerId = ownerId;
         this.deadline = deadline;
         this.comment = comment;
-//        this.status = status;
+        this.status = status;
+        this.originalFileName = originalFileName;
+        this.storedFileName = storedFileName;
     }
 
     @Override
@@ -49,7 +73,7 @@ public Task() {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return Objects.equals(id, task.id); // Сравнение по ID
+        return Objects.equals(id, task.id);
     }
 
     @Override
@@ -90,8 +114,43 @@ public Task() {
     public void setComment(String comment) {
         this.comment = comment;
     }
+    public Long getOwnerId() {
+        return ownerId;
+    }
 
-//    public void setStatus(String status){this.status=status;}
-//    public String getStatus(){return status;}
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
 
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
+    public String getStoredFileName() {
+        return storedFileName;
+    }
+
+    public void setStoredFileName(String storedFileName) {
+        this.storedFileName = storedFileName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
 }

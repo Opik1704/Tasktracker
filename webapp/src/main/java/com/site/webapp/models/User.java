@@ -32,6 +32,12 @@ public class User implements UserDetails {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @Column(length = 255)
+    private String originalAvatarFileName;
+
+    @Column(length = 255, unique = true)
+    private String storedAvatarFileName;
+
     @NotBlank(message = "Email обязателен")
     @Email(message = "Введите корректный email")
     @Column(unique = true, nullable = false)
@@ -67,17 +73,20 @@ public class User implements UserDetails {
     public void setFavouriteTasks(Set<Task> favouriteTasks) {
         this.favouriteTasks = favouriteTasks;
     }
+
     public boolean isTaskFavorite(Long taskId) {
         return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
     }
 
     public User() {
     }
-    public User(String firstName, String lastName, String email, String password) {
+    public User(String firstName, String lastName, String email, String password,String originalAvatarFileName,String storedAvatarFileName) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+        this.originalAvatarFileName = originalAvatarFileName;
+        this.storedAvatarFileName = storedAvatarFileName;
     }
 
     public Long getId() {
@@ -106,6 +115,22 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    public String getOriginalAvatarFileName() {
+        return originalAvatarFileName;
+    }
+
+    public void setOriginalAvatarFileName(String originalAvatarFileName) {
+        this.originalAvatarFileName = originalAvatarFileName;
+    }
+
+    public String getStoredAvatarFileName() {
+        return storedAvatarFileName;
+    }
+
+    public void setStoredAvatarFileName(String storedAvatarFileName) {
+        this.storedAvatarFileName = storedAvatarFileName;
+    }
+
     @Override
     public boolean isAccountNonLocked() {
         return true;
@@ -128,11 +153,13 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getRoles();
     }
+
     @Override
     @Nonnull
     public String getUsername() {
         return getEmail();
     }
+
     @Override
     public String getPassword() {
         return password;
