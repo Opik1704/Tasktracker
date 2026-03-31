@@ -24,14 +24,19 @@ public class NotificationService {
 
 
     public void send(User user,String message){
-        if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
+        if (user == null) {
+            log.warn("Попытка отправить уведомление null пользователю");
+            return;
+        }
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setMessage(message);
         notification.setCreatedAt(LocalDateTime.now());
+
         notificationRepository.save(notification);
         log.info("Пользователю {} отправлено сообщение {}", user.getEmail(),message);
     }
+
     public void markAllAsRead(User user) {
         if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
         List<Notification> unread = notificationRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());

@@ -55,6 +55,8 @@ public class TaskController extends LoggingController{
     public String addTask(@Valid Task task, BindingResult bindingResult, Principal principal, Model model){
         addUserToMDC();
         try {
+            User currentUser = getCurrentUser();
+
             if (bindingResult.hasErrors()) {
                 log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
                 model.addAttribute("tasks", taskService.getAllTasks("id", null));
@@ -64,7 +66,7 @@ public class TaskController extends LoggingController{
                 }
                 return "all_tasks";
             }
-            taskService.saveTask(task);
+            taskService.saveTask(task,currentUser);
             log.info("Задача успешно создана");
             return "redirect:/all-tasks";
         }finally {
@@ -79,11 +81,12 @@ public class TaskController extends LoggingController{
                              Model model) {
         addUserToMDC();
         try {
+            User currentUser = getCurrentUser();
             if (bindingResult.hasErrors()) {
                 log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
                 return "redirect:/all-tasks?sort=" + sort + "&error=validation";
             }
-            taskService.updateTask(task.getId(), task.getTitle(), task.getPriority(),task.getArtistId(), task.getDeadline(), task.getComment());
+            taskService.updateTask(task,currentUser);
             return "redirect:/all-tasks?sort=" + sort;
         }
         catch (Exception e){
@@ -99,8 +102,9 @@ public class TaskController extends LoggingController{
     public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
         addUserToMDC();
         try {
+            User currentUser = getCurrentUser();
             log.info("Удаление задачи");
-            taskService.deleteTask(id);
+            taskService.deleteTask(id,currentUser);
             log.info("Задача id {} удалена",id);
             return "redirect:/all-tasks?sort=" + sort;
         }
