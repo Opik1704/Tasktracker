@@ -40,12 +40,29 @@ public class TaskService {
     }
 
     private List<Task> getSortedTasks(String sort){
+        List<Task> tasks = (List<Task>) taskRepository.findAll();
+
         return switch (sort) {
-            case "deadline" -> taskRepository.findAllByOrderByDeadlineDesc();
-            case "priority" -> taskRepository.findAllByOrderByPriorityAsc();
-            case "id_desc" -> taskRepository.findAllByOrderByIdDesc();
-            case "id_asc" -> taskRepository.findAllByOrderByIdAsc();
-            default -> taskRepository.findAllByOrderByIdDesc();
+            case "status_asc" -> {
+                tasks.sort(Comparator.comparing(Task::getStatus));
+                yield tasks;
+            }
+            case "status_desc" -> {
+                tasks.sort(Comparator.comparing(Task::getStatus).reversed());
+                yield tasks;
+            }
+            case "deadline" -> {
+                tasks.sort(Comparator.comparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())));
+                yield tasks;
+            }
+            case "priority" -> {
+                tasks.sort(Comparator.comparing(Task::getPriority));
+                yield tasks;
+            }
+            default -> {
+                tasks.sort(Comparator.comparing(Task::getId).reversed());
+                yield tasks;
+            }
         };
     }
 
@@ -189,7 +206,17 @@ public class TaskService {
     }
 
     private List<Task> getSortedUserTask(Long userId, String sort){
+        List<Task> tasks = taskRepository.findByArtistId(userId);
+
         return switch (sort) {
+            case "status_asc" -> {
+                tasks.sort(Comparator.comparing(Task::getStatus));
+                yield tasks;
+            }
+            case "status_desc" -> {
+                tasks.sort(Comparator.comparing(Task::getStatus).reversed());
+                yield tasks;
+            }
             case "deadline" -> taskRepository.findByArtistIdOrderByDeadlineAsc(userId);
             case "priority" -> taskRepository.findByArtistIdOrderByPriorityAsc(userId);
             case "id_desc" -> taskRepository.findByArtistIdOrderByIdDesc(userId);
