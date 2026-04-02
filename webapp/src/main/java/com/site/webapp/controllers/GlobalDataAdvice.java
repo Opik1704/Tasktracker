@@ -26,7 +26,15 @@ public class GlobalDataAdvice extends LoggingController{
             User currentUser = getCurrentUser();
             if (currentUser != null) {
                 log.debug("Наполнение глобальной модели для пользователя: {}", currentUser.getEmail());
+
+                User user = userRepository.findById(currentUser.getId()).orElse(null);
                 long unreadCount = notificationRepository.countByUserIdAndReadFalse(currentUser.getId());
+
+                if (user != null) {
+                    model.addAttribute("userAvatar", user.getStoredAvatarFileName());
+                    model.addAttribute("currentUserName", user.getFirstName());
+                }
+
                 model.addAttribute("notificationsCount", unreadCount);
 
                 List<Notification> lastNotifications = notificationRepository.findAllByUserIdOrderByCreatedAtDesc(currentUser.getId());

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Профиль</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -147,6 +149,58 @@
         }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .avatar-header-section
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0 40px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+        }
+
+        .avatar-wrapper {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar-big {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .default-avatar-icon {
+            font-size: 10rem;
+            color: #ccc;
+        }
+
+        /* Кнопка "Изменить" */
+        .change-avatar-btn {
+            background: #f0f2f5;
+            color: #444;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid #ddd;
+        }
+
+        .change-avatar-btn:hover {
+            background: #e4e6e9;
+            border-color: #ccc;
+        }
     </style>
 </head>
 
@@ -157,6 +211,21 @@
 <div class="main-content">
     <div class="profile-container">
         <h1>Профиль пользователя</h1>
+        <div class="avatar-header-section">
+            <div class="avatar-wrapper">
+                <img th:if="${user.storedAvatarFileName != null}"
+                     th:src="@{'/uploads/avatars/' + ${user.storedAvatarFileName}}"
+                     class="profile-avatar-big">
+
+                <i th:unless="${user.storedAvatarFileName != null}"
+                   class="bi bi-person-circle default-avatar-icon"></i>
+            </div>
+
+            <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" class="avatar-form">
+                <label for="avatar-input" class="change-avatar-btn">Изменить аватар</label>
+                <input type="file" id="avatar-input" name="avatar" accept="image/*" onchange="this.form.submit()" style="display: none;">
+            </form>
+        </div>
         <div class="profile-info">
             <div th:if="${user != null}" class="data">
                 <div class="info-item">
@@ -183,18 +252,18 @@
         <div th:if="${param.success}" class="alert alert-success">Данные успешно обновлены!</div>
         <div th:if="${param.error}" class="alert alert-danger">Ошибка при обновлении данных!</div>
         <div class="profile-info">
-            <div class="form-section">
-                <h2>Фото профиля</h2>
-                <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <img th:if="${user.storedAvatarFileName != null}"
-                             th:src="@{'/uploads/avatars/' + ${user.storedAvatarFileName}}"
-                             style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
-                        <input type="file" name="avatar" class="form-control" accept="image/*" required>
-                    </div>
-                    <button type="submit" class="save-btn">Обновить фото</button>
-                </form>
-            </div>
+<!--            <div class="form-section">-->
+<!--                <h2>Фото профиля</h2>-->
+<!--                <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data">-->
+<!--                    <div class="form-group">-->
+<!--                        <img th:if="${user.storedAvatarFileName != null}"-->
+<!--                             th:src="@{'/uploads/avatars/' + ${user.storedAvatarFileName}}"-->
+<!--                             style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">-->
+<!--                        <input type="file" name="avatar" class="form-control" accept="image/*" required>-->
+<!--                    </div>-->
+<!--                    <button type="submit" class="save-btn">Обновить фото</button>-->
+<!--                </form>-->
+<!--            </div>-->
             <div class="form-section">
                 <h2>Редактировать данные</h2>
                 <form th:action="@{/profile/update-info}" method="post">

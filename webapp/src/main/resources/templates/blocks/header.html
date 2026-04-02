@@ -172,5 +172,15 @@
         .dropdown-menu li {
             display: block; /* Сбрасываем flex, который мы дали в .right-head li */
         }
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Делает круг */
+            object-fit: cover;  /* Обрезает края, чтобы не было сплюснуто */
+            border: 2px solid white;
+        }
+        .user-profile-header a:hover {
+            background-color: transparent !important; /* Убираем серый фон */
+        }
     </style>
 </div>
