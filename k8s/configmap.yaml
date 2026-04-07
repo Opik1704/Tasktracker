@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskmanager-config
+data:
+  DB_URL: "jdbc:postgresql://postgres-service:5432/tasks"
+  DB_USER: "postgres"
+  PORT: "1024"
