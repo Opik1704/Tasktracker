@@ -25,6 +25,8 @@ logs/
 .env
 *.env
 application-secret.properties
+k8s/secrets.yaml
+secrets.yaml
 
 ### IntelliJ IDEA ###
 .idea
