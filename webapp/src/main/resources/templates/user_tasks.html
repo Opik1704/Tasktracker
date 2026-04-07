@@ -124,7 +124,51 @@
             transform: translateY(-5px);
             color: white;
         }
+        /* --- Стили для бейджей статусов (добавить в style) --- */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px; /* Скругленные края (pill) */
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase; /* Все буквы заглавные */
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            white-space: nowrap;
+        }
 
+        /* Цвета для каждого статуса */
+        .status-new {
+            background-color: #e0f2fe; /* Светло-синий */
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .status-in_progress {
+            background-color: #fffbeb; /* Светло-желтый */
+            color: #a16207;
+            border: 1px solid #fef3c7;
+        }
+
+        .status-testing {
+            background-color: #ede9fe; /* Светло-фиолетовый */
+            color: #6d28d9;
+            border: 1px solid #ddd6fe;
+        }
+
+        .status-review {
+            background-color: #ffedfa; /* Светло-розовый */
+            color: #be185d;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-completed {
+            background-color: #dcfce7; /* Светло-зеленый */
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
         /* Чтобы скролл был плавным, а не резким прыжком */
         html {
             scroll-behavior: smooth;
@@ -154,6 +198,8 @@
                     <a th:href="@{/user-tasks(sort='id_asc')}" th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">Старые</a>
                     <a th:href="@{/user-tasks(sort='deadline')}" th:classappend="${currentSort == 'deadline'} ? 'active' : ''">Дедлайн</a>
                     <a th:href="@{/user-tasks(sort='priority')}" th:classappend="${currentSort == 'priority'} ? 'active' : ''">Приоритет</a>
+                    <a th:href="@{/user-tasks(sort='status_asc')}"th:classappend="${currentSort == 'status_asc'} ? 'active' : ''"> Статус (Новые)</a>
+                    <a th:href="@{/user-tasks(sort='status_desc')}" th:classappend="${currentSort == 'status_desc'} ? 'active' : ''">Статус (Завершенные)</a>
                 </div>
             </div>
         </div>
@@ -177,19 +223,27 @@
 
         <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card shadow-sm mb-3">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <h2 class="card-title mb-0" th:text="${el.title}"></h2>
-                        <h6 class="card-subtitle mb-2 mt-1" th:text="${el.priority}"
-                            th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <h2 class="card-title mb-0" th:text="${el.title}" style="margin-right: 0 !important;"></h2>
+
+                            <span class="status-badge"
+                                  th:classappend="'status-' + ${#strings.toLowerCase(el.status)}"
+                                  th:text="${el.status}">
+            </span>
+                        </div>
+
+                        <h6 class="card-subtitle mb-2" th:text="${el.priority}"
+                            th:classappend="'priority-' + ${#strings.toLowerCase(el.priority)}"
+                            style="margin-top: 0 !important;">
                         </h6>
                     </div>
 
-                    <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post">
-                        <input type="hidden" name="redirectUrl" value="/user-tasks">
-                        <button type="submit" class="favorite-btn" style="background: none; border: none; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">
-                            <span th:if="${currentUser != null and currentUser.favouriteTasks != null and currentUser.favouriteTasks.contains(el)}" style="color: #ffc107;">★</span>
-                            <span th:unless="${currentUser != null and currentUser.favouriteTasks != null and currentUser.favouriteTasks.contains(el)}" style="color: #ccc;">☆</span>
+                    <form th:action="@{/favorites/toggle/{id}(id=${el.id})}" method="post"
+                          th:onsubmit="return confirm('Убрать задачу «' + [[${el.title}]] + '» из избранного?');">
+                        <button type="submit" class="favorite-btn" style="background: none; border: none; font-size: 2.2rem; cursor: pointer; padding: 0; line-height: 1; color: #ffc107;">
+                            ★
                         </button>
                     </form>
                 </div>
