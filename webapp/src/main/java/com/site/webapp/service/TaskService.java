@@ -243,7 +243,7 @@ public class TaskService {
             case "priority" -> taskRepository.findByArtistIdOrderByPriorityAsc(userId);
             case "id_desc" -> taskRepository.findByArtistIdOrderByIdDesc(userId);
             case "id_asc" -> taskRepository.findByArtistIdOrderByIdAsc(userId);
-            default -> taskRepository.findAllByOrderByIdDesc();
+            default -> taskRepository.findByArtistIdOrderByIdDesc(userId);
         };
     }
 }

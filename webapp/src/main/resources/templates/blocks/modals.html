@@ -37,6 +37,7 @@
             <div class="modal-body">
                 <form th:action="@{/all-tasks/update}" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editTaskId">
+                    <input type="hidden" name="returnUrl" th:value="${#vars['jakarta.servlet.forward.request_uri'] ?: #vars['jakarta.servlet.error.request_uri'] ?: #request.requestURI ?: '/all-tasks'}">
 
                     <div class="mb-3">
                         <label class="form-label">Название</label>
@@ -58,8 +59,19 @@
                         <select name="artistId" id="editTaskArtist" class="form-select" required>
                             <option th:each="user : ${users}"
                                     th:value="${user.id}"
-                                    th:text="${user.firstName + ' ' + user.lastName}">
+                                    th:text="${(user.firstName ?: '') + ' ' + (user.lastName ?: '')}">
                             </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Статус</label>
+                        <select name="status" id="editTaskStatus" class="form-select">
+                            <option value="NEW">Новая</option>
+                            <option value="IN_PROGRESS">В работе</option>
+                            <option value="TESTING">Тестирование</option>
+                            <option value="REVIEW">Ревью</option>
+                            <option value="COMPLETED">Завершена</option>
                         </select>
                     </div>
 

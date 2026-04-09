@@ -463,6 +463,9 @@
         </span>
           <span>Дедлайн: <strong th:text="${#temporals.format(el.deadline, 'dd.MM.yyyy HH:mm')}"></strong></span>
         </div>
+        <div th:if="${el.comment != null and el.comment != ''}" class="mb-3">
+          <p class="text-secondary mb-0" th:text="${el.comment}"></p>
+        </div>
 
         <div class="btn-group-container d-flex gap-2">
           <button type="button"
@@ -472,9 +475,10 @@
                   th:data-task-id="${el.id}"
                   th:data-task-title="${el.title}"
                   th:data-task-priority="${el.priority}"
+                  th:data-task-status="${el.status}"
                   th:data-task-artist="${el.artistId}"
-                  th:data-task-deadline="${#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm')}"
-                  th:data-task-comment="${el.comment}"
+                  th:data-task-deadline="${el.deadline != null ? #temporals.format(el.deadline, &quot;yyyy-MM-dd'T'HH:mm&quot;) : ''}"
+                  th:data-task-comment="${el.comment} ?: ''"
                   th:data-current-sort="${currentSort}"
                   onclick="fillEditModal(this)">
             Редактировать
@@ -526,11 +530,14 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Дедлайн</label>
-            <input type="datetime-local" name="deadline" min="2024-01-01T00:00" max="2099-12-31T23:59" required>          </div>
+            <input type="datetime-local" name="deadline" min="2024-01-01T00:00" max="2099-12-31T23:59" required>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Комментарий</label>
             <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу"></textarea>
           </div>
+
           <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
       </div>
@@ -550,7 +557,20 @@
       document.getElementById('editTaskArtist').value = button.getAttribute('data-task-artist');
       document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
       document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
+      const statusField = document.getElementById('editTaskStatus');
+      if (statusField) {
+          statusField.value = button.getAttribute('data-task-status') || 'NEW';
+      }
+      clearEditFile();
   }
+
+  function clearEditFile() {
+      const fileInput = document.getElementById('edit-file-input');
+      const preview = document.getElementById('edit-preview');
+      if (fileInput) fileInput.value = '';
+      if (preview) preview.classList.add('d-none');
+  }
+
     const mybutton = document.getElementById("backToTopBtn");
 
     window.onscroll = function() {
@@ -568,18 +588,10 @@
         });
     }
 
-    function clearEditFile() {
-    const fileInput = document.getElementById('edit-file-input');
-    const preview = document.getElementById('edit-preview');
-    if (fileInput) fileInput.value = '';
-    if (preview) preview.classList.add('d-none');
-}
-
-// Слушатель вставки (Ctrl + V)
-document.addEventListener('paste', (event) => {
-    // Проверяем, открыта ли модалка в данный момент
+  document.addEventListener('paste', (event) => {
     const modal = document.getElementById('editTaskModal');
-    if (!modal.classList.contains('show')) return;
+    if (!modal || !modal.classList.contains('show')) return;
+
 
     const items = (event.clipboardData || event.originalEvent.clipboardData).items;
     for (const item of items) {

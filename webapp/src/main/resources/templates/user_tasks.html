@@ -217,7 +217,7 @@
 
         <div th:if="${#lists.isEmpty(tasks)}"
              style="text-align: center; padding: 50px; background: white; border-radius: 8px; border: 1px dashed #ccc; margin-top: 20px; width: 100%;">
-            <h3 style="color: #6c757d;">🔍 Задача не найдена</h3>
+            <h3 style="color: #6c757d;"> Задача не найдена</h3>
             <p style="color: #999;">Попробуйте изменить запрос или <a th:href="@{/user-tasks}">сбросить поиск</a></p>
         </div>
 
@@ -231,7 +231,7 @@
                             <span class="status-badge"
                                   th:classappend="'status-' + ${#strings.toLowerCase(el.status)}"
                                   th:text="${el.status}">
-            </span>
+                            </span>
                         </div>
 
                         <h6 class="card-subtitle mb-2" th:text="${el.priority}"
@@ -257,7 +257,9 @@
                                 th:data-task-id="${el.id}" th:data-task-title="${el.title}"
                                 th:data-task-priority="${el.priority}"
                                 th:data-task-deadline="${el.deadline != null ?#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm'): ''}"
-                                th:data-task-comment="${el.comment}" onclick="fillEditModal(this)">
+                                th:data-task-comment="${el.comment}" onclick="fillEditModal(this)"
+                                th:data-task-artist="${el.artistId}"
+                                th:data-task-status="${el.status}">
                             Редактировать
                         </button>
                         <form th:action="@{/user-tasks/delete/{id}(id=${el.id})}" method="post"
@@ -282,12 +284,33 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function fillEditModal(button) {
+        clearEditFile();
+
         document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
         document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');
         document.getElementById('editTaskPriority').value = button.getAttribute('data-task-priority');
+
+        const artistId = button.getAttribute('data-task-artist');
+        if (artistId) {
+            document.getElementById('editTaskArtist').value = artistId;
+        }
+
         document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
-        document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
+        document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || ''
+
+        const statusField = document.getElementById('editTaskStatus');
+        if (statusField) {
+            statusField.value = button.getAttribute('data-task-status') || 'NEW';
+        };
     }
+
+    function clearEditFile() {
+        const fileInput = document.getElementById('edit-file-input');
+        const preview = document.getElementById('edit-preview');
+        if (fileInput) fileInput.value = '';
+        if (preview) preview.classList.add('d-none');
+    }
+
     const mybutton = document.getElementById("backToTopBtn");
     window.onscroll = function() {
         if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
@@ -296,24 +319,17 @@
             mybutton.style.display = "none";
         }
     };
+
     function scrollToTop() {
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
     }
-    function clearEditFile() {
-    const fileInput = document.getElementById('edit-file-input');
-    const preview = document.getElementById('edit-preview');
-    if (fileInput) fileInput.value = '';
-    if (preview) preview.classList.add('d-none');
-}
 
     document.addEventListener('paste', (event) => {
-        // Проверяем, открыта ли модалка в данный момент
         const modal = document.getElementById('editTaskModal');
         if (!modal.classList.contains('show')) return;
-
         const items = (event.clipboardData || event.originalEvent.clipboardData).items;
         for (const item of items) {
             if (item.kind === 'file') {

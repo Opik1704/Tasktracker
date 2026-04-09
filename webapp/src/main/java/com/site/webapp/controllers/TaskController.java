@@ -46,6 +46,7 @@ public class TaskController extends LoggingController{
             model.addAttribute("currentSort", sort);
             model.addAttribute("search",search);
             model.addAttribute("currentUser", currentUser);
+            model.addAttribute("users", userService.allUsers());
 
             return "all_tasks";
         }
@@ -93,16 +94,19 @@ public class TaskController extends LoggingController{
     @PostMapping("/all-tasks/update")
     public String updateTask(@Valid Task task,
                              BindingResult bindingResult,
+                             @RequestParam(required = false) String returnUrl,
                              @RequestParam(value = "file", required = false) MultipartFile file,
                              @RequestParam(defaultValue = "id_asc") String sort,
-                             Model model) {
+                             Model model) throws IOException {
         addUserToMDC();
+        String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
         try {
-            User currentUser = getCurrentUser();
             if (bindingResult.hasErrors()) {
                 log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
-                return "redirect:/all-tasks?sort=" + sort + "&error=validation";
+                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
             }
+
+            User currentUser = getCurrentUser();
 
             String originalName = null;
             String storedName = null;
@@ -113,11 +117,12 @@ public class TaskController extends LoggingController{
             }
 
             taskService.updateTask(task, originalName, storedName, currentUser);
-            return "redirect:/all-tasks?sort=" + sort;
+
+            return "redirect:" + finalRedirect;
         }
         catch (Exception e){
             log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
-            return "redirect:/all-tasks?sort=" + sort + "&error=true";
+            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
         }
         finally {
             clearMDC();
