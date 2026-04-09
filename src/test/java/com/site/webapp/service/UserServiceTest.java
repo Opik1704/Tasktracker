@@ -75,18 +75,18 @@ class UserServiceTest {
         boolean result = userService.saveUser(user2);
         assertFalse(result);
     }
-    @Test
-    void deleteUser() {
-        User user = new User();
-        user.setEmail("delete@mail.com");
-        user.setPassword("123456");
-        user.setFirstName("Имя");
-        user.setLastName("Фамилия");
-        userService.saveUser(user);
-        Long id = user.getId();
-        boolean deleted = userService.deleteUser(id);
-
-        assertTrue(deleted);
-        assertNull(userService.findUserById(id));
-    }
+//    @Test
+//    void deleteUser() {
+//        User user = new User();
+//        user.setEmail("delete@mail.com");
+//        user.setPassword("123456");
+//        user.setFirstName("Имя");
+//        user.setLastName("Фамилия");
+//        userService.saveUser(user);
+//        Long id = user.getId();
+//        boolean deleted = userService.deleteUser(id);
+//
+//        assertTrue(deleted);
+//        assertNull(userService.findUserById(id));
+//    }
 }

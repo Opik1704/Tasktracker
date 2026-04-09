@@ -25,6 +25,8 @@ logs/
 .env
 *.env
 application-secret.properties
+k8s/secrets.yaml
+secrets.yaml
 
 ### IntelliJ IDEA ###
 .idea
@@ -41,6 +43,7 @@ application-secret.properties
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+target/
 
 ### System files ###
 .DS_Store
