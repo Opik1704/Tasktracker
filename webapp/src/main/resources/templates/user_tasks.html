@@ -302,6 +302,46 @@
             behavior: 'smooth'
         });
     }
+    function clearEditFile() {
+    const fileInput = document.getElementById('edit-file-input');
+    const preview = document.getElementById('edit-preview');
+    if (fileInput) fileInput.value = '';
+    if (preview) preview.classList.add('d-none');
+}
+
+    document.addEventListener('paste', (event) => {
+        // Проверяем, открыта ли модалка в данный момент
+        const modal = document.getElementById('editTaskModal');
+        if (!modal.classList.contains('show')) return;
+
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (const item of items) {
+            if (item.kind === 'file') {
+                const blob = item.getAsFile();
+                handleFileSelection(blob, 'edit');
+            }
+        }
+    });
+
+    function handleFileSelection(file, type) {
+        const fileInput = document.getElementById(type + '-file-input');
+        const preview = document.getElementById(type + '-preview');
+        const previewImg = document.getElementById(type + '-preview-img');
+        const fileName = document.getElementById(type + '-file-name');
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+
+        fileName.innerText = file.name || "clipboard_image.png";
+        preview.classList.remove('d-none');
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => previewImg.src = e.target.result;
+            reader.readAsDataURL(file);
+        }
+    }
 </script>
 
 </body>

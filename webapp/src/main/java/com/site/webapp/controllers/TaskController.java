@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 public class TaskController extends LoggingController{
@@ -52,7 +55,11 @@ public class TaskController extends LoggingController{
     }
 
     @PostMapping("/all-tasks")
-    public String addTask(@Valid Task task, BindingResult bindingResult, Principal principal, Model model){
+    public String addTask(@Valid Task task,
+                          BindingResult bindingResult,
+                          @RequestParam("file") MultipartFile file,
+                          Principal principal,
+                          Model model) throws IOException {
         addUserToMDC();
         try {
             User currentUser = getCurrentUser();
@@ -66,6 +73,15 @@ public class TaskController extends LoggingController{
                 }
                 return "all_tasks";
             }
+            if (!file.isEmpty()) {
+                String storedName = taskService.saveFile(file);
+                task.setOriginalFileName(file.getOriginalFilename());
+                task.setStoredFileName(storedName);
+            }
+
+            task.setOwnerId(currentUser.getId());
+            task.setStatus(Task.TaskStatus.NEW);
+
             taskService.saveTask(task,currentUser);
             log.info("Задача успешно создана");
             return "redirect:/all-tasks";
@@ -77,6 +93,7 @@ public class TaskController extends LoggingController{
     @PostMapping("/all-tasks/update")
     public String updateTask(@Valid Task task,
                              BindingResult bindingResult,
+                             @RequestParam(value = "file", required = false) MultipartFile file,
                              @RequestParam(defaultValue = "id_asc") String sort,
                              Model model) {
         addUserToMDC();
@@ -86,7 +103,16 @@ public class TaskController extends LoggingController{
                 log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
                 return "redirect:/all-tasks?sort=" + sort + "&error=validation";
             }
-            taskService.updateTask(task,currentUser);
+
+            String originalName = null;
+            String storedName = null;
+
+            if (file != null && !file.isEmpty()) {
+                storedName = taskService.saveFile(file);
+                originalName = file.getOriginalFilename();
+            }
+
+            taskService.updateTask(task, originalName, storedName, currentUser);
             return "redirect:/all-tasks?sort=" + sort;
         }
         catch (Exception e){
@@ -166,10 +192,13 @@ public class TaskController extends LoggingController{
             log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
             List<Task> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
+            List<User> allUsers = userService.allUsers();
+
             model.addAttribute("tasks", tasks);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("currentSort",sort);
             model.addAttribute("search",search);
+            model.addAttribute("users", allUsers);
             return "user_tasks";
         }
         finally {
