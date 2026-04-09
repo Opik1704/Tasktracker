@@ -11,6 +11,12 @@ import java.util.List;
 public interface TaskRepository extends CrudRepository<Task,Long> {
     List<Task> findByArtistId(Long artistId);
 
+    List<Task> findByStatus(Task.TaskStatus status);
+    List<Task> findByArtistIdAndStatus(Long artistId, Task.TaskStatus status);
+
+    List<Task> findAllByOrderByCreatedAtDesc();
+    List<Task> findByArtistIdOrderByCreatedAtDesc(Long artistId);
+
     List<Task> findAllByOrderByIdAsc();
     List<Task> findAllByOrderByIdDesc();
     List<Task> findAllByOrderByDeadlineDesc();

@@ -6,15 +6,16 @@ import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class TaskService {
@@ -82,9 +83,11 @@ public class TaskService {
         log.info("Задача создана с ID: {} пользователем {}", task.getId(), author);
     }
 
+    @Value("${upload.path}")
+    private String uploadPath;
 
     @Transactional
-    public void updateTask(Task updatedTask, User initiator) {
+    public void updateTask(Task updatedTask, String originalFileName, String storedFileName, User initiator) {
 
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new RuntimeException("Задача не найдена"));
 
@@ -130,9 +133,28 @@ public class TaskService {
         task.setArtistId(updatedTask.getArtistId());
         task.setDeadline(updatedTask.getDeadline());
         task.setComment(updatedTask.getComment());
+        task.setStatus(updatedTask.getStatus());
+
+        if (storedFileName != null) {
+            task.setOriginalFileName(originalFileName);
+            task.setStoredFileName(storedFileName);
+        }
 
         taskRepository.save(task);
         log.info("Задача id {} успешно обновлена", task.getId());
+    }
+
+    public String saveFile(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) return null;
+
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) uploadDir.mkdirs();
+
+        String uuidFile = UUID.randomUUID().toString();
+        String resultFilename = uuidFile + "_" + file.getOriginalFilename();
+        file.transferTo(new File(uploadPath + "/" + resultFilename));
+
+        return resultFilename;
     }
 
     @Transactional

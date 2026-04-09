@@ -5,6 +5,29 @@
 </head>
 <body>
 <div th:fragment="editTaskModal" class="modal fade" id="editTaskModal" tabindex="-1">
+    <style>
+        .drop-zone-style {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .drop-zone-style:hover, .drop-zone-style.dragover {
+            border-color: #007bff;
+            background: #eef6ff;
+        }
+        .dz-message {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        #edit-preview img {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -12,7 +35,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form th:action="@{/all-tasks/update}" method="post">
+                <form th:action="@{/all-tasks/update}" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editTaskId">
 
                     <div class="mb-3">
@@ -49,7 +72,23 @@
                         <label class="form-label">Комментарий</label>
                         <textarea name="comment" id="editTaskComment" class="form-control" rows="2"></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Прикрепить файл (Ctrl+V)</label>
+                        <div id="edit-drop-zone" class="drop-zone-style" onclick="document.getElementById('edit-file-input').click()">
+                            <div class="dz-message">
+                                <span>Нажмите для выбора</span> или вставьте из буфера
+                            </div>
+                            <input type="file" name="file" id="edit-file-input" class="d-none">
 
+                            <div id="edit-preview" class="d-none mt-2 p-2 border rounded bg-white">
+                                <div class="d-flex align-items-center">
+                                    <img id="edit-preview-img" src="" class="img-thumbnail me-2" style="width: 45px; height: 45px; object-fit: cover;">
+                                    <span id="edit-file-name" class="small text-truncate" style="max-width: 180px; color: #333;"></span>
+                                    <button type="button" class="btn-close ms-auto" style="font-size: 0.7rem;" onclick="event.stopPropagation(); clearEditFile()"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
                 </form>
             </div>
