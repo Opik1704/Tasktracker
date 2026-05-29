@@ -58,7 +58,7 @@ public class TaskController extends LoggingController{
     @PostMapping("/all-tasks")
     public String addTask(@Valid Task task,
                           BindingResult bindingResult,
-                          @RequestParam("file") MultipartFile file,
+                          @RequestParam(value = "file", required = false) MultipartFile file,
                           Principal principal,
                           Model model) throws IOException {
         addUserToMDC();
@@ -69,12 +69,14 @@ public class TaskController extends LoggingController{
                 log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
                 model.addAttribute("tasks", taskService.getAllTasks("id", null));
                 model.addAttribute("users", userService.allUsers());
+                model.addAttribute("currentSort", "id");
+                model.addAttribute("search", "");
                 if (principal != null) {
                     model.addAttribute("currentUser", userService.findByEmail(principal.getName()));
                 }
                 return "all_tasks";
             }
-            if (!file.isEmpty()) {
+            if (file != null && !file.isEmpty()) {
                 String storedName = taskService.saveFile(file);
                 task.setOriginalFileName(file.getOriginalFilename());
                 task.setStoredFileName(storedName);
@@ -84,6 +86,7 @@ public class TaskController extends LoggingController{
             task.setStatus(Task.TaskStatus.NEW);
 
             taskService.saveTask(task,currentUser);
+
             log.info("Задача успешно создана");
             return "redirect:/all-tasks";
         }finally {
@@ -94,7 +97,7 @@ public class TaskController extends LoggingController{
     @PostMapping("/all-tasks/update")
     public String updateTask(@Valid Task task,
                              BindingResult bindingResult,
-                             @RequestParam(required = false) String returnUrl,
+                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
                              @RequestParam(value = "file", required = false) MultipartFile file,
                              @RequestParam(defaultValue = "id_asc") String sort,
                              Model model) throws IOException {

@@ -4,6 +4,7 @@ import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -144,15 +149,32 @@ public class TaskService {
         log.info("Задача id {} успешно обновлена", task.getId());
     }
 
+
+    @PostConstruct
+    public void init() {
+        try {
+            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+            if (!Files.exists(root)) {
+                Files.createDirectories(root);
+                System.out.println("Папка для загрузок создана по пути: " + root);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось инициализировать папку для загрузок!", e);
+        }
+    }
+
     public String saveFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return null;
 
-        File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists()) uploadDir.mkdirs();
+        Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+        if (!Files.exists(root)) {
+            Files.createDirectories(root);
+        }
 
-        String uuidFile = UUID.randomUUID().toString();
-        String resultFilename = uuidFile + "_" + file.getOriginalFilename();
-        file.transferTo(new File(uploadPath + "/" + resultFilename));
+        String resultFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = root.resolve(resultFilename);
+
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         return resultFilename;
     }

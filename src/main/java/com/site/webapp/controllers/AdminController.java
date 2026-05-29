@@ -61,7 +61,7 @@ public class AdminController extends LoggingController{
         try {
             log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
             userService.updateUserRoles(userId,roleIds);
-            log.info("✅ Роли пользователя ID {} обновлены", userId);
+            log.info("Роли пользователя ID {} обновлены", userId);
             return "redirect:/admin";
         }
         finally {

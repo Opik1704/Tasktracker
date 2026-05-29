@@ -35,9 +35,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form th:action="@{/all-tasks/update}" method="post" enctype="multipart/form-data">
+                <form id="editTaskForm" th:action="@{/all-tasks/update}" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editTaskId">
-                    <input type="hidden" name="returnUrl" th:value="${#vars['jakarta.servlet.forward.request_uri'] ?: #vars['jakarta.servlet.error.request_uri'] ?: #request.requestURI ?: '/all-tasks'}">
+                    <input type="hidden" name="returnUrl" id="editTaskReturnUrl" value="">
+
+<!--                    <input type="hidden" name="redirectUrl" value="/user-tasks">-->
 
                     <div class="mb-3">
                         <label class="form-label">Название</label>

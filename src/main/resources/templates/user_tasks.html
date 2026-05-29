@@ -198,7 +198,7 @@
                     <a th:href="@{/user-tasks(sort='id_asc')}" th:classappend="${currentSort == 'id_asc'} ? 'active' : ''">Старые</a>
                     <a th:href="@{/user-tasks(sort='deadline')}" th:classappend="${currentSort == 'deadline'} ? 'active' : ''">Дедлайн</a>
                     <a th:href="@{/user-tasks(sort='priority')}" th:classappend="${currentSort == 'priority'} ? 'active' : ''">Приоритет</a>
-                    <a th:href="@{/user-tasks(sort='status_asc')}"th:classappend="${currentSort == 'status_asc'} ? 'active' : ''"> Статус (Новые)</a>
+                    <a th:href="@{/user-tasks(sort='status_asc')}" th:classappend="${currentSort == 'status_asc'} ? 'active' : ''"> Статус (Новые)</a>
                     <a th:href="@{/user-tasks(sort='status_desc')}" th:classappend="${currentSort == 'status_desc'} ? 'active' : ''">Статус (Завершенные)</a>
                 </div>
             </div>
@@ -256,13 +256,13 @@
                                 data-bs-toggle="modal" data-bs-target="#editTaskModal"
                                 th:data-task-id="${el.id}" th:data-task-title="${el.title}"
                                 th:data-task-priority="${el.priority}"
-                                th:data-task-deadline="${el.deadline != null ?#temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm'): ''}"
+                                th:data-task-deadline="${el.deadline != null ? #temporals.format(el.deadline, 'yyyy-MM-dd''T''HH:mm') : ''}"
                                 th:data-task-comment="${el.comment}" onclick="fillEditModal(this)"
                                 th:data-task-artist="${el.artistId}"
                                 th:data-task-status="${el.status}">
                             Редактировать
                         </button>
-                        <form th:action="@{/user-tasks/delete/{id}(id=${el.id})}" method="post"
+                        <form th:action="@{/all-tasks/delete/{id}(id=${el.id}, sort=${currentSort})}" method="post"
                               onsubmit="return confirm('Удалить задачу?');">
                             <button type="submit" class="btn btn-danger btn-sm" style="min-width: 120px;">Удалить</button>
                         </form>
@@ -286,15 +286,20 @@
     function fillEditModal(button) {
         clearEditFile();
 
+        const form = document.querySelector('#editTaskModal form');
+        const currentPath = window.location.pathname;
+          if (currentPath.includes('/user-tasks')) {
+              form.action = '/all-tasks/update';
+          } else {
+              form.action = '/all-tasks/update';
+          }
+
+        document.getElementById('editTaskReturnUrl').value = currentPath;
+
         document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
         document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');
         document.getElementById('editTaskPriority').value = button.getAttribute('data-task-priority');
-
-        const artistId = button.getAttribute('data-task-artist');
-        if (artistId) {
-            document.getElementById('editTaskArtist').value = artistId;
-        }
-
+        document.getElementById('editTaskArtist').value = button.getAttribute('data-task-artist');
         document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
         document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || ''
 
@@ -334,27 +339,42 @@
         for (const item of items) {
             if (item.kind === 'file') {
                 const blob = item.getAsFile();
-                handleFileSelection(blob, 'edit');
+                handleFileSelection(blob, 'edit', true);
             }
         }
     });
 
-    function handleFileSelection(file, type) {
+    document.addEventListener('DOMContentLoaded', function() {
+        const editFileInput = document.getElementById('edit-file-input');
+        if (editFileInput) {
+            editFileInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    handleFileSelection(this.files[0], 'edit');
+                }
+            });
+        }
+    });
+
+    function handleFileSelection(file, type, isPasted = false) {
         const fileInput = document.getElementById(type + '-file-input');
         const preview = document.getElementById(type + '-preview');
         const previewImg = document.getElementById(type + '-preview-img');
-        const fileName = document.getElementById(type + '-file-name');
+        const fileNameDisplay = document.getElementById(type + '-file-name');
 
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
+        if (isPasted) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        }
 
-        fileName.innerText = file.name || "clipboard_image.png";
+        fileNameDisplay.innerText = file.name || "pasted_image.png";
         preview.classList.remove('d-none');
 
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
-            reader.onload = (e) => previewImg.src = e.target.result;
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+            };
             reader.readAsDataURL(file);
         }
     }

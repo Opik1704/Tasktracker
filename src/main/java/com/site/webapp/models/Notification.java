@@ -9,11 +9,12 @@ import java.time.LocalDateTime;
 @Table(name = "notifications")
 public class Notification {
     @Id
-    @GeneratedValue
-    private long Id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String message;
 
+    @Column(name = "is_read", nullable = false)
     private boolean read = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -58,10 +59,10 @@ public class Notification {
     }
 
     public long getId() {
-        return Id;
+        return id;
     }
 
     public void setId(long id) {
-        Id = id;
+        this.id = id;
     }
 }

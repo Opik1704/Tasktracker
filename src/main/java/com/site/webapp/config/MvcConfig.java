@@ -6,6 +6,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
     @Override
@@ -18,9 +21,9 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String path = uploadPath.endsWith("/") ? uploadPath : uploadPath + "/";
+        String rootPath = System.getProperty("user.dir");
+        Path path = Paths.get(rootPath, uploadPath).toAbsolutePath();
 
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + path);
+        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + path.toString() + "/");
     }
 }

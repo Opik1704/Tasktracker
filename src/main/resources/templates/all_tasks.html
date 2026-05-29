@@ -504,7 +504,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form th:action="@{/all-tasks}" method="post">
+        <form th:action="@{/all-tasks}" method="post" enctype="multipart/form-data">
           <div class="mb-3">
             <label class="form-label">Название задачи</label>
             <input type="text" name="title" class="form-control" required>
@@ -537,7 +537,11 @@
             <label class="form-label">Комментарий</label>
             <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу"></textarea>
           </div>
-
+          <div class="mb-3">
+            <label class="form-label">Прикрепить файл</label>
+            <input type="file" name="file" class="form-control" id="addTaskFileInput" onchange="updateAddFileName(this)">
+            <small id="addFileHelp" class="form-text text-muted"></small>
+          </div>
           <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
       </div>
@@ -551,12 +555,22 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   function fillEditModal(button) {
+
+      const form = document.querySelector('#editTaskModal form');
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('/user-tasks')) {
+          form.action = '/all-tasks/update';
+      } else {
+          form.action = '/all-tasks/update';
+      }
       document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
+      document.getElementById('editTaskReturnUrl').value = currentPath;
       document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');
       document.getElementById('editTaskPriority').value = button.getAttribute('data-task-priority');
       document.getElementById('editTaskArtist').value = button.getAttribute('data-task-artist');
       document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
       document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
+
       const statusField = document.getElementById('editTaskStatus');
       if (statusField) {
           statusField.value = button.getAttribute('data-task-status') || 'NEW';
@@ -601,7 +615,33 @@
         }
     }
 });
-
+  function updateAddFileName(input) {
+      const helpText = document.getElementById('addFileHelp');
+      if (input.files && input.files.length > 0) {
+          helpText.textContent = 'Выбран файл: ' + input.files[0].name;
+      } else {
+          helpText.textContent = '';
+      }
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+          const editFileInput = document.getElementById('edit-file-input');
+          if (editFileInput) {
+              editFileInput.addEventListener('change', function(e) {
+                  if (this.files && this.files[0]) {
+                      handleFileSelection(this.files[0], 'edit');
+                  }
+              });
+          }
+      });
+  document.addEventListener('DOMContentLoaded', function() {
+    const addModal = document.getElementById('addTaskModal');
+    if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('addTaskFileInput').value = '';
+            document.getElementById('addFileHelp').textContent = '';
+        });
+    }
+});
   function handleFileSelection(file, type) {
       const fileInput = document.getElementById(type + '-file-input');
       const preview = document.getElementById(type + '-preview');
