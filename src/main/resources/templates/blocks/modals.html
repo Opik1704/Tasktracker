@@ -4,30 +4,82 @@
     <meta charset="UTF-8">
 </head>
 <body>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
 <div th:fragment="editTaskModal" class="modal fade" id="editTaskModal" tabindex="-1">
     <style>
-        .drop-zone-style {
+        .fu-zone {
             border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 18px 16px;
             text-align: center;
             background: #f8f9fa;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            position: relative;
+            transition: border-color 0.2s, background 0.2s;
+            user-select: none;
         }
-        .drop-zone-style:hover, .drop-zone-style.dragover {
+        .fu-zone:hover, .fu-zone.dragover {
             border-color: #007bff;
             background: #eef6ff;
         }
-        .dz-message {
-            color: #6c757d;
-            font-size: 0.9rem;
+        .fu-zone.dragover { border-style: solid; }
+        .fu-hint { color: #6c757d; font-size: 0.85rem; pointer-events: none; }
+        .fu-hint .fu-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+        .fu-preview-wrap {
+            display: none; margin-top: 10px; padding: 8px 10px;
+            border: 1px solid #dee2e6; border-radius: 8px; background: #fff;
+            align-items: center; gap: 10px;
         }
-        #edit-preview img {
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .fu-preview-wrap.active { display: flex; }
+        .fu-thumb-btn {
+            flex-shrink: 0; width: 44px; height: 44px;
+            border: none; padding: 0; background: none;
+            cursor: zoom-in; border-radius: 6px; overflow: hidden;
         }
+        .fu-thumb-btn img {
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            transition: transform 0.15s;
+        }
+        .fu-thumb-btn:hover img { transform: scale(1.08); }
+        .fu-doc-icon {
+            flex-shrink: 0; width: 44px; height: 44px; background: #e9ecef;
+            border-radius: 6px; display: flex; align-items: center;
+            justify-content: center; font-size: 1.4rem;
+        }
+        .fu-filename {
+            flex: 1; font-size: 0.82rem; color: #333;
+            white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; text-align: left;
+        }
+        .fu-clear {
+            flex-shrink: 0; background: none; border: none; color: #aaa;
+            font-size: 1rem; cursor: pointer; padding: 2px 4px;
+            line-height: 1; border-radius: 4px; transition: color 0.15s;
+        }
+        .fu-clear:hover { color: #dc3545; }
+        .fu-lightbox {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.82); z-index: 9999;
+            align-items: center; justify-content: center;
+        }
+        .fu-lightbox.open { display: flex; }
+        .fu-lightbox img {
+            max-width: 90vw; max-height: 88vh;
+            border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+        .fu-lightbox-close {
+            position: absolute; top: 18px; right: 22px;
+            color: #fff; font-size: 2rem; cursor: pointer;
+            line-height: 1; background: none; border: none;
+            opacity: 0.8; transition: opacity 0.15s;
+        }
+        .fu-lightbox-close:hover { opacity: 1; }
     </style>
+    <div id="fu-lightbox" class="fu-lightbox" onclick="fuCloseLightbox(event)">
+        <button class="fu-lightbox-close" onclick="fuCloseLightbox()">&times;</button>
+        <img id="fu-lightbox-img" src="" alt="">
+    </div>
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -88,19 +140,25 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">Прикрепить файл (Ctrl+V)</label>
-                        <div id="edit-drop-zone" class="drop-zone-style" onclick="document.getElementById('edit-file-input').click()">
-                            <div class="dz-message">
-                                <span>Нажмите для выбора</span> или вставьте из буфера
+                        <div id="edit-drop-zone" class="fu-zone" onclick="fuZoneClick('edit')"
+                             ondragover="fuDragOver(event,'edit')"
+                             ondragleave="fuDragLeave('edit')"
+                             ondrop="fuDrop(event,'edit')">
+                            <div class="fu-hint">
+                                <span class="fu-icon">📎</span>
+                                Перетащите файл, нажмите или вставьте <kbd>Ctrl+V</kbd>
                             </div>
-                            <input type="file" name="file" id="edit-file-input" class="d-none">
-
-                            <div id="edit-preview" class="d-none mt-2 p-2 border rounded bg-white">
-                                <div class="d-flex align-items-center">
-                                    <img id="edit-preview-img" src="" class="img-thumbnail me-2" style="width: 45px; height: 45px; object-fit: cover;">
-                                    <span id="edit-file-name" class="small text-truncate" style="max-width: 180px; color: #333;"></span>
-                                    <button type="button" class="btn-close ms-auto" style="font-size: 0.7rem;" onclick="event.stopPropagation(); clearEditFile()"></button>
-                                </div>
-                            </div>
+                            <input type="file" name="file" id="edit-file-input" class="d-none" onchange="fuFromInput(this,'edit')">
+                        </div>
+                        <div id="edit-fu-preview" class="fu-preview-wrap">
+                            <button type="button" class="fu-thumb-btn" id="edit-fu-thumb-btn"
+                                    onclick="fuOpenLightbox('edit')" title="Просмотреть">
+                                <img id="edit-fu-thumb" src="" alt="">
+                            </button>
+                            <span class="fu-doc-icon d-none" id="edit-fu-doc-icon"></span>
+                            <span class="fu-filename" id="edit-fu-name"></span>
+                            <button type="button" class="fu-clear"
+                                    onclick="fuClear('edit')" title="Убрать файл">✕</button>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
@@ -109,5 +167,6 @@
         </div>
     </div>
 </div>
+
 </body>
 </html>

@@ -319,7 +319,6 @@
         transform: translateY(-5px);
         color: white;
     }
-    /* --- Стили для бейджей статусов (добавить в style) --- */
     .status-badge {
         padding: 5px 12px;
         border-radius: 20px; /* Скругленные края (pill) */
@@ -334,7 +333,6 @@
         white-space: nowrap;
     }
 
-    /* Цвета для каждого статуса */
     .status-new {
         background-color: #e0f2fe; /* Светло-синий */
         color: #0369a1;
@@ -364,6 +362,73 @@
         color: #15803d;
         border: 1px solid #bbf7d0;
     }
+        .fu-zone {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 18px 16px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        user-select: none;
+    }
+    .fu-zone:hover, .fu-zone.dragover {
+        border-color: #007bff;
+        background: #eef6ff;
+    }
+    .fu-zone.dragover { border-style: solid; }
+    .fu-hint { color: #6c757d; font-size: 0.85rem; pointer-events: none; }
+    .fu-hint .fu-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .fu-preview-wrap {
+        display: none; margin-top: 10px; padding: 8px 10px;
+        border: 1px solid #dee2e6; border-radius: 8px; background: #fff;
+        align-items: center; gap: 10px;
+    }
+    .fu-preview-wrap.active { display: flex; }
+    .fu-thumb-btn {
+        flex-shrink: 0; width: 44px; height: 44px;
+        border: none; padding: 0; background: none;
+        cursor: zoom-in; border-radius: 6px; overflow: hidden;
+    }
+    .fu-thumb-btn img {
+        width: 100%; height: 100%; object-fit: cover;
+        border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        transition: transform 0.15s;
+    }
+    .fu-thumb-btn:hover img { transform: scale(1.08); }
+    .fu-doc-icon {
+        flex-shrink: 0; width: 44px; height: 44px; background: #e9ecef;
+        border-radius: 6px; display: flex; align-items: center;
+        justify-content: center; font-size: 1.4rem;
+    }
+    .fu-filename {
+        flex: 1; font-size: 0.82rem; color: #333;
+        white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; text-align: left;
+    }
+    .fu-clear {
+        flex-shrink: 0; background: none; border: none; color: #aaa;
+        font-size: 1rem; cursor: pointer; padding: 2px 4px;
+        line-height: 1; border-radius: 4px; transition: color 0.15s;
+    }
+    .fu-clear:hover { color: #dc3545; }
+    .fu-lightbox {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.82); z-index: 9999;
+        align-items: center; justify-content: center;
+    }
+    .fu-lightbox.open { display: flex; }
+    .fu-lightbox img {
+        max-width: 90vw; max-height: 88vh;
+        border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .fu-lightbox-close {
+        position: absolute; top: 18px; right: 22px;
+        color: #fff; font-size: 2rem; cursor: pointer;
+        line-height: 1; background: none; border: none;
+        opacity: 0.8; transition: opacity 0.15s;
+    }
+    .fu-lightbox-close:hover { opacity: 1; }
     html {
         scroll-behavior: smooth;
     }
@@ -410,7 +475,7 @@
             </a>
           </div>
         </div>
-        <button class="action-btn add-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+        <button type="button" class="action-btn add-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
           + Добавить задачу
         </button>
       </div>
@@ -538,9 +603,28 @@
             <textarea name="comment" class="form-control" rows="2" placeholder="Опишите задачу"></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Прикрепить файл</label>
-            <input type="file" name="file" class="form-control" id="addTaskFileInput" onchange="updateAddFileName(this)">
-            <small id="addFileHelp" class="form-text text-muted"></small>
+            <label class="form-label text-muted small fw-bold">Прикрепить файл</label>
+            <div id="add-drop-zone" class="fu-zone"
+                 onclick="fuZoneClick('add')"
+                 ondragover="fuDragOver(event,'add')"
+                 ondragleave="fuDragLeave('add')"
+                 ondrop="fuDrop(event,'add')">
+              <div class="fu-hint">
+                <span class="fu-icon">📎</span>
+                Перетащите файл, нажмите или вставьте <kbd>Ctrl+V</kbd>
+              </div>
+              <input type="file" name="file" id="add-file-input" class="d-none"
+                     onchange="fuFromInput(this,'add')">
+            </div>
+            <div id="add-fu-preview" class="fu-preview-wrap">
+              <button type="button" class="fu-thumb-btn" id="add-fu-thumb-btn"
+                      onclick="fuOpenLightbox('add')" title="Просмотреть">
+                <img id="add-fu-thumb" src="" alt="">
+              </button>
+              <span class="fu-doc-icon d-none" id="add-fu-doc-icon">📄</span>
+              <span class="fu-filename" id="add-fu-name"></span>
+              <button type="button" class="fu-clear" onclick="fuClear('add')" title="Убрать файл">✕</button>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
@@ -551,8 +635,13 @@
 <button onclick="scrollToTop()" id="backToTopBtn" class="back-to-top" title="Наверх">
   ↑
 </button>
+<div id="fu-lightbox" class="fu-lightbox" onclick="fuCloseLightbox(event)">
+  <button class="fu-lightbox-close" onclick="fuCloseLightbox()">&times;</button>
+  <img id="fu-lightbox-img" src="" alt="">
+</div>
 <div th:insert="blocks/modals :: editTaskModal"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
   function fillEditModal(button) {
 
@@ -575,15 +664,10 @@
       if (statusField) {
           statusField.value = button.getAttribute('data-task-status') || 'NEW';
       }
-      clearEditFile();
+      fuClear('edit');
   }
 
-  function clearEditFile() {
-      const fileInput = document.getElementById('edit-file-input');
-      const preview = document.getElementById('edit-preview');
-      if (fileInput) fileInput.value = '';
-      if (preview) preview.classList.add('d-none');
-  }
+
 
     const mybutton = document.getElementById("backToTopBtn");
 
@@ -602,37 +686,7 @@
         });
     }
 
-  document.addEventListener('paste', (event) => {
-    const modal = document.getElementById('editTaskModal');
-    if (!modal || !modal.classList.contains('show')) return;
 
-
-    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-    for (const item of items) {
-        if (item.kind === 'file') {
-            const blob = item.getAsFile();
-            handleFileSelection(blob, 'edit');
-        }
-    }
-});
-  function updateAddFileName(input) {
-      const helpText = document.getElementById('addFileHelp');
-      if (input.files && input.files.length > 0) {
-          helpText.textContent = 'Выбран файл: ' + input.files[0].name;
-      } else {
-          helpText.textContent = '';
-      }
-  }
-  document.addEventListener('DOMContentLoaded', function() {
-          const editFileInput = document.getElementById('edit-file-input');
-          if (editFileInput) {
-              editFileInput.addEventListener('change', function(e) {
-                  if (this.files && this.files[0]) {
-                      handleFileSelection(this.files[0], 'edit');
-                  }
-              });
-          }
-      });
   document.addEventListener('DOMContentLoaded', function() {
     const addModal = document.getElementById('addTaskModal');
     if (addModal) {
@@ -642,26 +696,119 @@
         });
     }
 });
-  function handleFileSelection(file, type) {
-      const fileInput = document.getElementById(type + '-file-input');
-      const preview = document.getElementById(type + '-preview');
-      const previewImg = document.getElementById(type + '-preview-img');
-      const fileName = document.getElementById(type + '-file-name');
+function fuSetFile(file, prefix) {
+        if (!file) return;
+        const input    = document.getElementById(prefix + '-file-input');
+        const preview  = document.getElementById(prefix + '-fu-preview');
+        const nameEl   = document.getElementById(prefix + '-fu-name');
+        const thumb    = document.getElementById(prefix + '-fu-thumb');
+        const thumbBtn = document.getElementById(prefix + '-fu-thumb-btn');
+        const docIcon  = document.getElementById(prefix + '-fu-doc-icon');
 
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      fileInput.files = dataTransfer.files;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
 
-      fileName.innerText = file.name || "clipboard_image.png";
-      preview.classList.remove('d-none');
+        nameEl.textContent = file.name || 'clipboard_image.png';
+        preview.classList.add('active');
 
-      if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => previewImg.src = e.target.result;
-          reader.readAsDataURL(file);
-      }
-  }
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                thumb.src = e.target.result;
+                thumb.dataset.fullSrc = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            thumbBtn.classList.remove('d-none');
+            docIcon.classList.add('d-none');
+        } else {
+            thumbBtn.classList.add('d-none');
+            docIcon.classList.remove('d-none');
+            const icons = {
+                pdf:  'bi-file-earmark-pdf',
+                doc:  'bi-file-earmark-word',
+                docx: 'bi-file-earmark-word',
+                xls:  'bi-file-earmark-excel',
+                xlsx: 'bi-file-earmark-excel',
+                zip:  'bi-file-earmark-zip',
+                rar:  'bi-file-earmark-zip',
+                txt:  'bi-file-earmark-text',
+            };
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            const iconClass = icons[ext] || 'bi-file-earmark';
+            docIcon.innerHTML = `<i class="bi ${iconClass}"></i>`;
+        }
+    }
 
+    function fuClear(prefix) {
+        const input   = document.getElementById(prefix + '-file-input');
+        const preview = document.getElementById(prefix + '-fu-preview');
+        const thumb   = document.getElementById(prefix + '-fu-thumb');
+        if (input)   input.value = '';
+        if (preview) preview.classList.remove('active');
+        if (thumb)   { thumb.src = ''; thumb.dataset.fullSrc = ''; }
+    }
+
+    function fuZoneClick(prefix) {
+        document.getElementById(prefix + '-file-input').click();
+    }
+    function fuFromInput(input, prefix) {
+        if (input.files && input.files[0]) fuSetFile(input.files[0], prefix);
+    }
+    function fuDragOver(e, prefix) {
+        e.preventDefault();
+        document.getElementById(prefix + '-drop-zone').classList.add('dragover');
+    }
+    function fuDragLeave(prefix) {
+        document.getElementById(prefix + '-drop-zone').classList.remove('dragover');
+    }
+    function fuDrop(e, prefix) {
+        e.preventDefault();
+        document.getElementById(prefix + '-drop-zone').classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) fuSetFile(file, prefix);
+    }
+
+    document.addEventListener('paste', function(e) {
+        let prefix = null;
+        if (document.getElementById('editTaskModal')?.classList.contains('show')) prefix = 'edit';
+        else if (document.getElementById('addTaskModal')?.classList.contains('show')) prefix = 'add';
+        if (!prefix) return;
+
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) {
+            if (item.kind === 'file') {
+                fuSetFile(item.getAsFile(), prefix);
+                break;
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        ['editTaskModal', 'addTaskModal'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('hidden.bs.modal', function() {
+                    fuClear(id === 'editTaskModal' ? 'edit' : 'add');
+                });
+            }
+        });
+    });
+
+    function fuOpenLightbox(prefix) {
+        const thumb = document.getElementById(prefix + '-fu-thumb');
+        const src = thumb?.dataset?.fullSrc || thumb?.src;
+        if (!src) return;
+        document.getElementById('fu-lightbox-img').src = src;
+        document.getElementById('fu-lightbox').classList.add('open');
+    }
+    function fuCloseLightbox(e) {
+        if (e && e.target !== e.currentTarget && e.target.tagName === 'IMG') return;
+        document.getElementById('fu-lightbox').classList.remove('open');
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') fuCloseLightbox();
+    });
 </script>
 
 </body>
