@@ -361,11 +361,9 @@
         const previewImg = document.getElementById(type + '-preview-img');
         const fileNameDisplay = document.getElementById(type + '-file-name');
 
-        if (isPasted) {
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
-        }
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
 
         fileNameDisplay.innerText = file.name || "pasted_image.png";
         preview.classList.remove('d-none');
