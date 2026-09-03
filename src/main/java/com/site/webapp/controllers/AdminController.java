@@ -18,8 +18,10 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController extends LoggingController{
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    public AdminController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public String userList(Model model) {

@@ -16,8 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/registration")
 public class RegistrationController extends LoggingController {
-    @Autowired
-    private UserService userService;
+
+    private final UserService userService;
+
+    public RegistrationController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public String registration(Model model){
@@ -31,8 +35,10 @@ public class RegistrationController extends LoggingController {
                           BindingResult bindingResult,
                           Model model) {
 
+        if (bindingResult.hasErrors()) {
+            return "registration";
+        }
         String result = userService.registerNewUser(registrationDto);
-
         if ("passwordError".equals(result)) {
             model.addAttribute("passwordError", "Пароли не совпадают");
             return "registration";

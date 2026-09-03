@@ -13,10 +13,14 @@ import java.util.List;
 
 @ControllerAdvice
 public class GlobalDataAdvice extends LoggingController{
-    @Autowired
-    NotificationService notificationService;
-    @Autowired
-    private NotificationRepository notificationRepository;
+
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
+
+    public GlobalDataAdvice(NotificationRepository notificationRepository, NotificationService notificationService) {
+        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
+    }
 
 
     @ModelAttribute

@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/notifications")
 public class NotificationController extends LoggingController {
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @GetMapping("/mark-all-read")
     public String markAllAsRead(@RequestHeader(value = "referer", required = false) String referer) {

@@ -6,7 +6,6 @@ import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -23,11 +22,13 @@ import java.util.UUID;
 
 @Controller
 public class TaskController extends LoggingController{
-    @Autowired
-    private TaskService taskService;
+    private final TaskService taskService;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public TaskController(TaskService taskService, UserService userService) {
+        this.taskService = taskService;
+        this.userService = userService;
+    }
 
     @GetMapping("/all-tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,
@@ -77,6 +78,8 @@ public class TaskController extends LoggingController{
                 return "all_tasks";
             }
             if (file != null && !file.isEmpty()) {
+                System.out.println("FILE NAME = " + file.getOriginalFilename());
+                System.out.println("FILE SIZE = " + file.getSize());
                 String storedName = taskService.saveFile(file);
                 task.setOriginalFileName(file.getOriginalFilename());
                 task.setStoredFileName(storedName);
@@ -94,43 +97,43 @@ public class TaskController extends LoggingController{
         }
     }
 
-    @PostMapping("/all-tasks/update")
-    public String updateTask(@Valid Task task,
-                             BindingResult bindingResult,
-                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                             @RequestParam(value = "file", required = false) MultipartFile file,
-                             @RequestParam(defaultValue = "id_asc") String sort,
-                             Model model) throws IOException {
-        addUserToMDC();
-        String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
-        try {
-            if (bindingResult.hasErrors()) {
-                log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
-                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
+        @PostMapping("/all-tasks/update")
+        public String updateTask(@Valid Task task,
+                                 BindingResult bindingResult,
+                                 @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                                 @RequestParam(value = "file", required = false) MultipartFile file,
+                                 @RequestParam(defaultValue = "id_asc") String sort,
+                                 Model model) throws IOException {
+            addUserToMDC();
+            String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
+            try {
+                if (bindingResult.hasErrors()) {
+                    log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
+                    return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
+                }
+
+                User currentUser = getCurrentUser();
+
+                String originalName = null;
+                String storedName = null;
+
+                if (file != null && !file.isEmpty()) {
+                    storedName = taskService.saveFile(file);
+                    originalName = file.getOriginalFilename();
+                }
+
+                taskService.updateTask(task, originalName, storedName, currentUser);
+
+                return "redirect:" + finalRedirect;
             }
-
-            User currentUser = getCurrentUser();
-
-            String originalName = null;
-            String storedName = null;
-
-            if (file != null && !file.isEmpty()) {
-                storedName = taskService.saveFile(file);
-                originalName = file.getOriginalFilename();
+            catch (Exception e){
+                log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
+                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
             }
-
-            taskService.updateTask(task, originalName, storedName, currentUser);
-
-            return "redirect:" + finalRedirect;
+            finally {
+                clearMDC();
+            }
         }
-        catch (Exception e){
-            log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
-            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
-        }
-        finally {
-            clearMDC();
-        }
-    }
 
     @PostMapping("/all-tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
