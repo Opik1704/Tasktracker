@@ -38,8 +38,16 @@ public class NotificationService {
     }
 
     public void markAllAsRead(User user) {
-        if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
-        List<Notification> unread = notificationRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
+        if (user == null) {
+            throw new UsernameNotFoundException("Пользователь не найден");
+        }
+
+        List<Notification> unread = notificationRepository.findAllByUserIdAndReadFalse(user.getId());
+        if(unread.isEmpty()){
+            unread.forEach(n -> n.setRead(true));
+            notificationRepository.saveAll(unread);
+            log.info("Пользователю {} отметил сообщения как прочитанные", user.getEmail());
+        }
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
         log.info("Пользователю {} отметил сообщения как прочитанные", user.getEmail());
@@ -52,5 +60,8 @@ public class NotificationService {
     public List<Notification> getLastNotifications(Long userId) {
         return notificationRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
     }
-
+    public void deleteAllByTaskId(Long taskId){
+        notificationRepository.deleteAllByTaskId(taskId);
+        log.info("Удалены все уведомления, связанные с задачей ID: {}", taskId);
+    }
 }
