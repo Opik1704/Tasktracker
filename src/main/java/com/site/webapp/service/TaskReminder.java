@@ -5,6 +5,8 @@ import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,8 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Component
-public class TaskReminder extends LoggingController {
+public class TaskReminder {
+    private static final Logger log = LoggerFactory.getLogger(TaskReminder.class);
     @Autowired
     TaskRepository taskRepository;
     @Autowired

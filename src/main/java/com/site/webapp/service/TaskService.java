@@ -184,7 +184,6 @@ public class TaskService {
         Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Задача не найдена"));
 
         String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail()  : "Система";
-
         if (task.getArtistId() != null) {
             userRepository.findById(task.getArtistId()).ifPresent(artist -> {
                 String msg = author + " удалил задачу '" + task.getTitle() + "', которая была назначена вам";
@@ -192,6 +191,7 @@ public class TaskService {
                 notificationService.send(artist, msg);
             });
         }
+        notificationService.deleteAllByTaskId(id);
 
         taskRepository.deleteById(id);
 
