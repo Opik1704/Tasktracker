@@ -47,7 +47,6 @@ public class TaskController extends LoggingController{
             model.addAttribute("currentSort", sort);
             model.addAttribute("search",search);
             model.addAttribute("currentUser", currentUser);
-            model.addAttribute("users", userService.allUsers());
 
             return "all_tasks";
         }

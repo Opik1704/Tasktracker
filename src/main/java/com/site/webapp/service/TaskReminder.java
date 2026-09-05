@@ -14,17 +14,22 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class TaskReminder {
     private static final Logger log = LoggerFactory.getLogger(TaskReminder.class);
-    @Autowired
-    TaskRepository taskRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    private NotificationService notificationService;
-
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    public TaskReminder(TaskRepository taskRepository,
+                        UserRepository userRepository,
+                        NotificationService notificationService) {
+        this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
+    }
     @Scheduled(cron = "0 0 9 * * MON")
     public void sendWeeklyPlan() {
         log.info("Формирование плана на неделю");
@@ -49,6 +54,9 @@ public class TaskReminder {
         List<Task> urgentTasks = taskRepository.findAllByDeadlineBetween(now, twoHoursLater);
 
         for (Task task : urgentTasks) {
+            if (task.getArtistId() == null) {
+                continue;
+            }
             User user = userRepository.findById(task.getArtistId()).orElse(null);
             if (user != null) {
                 notificationService.send(user, "До дедлайна задачи '" + task.getTitle() + "' осталось меньше 2 часов!");
@@ -57,18 +65,34 @@ public class TaskReminder {
     }
 
     private void processTasks(LocalDateTime start, LocalDateTime end, String messageTemplate) {
+        log.info("Загрузка задач и пользователей за период {} - {}", start, end);
+
+        List<Task> allTasks = taskRepository.findAllByDeadlineBetween(start, end);
+
+        if (allTasks.isEmpty()) {
+            log.info("Нет задач в этом периоде");
+            return;
+        }
+
         List<User> allUsers = userRepository.findAll();
+        Map<Long, User> usersById = allUsers.stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
 
-        for (User user : allUsers) {
-            List<Task> userTasks = taskRepository.findAllByArtistIdAndDeadlineBetween(user.getId(), start, end);
+        Map<Long, List<Task>> tasksByUserId = allTasks.stream()
+                .collect(Collectors.groupingBy(Task::getArtistId));
 
-            if (!userTasks.isEmpty()) {
-                int count = userTasks.size();
+        for (Map.Entry<Long, List<Task>> entry : tasksByUserId.entrySet()) {
+            Long userId = entry.getKey();
+            User user = usersById.get(userId);
+
+            if (user != null) {
+                int count = entry.getValue().size();
                 String finalMessage = messageTemplate.replace("{}", String.valueOf(count));
-
                 notificationService.send(user, finalMessage);
-                log.info("Отправлено напоминание для {}: {} задач", user.getEmail(), count);
+                log.info("Уведомление {}: {} задач", user.getEmail(), count);
             }
         }
+
+        log.info(" Обработано {} пользователей с задачами", tasksByUserId.size());
     }
 }

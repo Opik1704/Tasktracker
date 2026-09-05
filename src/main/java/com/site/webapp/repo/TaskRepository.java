@@ -32,4 +32,5 @@ public interface TaskRepository extends CrudRepository<Task,Long> {
     List<Task> findAllByDeadlineBetween(LocalDateTime now, LocalDateTime twoHoursLater);
     List<Task> findAllByArtistIdAndDeadlineBetween(Long artistId,LocalDateTime start,LocalDateTime end);
 
+
 }
