@@ -1,15 +1,16 @@
 package com.site.webapp.controllers;
 
+import com.site.webapp.dto.ChangePasswordDto;
+import com.site.webapp.dto.ChangeProfileDto;
 import com.site.webapp.models.User;
 import com.site.webapp.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -23,6 +24,7 @@ public class ProfileController extends LoggingController {
 
     @GetMapping
     public String profile(@AuthenticationPrincipal User currentUser, Model model) {
+        if (currentUser == null) return "redirect:/authorization";
         addUserToMDC();
         try {
             User freshUser = userService.findUserById(currentUser.getId());
@@ -36,12 +38,14 @@ public class ProfileController extends LoggingController {
 
     @PostMapping("/update-info")
     public String updateProfile(@AuthenticationPrincipal User currentUser,
-                                @RequestParam String firstName,
-                                @RequestParam String lastName) {
+                                @Valid @ModelAttribute ChangeProfileDto changeProfileDto,
+                                BindingResult bindingResult) {
+        if (currentUser == null) return "redirect:/authorization";
+
         addUserToMDC();
         try {
             log.info("Пользователь {} обновляет данные", currentUser.getEmail());
-            userService.updateUserInfo(currentUser.getId(),firstName,lastName);
+            userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName());
             return "redirect:/profile";
         } finally {
             clearMDC();
@@ -50,17 +54,16 @@ public class ProfileController extends LoggingController {
 
     @PostMapping("/change-password")
     public String changePassword(@AuthenticationPrincipal User currentUser,
-                                 @RequestParam String oldPassword,
-                                 @RequestParam String newPassword,
-                                 @RequestParam String confirmPassword,
-                                 Model model) {
+                                 @Valid @ModelAttribute ChangePasswordDto changePasswordDto) {
+        if (currentUser == null) return "redirect:/authorization";
+
         addUserToMDC();
         try {
             String result = userService.updatePassword(
                     currentUser.getId(),
-                    oldPassword,
-                    newPassword,
-                    confirmPassword
+                    changePasswordDto.getOldPassword(),
+                    changePasswordDto.getNewPassword(),
+                    changePasswordDto.getConfirmPassword()
             );
 
             if ("success".equals(result)) {
