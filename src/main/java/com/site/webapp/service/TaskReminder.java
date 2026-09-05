@@ -63,6 +63,10 @@ public class TaskReminder {
             }
         }
     }
+    @Scheduled(cron = "0 0 2 * * *")
+    public void cleanOldNotifications() {
+        notificationService.deleteOldNotifications();
+    }
 
     private void processTasks(LocalDateTime start, LocalDateTime end, String messageTemplate) {
         log.info("Загрузка задач и пользователей за период {} - {}", start, end);

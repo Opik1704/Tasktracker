@@ -64,7 +64,6 @@ public class TaskController extends LoggingController{
         addUserToMDC();
         try {
             User currentUser = getCurrentUser();
-
             if (bindingResult.hasErrors()) {
                 log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
                 model.addAttribute("tasks", taskService.getAllTasks("id", null));

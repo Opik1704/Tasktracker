@@ -54,12 +54,18 @@ public class NotificationService {
     public long getUnreadCount(Long userId) {
         return notificationRepository.countByUserIdAndReadFalse(userId);
     }
-
     public List<Notification> getLastNotifications(Long userId) {
         return notificationRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
     }
+
     public void deleteAllByTaskId(Long taskId){
         notificationRepository.deleteAllByTaskId(taskId);
         log.info("Удалены все уведомления, связанные с задачей ID: {}", taskId);
+    }
+
+    public void deleteOldNotifications() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(30);
+        long deleted = notificationRepository.deleteAllByCreatedAtBefore(threshold);
+        log.info("Удалено {} старых уведомлений", deleted);
     }
 }
