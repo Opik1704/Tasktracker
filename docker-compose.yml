@@ -10,8 +10,11 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       PORT: 1024
+      APP_UPLOAD_DIR: /app/uploads
     depends_on:
       - postgres
+    volumes:
+      - ./uploads:/app/uploads
     restart: always
   postgres:
     image: postgres:16

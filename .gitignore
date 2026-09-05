@@ -21,6 +21,9 @@ logs/
 !**/src/main/**/logs/
 !**/src/test/**/logs/
 
+# Папка с загруженными пользователями файлами
+uploads/
+
 ### Environment & Secrets ###
 .env
 *.env
