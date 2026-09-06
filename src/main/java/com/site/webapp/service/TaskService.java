@@ -75,17 +75,31 @@ public class TaskService {
 
     @Transactional
     public void saveTask(Task task,User initiator) {
+        String authorName;
+        if (initiator != null) {
+            String firstName = initiator.getFirstName() != null ? initiator.getFirstName() : "";
+            String lastName = initiator.getLastName() != null ? initiator.getLastName() : "";
 
-        String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail() : "Система";
-        User currentUser = userRepository.findById(task.getArtistId()).orElse(null);
+            String fullName = (firstName + " " + lastName).trim();
 
-        String msg = author + " назначил вам задачу " + task.getTitle() + " с дедлайном " + task.getDeadline() + "с приоритетом" + task.getPriority();
-
-        notificationService.send(currentUser,msg);
+            if (!fullName.isEmpty()) {
+                authorName = fullName;
+            } else if (initiator.getEmail() != null) {
+                authorName = initiator.getEmail();
+            } else {
+                authorName = "Система";
+            }
+        } else {
+            authorName = "Система";
+        }
+        String msg = authorName + " назначил вам задачу " + task.getTitle() + " с дедлайном " + task.getDeadline() + " с приоритетом " + task.getPriority();
+        if(task.getArtistId() != null){
+            notificationService.send(userRepository.findById(task.getArtistId()).orElse(null),msg);
+        }
 
         taskRepository.save(task);
 
-        log.info("Задача создана с ID: {} пользователем {}", task.getId(), author);
+        log.info("Задача создана с ID: {} пользователем {}", task.getId(), authorName);
     }
 
     @Value("${upload.path}")
