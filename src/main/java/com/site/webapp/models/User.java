@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.constraints.Size;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +19,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,19 +68,13 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-    @OnDelete(action = OnDeleteAction.CASCADE)
+
     private Set<Task> favouriteTasks = new HashSet<>();
 
-    public Set<Task> getFavouriteTasks() {
-        return favouriteTasks;
-    }
-    public void setFavouriteTasks(Set<Task> favouriteTasks) {
-        this.favouriteTasks = favouriteTasks;
-    }
+    @Column(nullable = false)
+    private boolean deleted = false;
 
-    public boolean isTaskFavorite(Long taskId) {
-        return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
-    }
+
 
     public User() {
     }
@@ -180,6 +178,22 @@ public class User implements UserDetails {
         this.roles = roles;
     }
 
+    public Set<Task> getFavouriteTasks() {
+        return favouriteTasks;
+    }
+    public void setFavouriteTasks(Set<Task> favouriteTasks) {
+        this.favouriteTasks = favouriteTasks;
+    }
+    public boolean isTaskFavorite(Long taskId) {
+        return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
+    }
+    public boolean isDeleted() {
+        return deleted;
+    }
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -187,7 +201,6 @@ public class User implements UserDetails {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", roles=" + roles +
                 '}';
     }
 

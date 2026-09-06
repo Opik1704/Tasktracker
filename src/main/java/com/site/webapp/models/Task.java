@@ -1,5 +1,7 @@
 package com.site.webapp.models;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.*;
@@ -8,9 +10,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "tasks")
+@SQLDelete(sql = "UPDATE tasks SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -35,20 +42,26 @@ public class Task {
     @Size(max = 500, message = "Комментарий слишком длинный")
     private String comment;
 
-    @Column(length = 255)
-    private String originalFileName;
-
-    @Column(length = 255, unique = true)
-    private String storedFileName;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
 
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status = TaskStatus.NEW;
+
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<TaskAttachment> attachments = new ArrayList<>();
 
     public enum TaskStatus {
         NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
@@ -56,7 +69,7 @@ public class Task {
 
 public Task() {
 }
-    public Task(String title, String priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment,String originalFileName,String storedFileName){
+    public Task(String title, String priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment){
         this.title = title;
         this.priority = priority;
         this.artistId = artistId;
@@ -64,8 +77,6 @@ public Task() {
         this.deadline = deadline;
         this.comment = comment;
         this.status = status;
-        this.originalFileName = originalFileName;
-        this.storedFileName = storedFileName;
     }
 
     @Override
@@ -76,6 +87,30 @@ public Task() {
         return Objects.equals(id, task.id);
     }
 
+    public void addAttachment(TaskAttachment attachment) {
+        attachments.add(attachment);
+        attachment.setTask(this);
+    }
+
+    public void removeAttachment(TaskAttachment attachment) {
+        attachments.remove(attachment);
+        attachment.setTask(null);
+    }
+
+    public List<TaskAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<TaskAttachment> attachments) {
+        this.attachments = attachments;
+    }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -122,22 +157,6 @@ public Task() {
         this.ownerId = ownerId;
     }
 
-    public String getOriginalFileName() {
-        return originalFileName;
-    }
-
-    public void setOriginalFileName(String originalFileName) {
-        this.originalFileName = originalFileName;
-    }
-
-    public String getStoredFileName() {
-        return storedFileName;
-    }
-
-    public void setStoredFileName(String storedFileName) {
-        this.storedFileName = storedFileName;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -152,5 +171,12 @@ public Task() {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
