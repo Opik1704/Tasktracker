@@ -15,7 +15,7 @@
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 300px; max-height: 400px; overflow-y: auto;">
-                        <li><h6 class="dropdown-header">Уведомления</h6></li>
+                        <li><h6 class="custom-dropdown-header">Уведомления</h6></li>
                         <li><hr class="dropdown-divider"></li>
 
                         <li th:if="${#lists.isEmpty(lastNotifications)}">
@@ -135,11 +135,10 @@
             display: block;
             padding: 10px 20px;
             margin-bottom: 0;
-            font-size: 1.2rem !important; /* Увеличили размер */
-            font-weight: 800 !important;   /* Сделали максимально жирным */
-            color: #212529;               /* Глубокий темный цвет */
-            text-transform: uppercase;    /* Все буквы заглавные (по желанию) */
-            letter-spacing: 0.5px;        /* Немного раздвинули буквы */
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            color: #212529;
+            letter-spacing: 0.6px;        /* Немного раздвинули буквы */
         }
        .dropdown-item:active {
         background-color: #f8f9fa;
