@@ -41,12 +41,14 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, TaskRepository taskRepository, PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, TaskRepository taskRepository, PasswordEncoder passwordEncoder, FileStorageService fileStorageService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.taskRepository = taskRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -197,29 +199,24 @@ public class UserService implements UserDetailsService {
     private String uploadPath;
 
     @Transactional
-    public void updateAvatar(Long userId, MultipartFile file) throws IOException {
-        User user = userRepository.findById(userId).orElseThrow();
-
-        if (file != null && !file.isEmpty()) {
-
-            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
-            Path avatarsDir = root.resolve("avatars");
-
-            if (!Files.exists(avatarsDir)) {
-                Files.createDirectories(avatarsDir);
-            }
-            String uuidFile = UUID.randomUUID().toString();
-            String resultFilename = uuidFile + "." + file.getOriginalFilename();
-
-            Path filePath = avatarsDir.resolve(resultFilename);
-            Files.copy(file.getInputStream(), filePath,     StandardCopyOption.REPLACE_EXISTING);
-
-            user.setOriginalAvatarFileName(file.getOriginalFilename());
-            user.setStoredAvatarFileName(resultFilename);
-
-            userRepository.save(user);
+    public void updateAvatar(Long userId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return;
         }
-
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        if (user.getStoredAvatarFileName() != null) {
+            try {
+                fileStorageService.deleteFile(user.getStoredAvatarFileName());
+            } catch (Exception e) {
+                log.warn("Не удалось удалить старую аватарку пользователя ID {}: {}", userId, e.getMessage());
+            }
+        }
+        String s3Key = fileStorageService.uploadFile(file, "avatars");
+        user.setOriginalAvatarFileName(file.getOriginalFilename());
+        user.setStoredAvatarFileName(s3Key);
+        userRepository.save(user);
+        log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
     }
 
     public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
