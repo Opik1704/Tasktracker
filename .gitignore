@@ -23,6 +23,9 @@ logs/
 
 # Папка с загруженными пользователями файлами
 uploads/
+**/uploads/*
+uploads/*
+!uploads/.gitkeep
 
 ### Environment & Secrets ###
 .env
@@ -30,6 +33,7 @@ uploads/
 application-secret.properties
 k8s/secrets.yaml
 secrets.yaml
+**/secret.yml
 
 ### IntelliJ IDEA ###
 .idea
