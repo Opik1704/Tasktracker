@@ -19,46 +19,46 @@ import org.hibernate.annotations.UpdateTimestamp;
 @SQLDelete(sql = "UPDATE tasks SET deleted = true WHERE id = ?")
 @SQLRestriction("deleted = false")
 public class Task {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tasks_seq_gen")
+    @SequenceGenerator(name = "tasks_seq_gen", sequenceName = "tasks_seq", allocationSize = 50)
     private Long id;
 
     @NotBlank(message = "Название задачи не может быть пустым")
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
     @NotBlank(message = "Укажите приоритет")
+    @Column(nullable = false)
     private String priority;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskStatus status = TaskStatus.NEW;
 
     private Long artistId;
 
+    @NotNull(message = "Автор задачи обязателен")
+    @Column(nullable = false, updatable = false)
     private Long ownerId;
 
-    @Future(message = "Дедлайн не может быть в прошлом")
     @NotNull(message = "Дата дедлайна обязательна")
+    @Future(message = "Дедлайн не может быть в прошлом")
     private LocalDateTime deadline;
 
     @Size(max = 500, message = "Комментарий слишком длинный")
     private String comment;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
-
-
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted", nullable = false)
-    private boolean deleted = false;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaskStatus status = TaskStatus.NEW;
-
+    private boolean deleted = false;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<TaskAttachment> attachments = new ArrayList<>();
@@ -67,8 +67,11 @@ public class Task {
         NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
     }
 
-public Task() {
-}
+    // Constructors
+
+    public Task() {
+    }
+
     public Task(String title, String priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment){
         this.title = title;
         this.priority = priority;
@@ -79,13 +82,7 @@ public Task() {
         this.status = status;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Task task = (Task) o;
-        return Objects.equals(id, task.id);
-    }
+    // Logic
 
     public void addAttachment(TaskAttachment attachment) {
         attachments.add(attachment);
@@ -97,86 +94,115 @@ public Task() {
         attachment.setTask(null);
     }
 
-    public List<TaskAttachment> getAttachments() {
-        return attachments;
-    }
+    // Getters and Setters
 
-    public void setAttachments(List<TaskAttachment> attachments) {
-        this.attachments = attachments;
-    }
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-    public String getTitle() {return title;}
-    public void setTitle(String title) {
-        this.title = title;
-    }
     public Long getId() {
         return id;
     }
     public void setId(Long id) {
         this.id = id;
     }
-    public Long getArtistId() {
-        return artistId;
+
+    public String getTitle() {
+        return title;
     }
-    public void setArtistId(Long artistId) {
-        this.artistId = artistId;
+    public void setTitle(String title) {
+        this.title = title;
     }
+
     public String getPriority() {
         return priority;
     }
     public void setPriority(String priority) {
         this.priority = priority;
     }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
+    public Long getArtistId() {
+        return artistId;
+    }
+    public void setArtistId(Long artistId) {
+        this.artistId = artistId;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+
     public LocalDateTime getDeadline() {
         return deadline;
     }
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
     }
+
     public String getComment() {
         return comment;
     }
     public void setComment(String comment) {
         this.comment = comment;
     }
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public TaskStatus getStatus() {
-        return status;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
-    }
     public boolean isDeleted() {
         return deleted;
     }
-
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public List<TaskAttachment> getAttachments() {
+        return attachments;
+    }
+    public void setAttachments(List<TaskAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    // Base Method Overrides
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", status=" + status +
+                ", priority='" + priority + '\'' +
+                ", deleted=" + deleted +
+                '}';
     }
 }

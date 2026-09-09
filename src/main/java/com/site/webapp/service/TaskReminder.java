@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -23,6 +25,7 @@ public class TaskReminder {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+
     public TaskReminder(TaskRepository taskRepository,
                         UserRepository userRepository,
                         NotificationService notificationService) {
@@ -30,6 +33,7 @@ public class TaskReminder {
         this.userRepository = userRepository;
         this.notificationService = notificationService;
     }
+
     @Scheduled(cron = "0 0 9 * * MON")
     public void sendWeeklyPlan() {
         log.info("Формирование плана на неделю");
@@ -59,10 +63,11 @@ public class TaskReminder {
             }
             User user = userRepository.findById(task.getArtistId()).orElse(null);
             if (user != null) {
-                notificationService.send(user, "До дедлайна задачи '" + task.getTitle() + "' осталось меньше 2 часов!");
+                notificationService.send(user,task, "До дедлайна задачи '" + task.getTitle() + "' осталось меньше 2 часов!");
             }
         }
     }
+
     @Scheduled(cron = "0 0 2 * * *")
     public void cleanOldNotifications() {
         notificationService.deleteOldNotifications();
@@ -78,8 +83,12 @@ public class TaskReminder {
             return;
         }
 
-        List<User> allUsers = userRepository.findAll();
-        Map<Long, User> usersById = allUsers.stream()
+        Set<Long> userIds = allTasks.stream()
+                .map(Task::getArtistId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Long, User> usersById = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
 
         Map<Long, List<Task>> tasksByUserId = allTasks.stream()

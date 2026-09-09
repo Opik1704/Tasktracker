@@ -21,7 +21,7 @@ public class FileStorageService {
 
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket}")
+    @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
     public FileStorageService(S3Client s3Client) {

@@ -205,16 +205,16 @@ public class UserService implements UserDetailsService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
-        if (user.getStoredAvatarFileName() != null) {
+        if (user.getAvatarS3Key() != null) {
             try {
-                fileStorageService.deleteFile(user.getStoredAvatarFileName());
+                fileStorageService.deleteFile(user.getAvatarS3Key());
             } catch (Exception e) {
                 log.warn("Не удалось удалить старую аватарку пользователя ID {}: {}", userId, e.getMessage());
             }
         }
         String s3Key = fileStorageService.uploadFile(file, "avatars");
         user.setOriginalAvatarFileName(file.getOriginalFilename());
-        user.setStoredAvatarFileName(s3Key);
+        user.setAvatarS3Key(s3Key);
         userRepository.save(user);
         log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
     }

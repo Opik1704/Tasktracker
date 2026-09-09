@@ -41,7 +41,7 @@ public class TaskAttachmentService {
         TaskAttachment taskAttachment = new TaskAttachment();
         taskAttachment.setTask(task);
         taskAttachment.setS3Key(s3Key);
-        taskAttachment.setFileName(file.getName());
+        taskAttachment.setFileName(file.getOriginalFilename());
         taskAttachment.setContentType(file.getContentType());
         taskAttachment.setFileSize(file.getSize());
 

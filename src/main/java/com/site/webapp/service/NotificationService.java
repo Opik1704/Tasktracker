@@ -1,6 +1,7 @@
 package com.site.webapp.service;
 
 import com.site.webapp.models.Notification;
+import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.NotificationRepository;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class NotificationService {
     }
 
 
-    public void send(User user,String message){
+    public void send(User user, Task task, String message){
         if (user == null) {
             log.warn("Попытка отправить уведомление null пользователю");
             return;
@@ -31,10 +32,14 @@ public class NotificationService {
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setMessage(message);
+        notification.setTask(task);
         notification.setCreatedAt(LocalDateTime.now());
 
         notificationRepository.save(notification);
         log.info("Пользователю {} отправлено сообщение {}", user.getEmail(),message);
+    }
+    public void send(User user, String message) {
+        send(user, null, message);
     }
 
     public void markAllAsRead(User user) {

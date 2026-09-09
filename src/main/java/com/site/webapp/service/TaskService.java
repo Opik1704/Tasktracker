@@ -74,7 +74,7 @@ public class TaskService {
 
 
     @Transactional
-    public void saveTask(Task task,User initiator) {
+    public Task saveTask(Task task,User initiator) {
         String authorName;
         if (initiator != null) {
             String firstName = initiator.getFirstName() != null ? initiator.getFirstName() : "";
@@ -96,10 +96,9 @@ public class TaskService {
         if(task.getArtistId() != null){
             notificationService.send(userRepository.findById(task.getArtistId()).orElse(null),msg);
         }
-
         taskRepository.save(task);
-
         log.info("Задача создана с ID: {} пользователем {}", task.getId(), authorName);
+        return task;
     }
 
     @Value("${upload.path}")
@@ -153,11 +152,6 @@ public class TaskService {
         task.setDeadline(updatedTask.getDeadline());
         task.setComment(updatedTask.getComment());
         task.setStatus(updatedTask.getStatus());
-
-        if (storedFileName != null) {
-            task.setOriginalFileName(originalFileName);
-            task.setStoredFileName(storedFileName);
-        }
 
         taskRepository.save(task);
         log.info("Задача id {} успешно обновлена", task.getId());
