@@ -5,10 +5,7 @@ import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.RoleRepository;
-import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+
 import java.util.*;
 
 @Service
@@ -34,35 +26,18 @@ public class UserService implements UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    @PersistenceContext
-    private EntityManager em;
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, TaskRepository taskRepository, PasswordEncoder passwordEncoder, FileStorageService fileStorageService){
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, FileStorageService fileStorageService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.taskRepository = taskRepository;
         this.fileStorageService = fileStorageService;
     }
 
-    @Override
-    @NonNull
-    public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException{
-        log.info("Попытка входа пользователя с email: {}", email);
-        User user = userRepository.findByEmail(email);
-        if (user == null){
-            log.warn("Пользователь с email {} не найден",email);
-            throw new UsernameNotFoundException("User not found" + email);
-        }
-        log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
-        return user;
-    }
 
     public String registerNewUser(RegistrationDto registrationDto) {
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
@@ -85,7 +60,6 @@ public class UserService implements UserDetailsService {
             return "emailError";
         }
     }
-
     @Transactional
     public boolean saveUser(User user){
         User userFromDB = userRepository.findByEmail(user.getEmail());
@@ -106,6 +80,20 @@ public class UserService implements UserDetailsService {
         }
     }
 
+
+    @Override
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException{
+        log.info("Попытка входа пользователя с email: {}", email);
+        User user = userRepository.findByEmail(email);
+        if (user == null){
+            log.warn("Пользователь с email {} не найден",email);
+            throw new UsernameNotFoundException("User not found" + email);
+        }
+        log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
+        return user;
+    }
+
     public User findUserById(Long userId){
         log.debug("Поиск пользователя по ID: {}", userId);
         Optional<User> userFromDb = userRepository.findById(userId);
@@ -117,16 +105,19 @@ public class UserService implements UserDetailsService {
             return null;
         }
     }
+
     public User findByEmail(String email) {
         log.debug("Поиск пользователя по email: {}", email);
         return userRepository.findByEmail(email);
     }
+
     public List<User> allUsers(){
         log.debug("Запрос списка всех пользователей");
         List<User> users = userRepository.findAll();
         log.debug("Найдено {} пользователей", users.size());
         return users;
     }
+
     public List<Role> getAllRoles() {
         log.debug("Запрос списка всех ролей");
         return roleRepository.findAll();
@@ -141,6 +132,7 @@ public class UserService implements UserDetailsService {
 
         return new ArrayList<>(user.getFavouriteTasks());
     }
+
 
     @Transactional
     public void updateUserInfo(Long userId,String firstName,String lastName){
@@ -195,6 +187,7 @@ public class UserService implements UserDetailsService {
         log.info("Роли пользователя ID {} обновлены", userId);
     }
 
+
     @Value("${app.upload.dir}")
     private String uploadPath;
 
@@ -218,6 +211,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
         log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
     }
+
 
     public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
         log.info("Удаление пользователя с ID: {} админом: {}", userId, adminEmail);

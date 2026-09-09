@@ -115,6 +115,15 @@ public class User implements UserDetails {
         this.lastName = lastName;
     }
 
+    public String getFullName() {
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        String full = (first + " " + last).trim();
+
+        return full.isEmpty() ? email : full;
+    }
+
+
     public String getEmail() {
         return email;
     }

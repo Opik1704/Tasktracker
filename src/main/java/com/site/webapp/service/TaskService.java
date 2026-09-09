@@ -8,27 +8,27 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class TaskService {
+
     private static final Logger log = LoggerFactory.getLogger(TaskService.class);
+
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-
 
     public TaskService(TaskRepository taskRepository, UserRepository userRepository,NotificationService notificationService) {
         this.taskRepository = taskRepository;
@@ -37,6 +37,29 @@ public class TaskService {
     }
 
 
+    @Transactional
+    public Task createTask(Task task, User initiator) {
+        task.setStatus(Task.TaskStatus.NEW);
+
+        String authorName;
+        if (initiator != null) {
+            task.setOwnerId(initiator.getId());
+            authorName = initiator.getFullName();
+        } else {
+            authorName = "Система";
+        }
+
+        String msg = authorName + " назначил(а) вам задачу " + task.getTitle() + " с дедлайном " + task.getDeadline() + " с приоритетом " + task.getPriority();
+        if (task.getArtistId() != null) {
+            notificationService.send(userRepository.findById(task.getArtistId()).orElse(null), msg);
+        }
+        taskRepository.save(task);
+        log.info("Задача создана с ID: {} пользователем {}", task.getId(), authorName);
+        return task;
+    }
+
+
+    @Transactional(readOnly = true)
     public List<Task> getAllTasks(String sort, String search) {
         if (search != null && !search.trim().isEmpty()) {
             return taskRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(
@@ -45,78 +68,35 @@ public class TaskService {
         return getSortedTasks(sort);
     }
 
-    private List<Task> getSortedTasks(String sort){
-        List<Task> tasks = (List<Task>) taskRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<Task> getAllUserTasks(Long userId, String sort, String search){
+        if (search != null && !search.trim().isEmpty()) {
+            return taskRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(
+                    userId,search.trim(),userId,search.trim());
+        }
+        return getSortedUserTask(userId, sort);
+    }
 
-        return switch (sort) {
-            case "status_asc" -> {
-                tasks.sort(Comparator.comparing(Task::getStatus));
-                yield tasks;
-            }
-            case "status_desc" -> {
-                tasks.sort(Comparator.comparing(Task::getStatus).reversed());
-                yield tasks;
-            }
-            case "deadline" -> {
-                tasks.sort(Comparator.comparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())));
-                yield tasks;
-            }
-            case "priority" -> {
-                tasks.sort(Comparator.comparing(Task::getPriority));
-                yield tasks;
-            }
-            default -> {
-                tasks.sort(Comparator.comparing(Task::getId).reversed());
-                yield tasks;
-            }
-        };
+    @Transactional(readOnly = true)
+    public List<Task> getSortedFavorites(String email, String sort) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) return new ArrayList<>();
+
+        return getSortedFavoriteTasks(new ArrayList<>(user.getFavouriteTasks()), sort);
     }
 
 
     @Transactional
-    public Task saveTask(Task task,User initiator) {
-        String authorName;
-        if (initiator != null) {
-            String firstName = initiator.getFirstName() != null ? initiator.getFirstName() : "";
-            String lastName = initiator.getLastName() != null ? initiator.getLastName() : "";
-
-            String fullName = (firstName + " " + lastName).trim();
-
-            if (!fullName.isEmpty()) {
-                authorName = fullName;
-            } else if (initiator.getEmail() != null) {
-                authorName = initiator.getEmail();
-            } else {
-                authorName = "Система";
-            }
-        } else {
-            authorName = "Система";
-        }
-        String msg = authorName + " назначил вам задачу " + task.getTitle() + " с дедлайном " + task.getDeadline() + " с приоритетом " + task.getPriority();
-        if(task.getArtistId() != null){
-            notificationService.send(userRepository.findById(task.getArtistId()).orElse(null),msg);
-        }
-        taskRepository.save(task);
-        log.info("Задача создана с ID: {} пользователем {}", task.getId(), authorName);
-        return task;
-    }
-
-    @Value("${upload.path}")
-    private String uploadPath;
-
-    @Transactional
-    public void updateTask(Task updatedTask, String originalFileName, String storedFileName, User initiator) {
+    public void updateTask(Task updatedTask, User initiator) {
 
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new RuntimeException("Задача не найдена"));
 
-        StringBuilder changes = new StringBuilder();
-
-        String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail() : "Система";
+        String authorName = initiator != null ? initiator.getFullName() : "Система";
 
         if (!Objects.equals(task.getArtistId(), updatedTask.getArtistId())) {
             if (task.getArtistId() != null) {
                 userRepository.findById(task.getArtistId()).ifPresent(oldUser ->{
-                    String msg = author + " передал вашу задачу '" + task.getTitle() + " пользователю" + userRepository.findById(updatedTask.getArtistId()).map(User::getEmail).orElse("не назначен");
+                    String msg = authorName + " передал вашу задачу '" + task.getTitle() + "' пользователю " + userRepository.findById(updatedTask.getArtistId()).map(User::getEmail).orElse("не назначен");
                     log.info("Уведомление старому исполнителю (ID {}): {}", task.getArtistId(), msg);
                     notificationService.send(oldUser, msg);
                 });
@@ -124,7 +104,7 @@ public class TaskService {
             if (updatedTask.getArtistId() != null) {
                 userRepository.findById(updatedTask.getArtistId()).ifPresent(newUser ->
                 {
-                    String msg = author + " назначил вам задачу '" + task.getTitle() + "' пользователя" + userRepository.findById(task.getArtistId()).map(User::getEmail).orElse("никто");
+                    String msg = authorName + " назначил вам задачу '" + task.getTitle() + "' (ранее у: " + userRepository.findById(task.getArtistId()).map(User::getFullName).orElse("никто");
                     notificationService.send(newUser, msg);
                 });
             }
@@ -132,7 +112,7 @@ public class TaskService {
 
         if (!Objects.equals(task.getDeadline(), updatedTask.getDeadline()) && Objects.equals(task.getArtistId(), updatedTask.getArtistId()) && task.getArtistId() != null) {
             userRepository.findById(task.getArtistId()).ifPresent(currentArtist -> {
-                String msg = author + " изменил дедлайн задачи '" + task.getTitle() + "' на " + updatedTask.getDeadline();
+                String msg = authorName + " изменил дедлайн задачи '" + task.getTitle() + "' на " + updatedTask.getDeadline();
                 log.info("Лог изменения дедлайна {}", msg);
                 notificationService.send(currentArtist, msg);
             });
@@ -140,7 +120,7 @@ public class TaskService {
 
         if(!Objects.equals(task.getPriority(),updatedTask.getPriority()) && task.getArtistId() != null  ){
             userRepository.findById(task.getArtistId()).ifPresent(currentArtist ->{
-                String msg = author + " изменил приоритет задачи '" + task.getTitle() + " '  на " + updatedTask.getPriority();
+                String msg = authorName + " изменил приоритет задачи '" + task.getTitle() + " '  на " + updatedTask.getPriority();
                 log.info("Лог изменения приоритета {}", msg);
                 notificationService.send(currentArtist,msg);
             });
@@ -157,35 +137,35 @@ public class TaskService {
         log.info("Задача id {} успешно обновлена", task.getId());
     }
 
-
-    @PostConstruct
-    public void init() {
-        try {
-            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
-            if (!Files.exists(root)) {
-                Files.createDirectories(root);
-                System.out.println("Папка для загрузок создана по пути: " + root);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Не удалось инициализировать папку для загрузок!", e);
-        }
-    }
-
-    public String saveFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) return null;
-
-        Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
-        if (!Files.exists(root)) {
-            Files.createDirectories(root);
-        }
-
-        String resultFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = root.resolve(resultFilename);
-
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return resultFilename;
-    }
+//
+//    @PostConstruct
+//    public void init() {
+//        try {
+//            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+//            if (!Files.exists(root)) {
+//                Files.createDirectories(root);
+//                System.out.println("Папка для загрузок создана по пути: " + root);
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException("Не удалось инициализировать папку для загрузок!", e);
+//        }
+//    }
+//
+//    public String saveFile(MultipartFile file) throws IOException {
+//        if (file == null || file.isEmpty()) return null;
+//
+//        Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+//        if (!Files.exists(root)) {
+//            Files.createDirectories(root);
+//        }
+//
+//        String resultFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+//        Path filePath = root.resolve(resultFilename);
+//
+//        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+//
+//        return resultFilename;
+//    }
 
     @Transactional
     public void deleteTask(Long id, User initiator) {
@@ -207,30 +187,6 @@ public class TaskService {
     }
 
 
-    @Transactional(readOnly = true)
-    public List<Task> getSortedFavorites(String email, String sort) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) return new ArrayList<>();
-
-        List<Task> favorites = new ArrayList<>(user.getFavouriteTasks());
-
-        return switch (sort != null ? sort : "default") {
-            case "deadline" -> {
-                favorites.sort(Comparator.comparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder())));
-                yield favorites;
-            }
-            case "priority" -> {
-                favorites.sort(Comparator.comparing(Task::getPriority));
-                yield favorites;
-            }
-            case "recent" -> {
-                favorites.sort(Comparator.comparing(Task::getId).reversed());
-                yield favorites;
-            }
-            default -> favorites;
-        };
-    }
-
     @Transactional
     public void toggleFavorite(String email, Long taskId) {
         log.info("Переключение избранного для пользователя {} и задачи {}", email, taskId);
@@ -248,32 +204,46 @@ public class TaskService {
         }
     }
 
-
-    public List<Task> getAllUserTasks(Long userId, String sort, String search){
-        if (search != null && !search.trim().isEmpty()) {
-            return taskRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(
-                    userId,search.trim(),userId,search.trim());
-        }
-        return getSortedUserTask(userId, sort);
+    private List<Task> getSortedTasks(String sortParam) {
+        Sort sort = switch (sortParam != null ? sortParam : "default") {
+            case "status_asc"  -> Sort.by(Sort.Direction.ASC, "status");
+            case "status_desc" -> Sort.by(Sort.Direction.DESC, "status");
+            case "deadline"    -> Sort.by(Sort.Direction.ASC, "deadline");
+            case "priority"    -> Sort.by(Sort.Direction.ASC, "priority");
+            case "created_asc"  -> Sort.by(Sort.Direction.ASC, "createdAt");
+            default            -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
+        return taskRepository.findAll(sort);
     }
 
-    private List<Task> getSortedUserTask(Long userId, String sort){
-        List<Task> tasks = taskRepository.findByArtistId(userId);
-
-        return switch (sort) {
-            case "status_asc" -> {
-                tasks.sort(Comparator.comparing(Task::getStatus));
-                yield tasks;
-            }
-            case "status_desc" -> {
-                tasks.sort(Comparator.comparing(Task::getStatus).reversed());
-                yield tasks;
-            }
-            case "deadline" -> taskRepository.findByArtistIdOrderByDeadlineAsc(userId);
-            case "priority" -> taskRepository.findByArtistIdOrderByPriorityAsc(userId);
-            case "id_desc" -> taskRepository.findByArtistIdOrderByIdDesc(userId);
-            case "id_asc" -> taskRepository.findByArtistIdOrderByIdAsc(userId);
-            default -> taskRepository.findByArtistIdOrderByIdDesc(userId);
+    private List<Task> getSortedUserTask(Long userId, String sortParam){
+        Sort sort = switch (sortParam != null ? sortParam : "default"){
+            case "status_asc"  -> Sort.by(Sort.Direction.ASC,"status");
+            case "status_desc" -> Sort.by(Sort.Direction.DESC, "status");
+            case "deadline" -> Sort.by(Sort.Direction.ASC, "deadline");
+            case "priority" -> Sort.by(Sort.Direction.ASC, "priority");
+            case "created_asc"  -> Sort.by(Sort.Direction.ASC, "createdAt");
+            default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
+        return taskRepository.findByArtistId(userId, sort);
+    }
+
+    private List<Task> getSortedFavoriteTasks(List<Task> favorites, String sort) {
+        Comparator<Task> comparator = switch (sort != null ? sort : "default") {
+            case "status_asc"  -> Comparator.comparing(Task::getStatus);
+            case "status_desc" -> Comparator.comparing(Task::getStatus).reversed();
+            case "deadline" -> Comparator.comparing(Task::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "priority" -> Comparator.comparing(Task::getPriority, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "recent"   -> Comparator.comparing(Task::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+            default         -> null;
+        };
+
+        if (comparator == null) {
+            return favorites;
+        }
+
+        return favorites.stream()
+                .sorted(comparator)
+                .toList();
     }
 }

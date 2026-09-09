@@ -37,7 +37,6 @@ public class TaskAttachmentService {
 
         String s3Key = fileStorageService.uploadFile(file, "task-attachents");
 
-
         TaskAttachment taskAttachment = new TaskAttachment();
         taskAttachment.setTask(task);
         taskAttachment.setS3Key(s3Key);

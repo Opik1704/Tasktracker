@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
-import java.util.UUID;
 
 @Controller
 public class TaskController extends LoggingController{
@@ -76,13 +75,12 @@ public class TaskController extends LoggingController{
                 return "all_tasks";
             }
 
-            task.setOwnerId(currentUser.getId());
-            task.setStatus(Task.TaskStatus.NEW);
+            Task savedTask = taskService.createTask(task,currentUser);
 
-            Task savedTask = taskService.saveTask(task,currentUser);
             if (file != null && !file.isEmpty()) {
                 taskAttachmentService.addAttachment( file,savedTask.getId());
             }
+
             log.info("Задача ID {} успешно создана", savedTask.getId());
             return "redirect:/all-tasks";
         }finally {
@@ -109,13 +107,6 @@ public class TaskController extends LoggingController{
 
                 String originalName = null;
                 String storedName = null;
-
-                if (file != null && !file.isEmpty()) {
-                    storedName = taskService.saveFile(file);
-                    originalName = file.getOriginalFilename();
-                }
-
-                taskService.updateTask(task, originalName, storedName, currentUser);
 
                 return "redirect:" + finalRedirect;
             }
