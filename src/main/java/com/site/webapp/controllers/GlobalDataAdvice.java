@@ -35,7 +35,7 @@ public class GlobalDataAdvice extends LoggingController{
                 long unreadCount = notificationRepository.countByUserIdAndReadFalse(currentUser.getId());
 
                 if (user != null) {
-                    model.addAttribute("userAvatar", user.getStoredAvatarFileName());
+                    model.addAttribute("userAvatar", user.getAvatarS3Key());
                     model.addAttribute("currentUserName", user.getFirstName());
                 }
 

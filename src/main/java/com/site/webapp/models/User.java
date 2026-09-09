@@ -4,8 +4,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -22,25 +21,20 @@ import java.util.Set;
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
 @SQLRestriction("deleted = false")
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Имя обязательно")
     @Size(min=2,max = 50, message = "Имя должно содержать не менее 2 символов")
-    @Column(name = "first_name", nullable = false)
+    @Column(nullable = false)
     private String firstName;
 
     @NotBlank(message = "Фамилия обязательна")
     @Size(min=2,max = 50, message = "Фамилия должна содержать не менее 2 символов")
-    @Column(name = "last_name", nullable = false)
+    @Column(nullable = false)
     private String lastName;
-
-    @Column(length = 255)
-    private String originalAvatarFileName;
-
-    @Column(length = 255, unique = true)
-    private String storedAvatarFileName;
 
     @NotBlank(message = "Email обязателен")
     @Email(message = "Введите корректный email")
@@ -53,6 +47,15 @@ public class User implements UserDetails {
 
     @Transient
     private String passwordConfirm;
+
+    @Column(length = 255)
+    private String originalAvatarFileName;
+
+    @Column(length = 512, unique = true)
+    private String avatarS3Key;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -68,24 +71,28 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-
     private Set<Task> favouriteTasks = new HashSet<>();
 
-    @Column(nullable = false)
-    private boolean deleted = false;
-
-
+    // Constructors
 
     public User() {
     }
-    public User(String firstName, String lastName, String email, String password,String originalAvatarFileName,String storedAvatarFileName) {
+
+    public User(String firstName, String lastName, String email, String password,String originalAvatarFileName,String avatarS3Key) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.originalAvatarFileName = originalAvatarFileName;
-        this.storedAvatarFileName = storedAvatarFileName;
+        this.avatarS3Key = avatarS3Key;
     }
+
+    // Logic
+    public boolean isTaskFavorite(Long taskId) {
+        return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
+    }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -93,19 +100,21 @@ public class User implements UserDetails {
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getFirstName() {
         return firstName;
     }
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
+
     public String getLastName() {
         return lastName;
     }
-
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
+
     public String getEmail() {
         return email;
     }
@@ -113,62 +122,40 @@ public class User implements UserDetails {
         this.email = email;
     }
 
-    public String getOriginalAvatarFileName() {
-        return originalAvatarFileName;
-    }
-
-    public void setOriginalAvatarFileName(String originalAvatarFileName) {
-        this.originalAvatarFileName = originalAvatarFileName;
-    }
-
-    public String getStoredAvatarFileName() {
-        return storedAvatarFileName;
-    }
-
-    public void setStoredAvatarFileName(String storedAvatarFileName) {
-        this.storedAvatarFileName = storedAvatarFileName;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return getRoles();
-    }
-
-    @Override
-    @Nonnull
-    public String getUsername() {
-        return getEmail();
-    }
-
     @Override
     public String getPassword() {
         return password;
     }
-    public void setPassword(String password) {this.password = password;}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     public String getPasswordConfirm() {
         return passwordConfirm;
     }
     public void setPasswordConfirm(String passwordConfirm) {
         this.passwordConfirm = passwordConfirm;
+    }
+
+    public String getOriginalAvatarFileName() {
+        return originalAvatarFileName;
+    }
+    public void setOriginalAvatarFileName(String originalAvatarFileName) {
+        this.originalAvatarFileName = originalAvatarFileName;
+    }
+
+    public String getAvatarS3Key() {
+        return avatarS3Key;
+    }
+    public void setAvatarS3Key(String avatarS3Key) {
+        this.avatarS3Key = avatarS3Key;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public Set<Role> getRoles() {
@@ -184,14 +171,52 @@ public class User implements UserDetails {
     public void setFavouriteTasks(Set<Task> favouriteTasks) {
         this.favouriteTasks = favouriteTasks;
     }
-    public boolean isTaskFavorite(Long taskId) {
-        return favouriteTasks.stream().anyMatch(task -> task.getId().equals(taskId));
+
+    // UserDetails Overrides
+    @Override
+    @Nonnull
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getRoles();
     }
-    public boolean isDeleted() {
-        return deleted;
+    @Override
+    @Nonnull
+    public String getUsername() {
+        return getEmail();
     }
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isEnabled() {
+        return !deleted;
+    }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    // Base Method Overrides
+
+    @Override
+    public boolean equals(Object o){
+        if(this == o){
+            return true;
+        }
+        if(o == null || getClass() != o.getClass()){
+            return false;
+        }
+        User user = (User) o;
+        return id != null && Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
     @Override

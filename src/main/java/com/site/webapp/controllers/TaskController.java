@@ -2,6 +2,7 @@ package com.site.webapp.controllers;
 
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
+import com.site.webapp.service.TaskAttachmentService;
 import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,12 @@ import java.util.UUID;
 public class TaskController extends LoggingController{
     private final TaskService taskService;
     private final UserService userService;
+    private final TaskAttachmentService taskAttachmentService;
 
-    public TaskController(TaskService taskService, UserService userService) {
+    public TaskController(TaskService taskService, UserService userService,TaskAttachmentService taskAttachmentService) {
         this.taskService = taskService;
         this.userService = userService;
+        this.taskAttachmentService = taskAttachmentService;
     }
 
     @GetMapping("/all-tasks")
@@ -59,7 +62,6 @@ public class TaskController extends LoggingController{
     public String addTask(@Valid Task task,
                           BindingResult bindingResult,
                           @RequestParam(value = "file", required = false) MultipartFile file,
-                          Principal principal,
                           Model model) throws IOException {
         addUserToMDC();
         try {
@@ -70,25 +72,18 @@ public class TaskController extends LoggingController{
                 model.addAttribute("users", userService.allUsers());
                 model.addAttribute("currentSort", "id");
                 model.addAttribute("search", "");
-                if (principal != null) {
-                    model.addAttribute("currentUser", userService.findByEmail(principal.getName()));
-                }
+
                 return "all_tasks";
-            }
-            if (file != null && !file.isEmpty()) {
-                System.out.println("FILE NAME = " + file.getOriginalFilename());
-                System.out.println("FILE SIZE = " + file.getSize());
-                String storedName = taskService.saveFile(file);
-                task.setOriginalFileName(file.getOriginalFilename());
-                task.setStoredFileName(storedName);
             }
 
             task.setOwnerId(currentUser.getId());
             task.setStatus(Task.TaskStatus.NEW);
 
-            taskService.saveTask(task,currentUser);
-
-            log.info("Задача успешно создана");
+            Task savedTask = taskService.saveTask(task,currentUser);
+            if (file != null && !file.isEmpty()) {
+                taskAttachmentService.addAttachment( file,savedTask.getId());
+            }
+            log.info("Задача ID {} успешно создана", savedTask.getId());
             return "redirect:/all-tasks";
         }finally {
             clearMDC();

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     original_avatar_file_name VARCHAR(255),
-    stored_avatar_file_name VARCHAR(255) UNIQUE,
+    avatar_s3_key VARCHAR(255) UNIQUE,
     deleted BOOLEAN NOT NULL DEFAULT false
 );
 
