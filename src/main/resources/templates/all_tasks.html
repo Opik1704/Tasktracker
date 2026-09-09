@@ -613,8 +613,8 @@
                 <span class="fu-icon">📎</span>
                 Перетащите файл, нажмите или вставьте <kbd>Ctrl+V</kbd>
               </div>
-              <input type="file" name="file" id="add-file-input" class="d-none"
-                     onchange="fuFromInput(this,'add')">
+              <input type="file" name="files" id="add-file-input" class="d-none" multiple onchange="fuFromInput(this,'add')">
+              <div id="add-fu-preview-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
             </div>
             <div id="add-fu-preview" class="fu-preview-wrap">
               <button type="button" class="fu-thumb-btn" id="add-fu-thumb-btn"
@@ -660,6 +660,48 @@
       document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
       document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
 
+      const fileStores = {
+        add: new DataTransfer(),
+        edit: new DataTransfer()
+       };
+      function fuSetFile(file, prefix) {
+          if (!file) return;
+
+          fileStores[prefix].items.add(file);
+
+          const input = document.getElementById(prefix + '-file-input');
+          input.files = fileStores[prefix].files;
+          renderPreviews(prefix);
+      }
+      function renderPreviews(prefix) {
+          const listContainer = document.getElementById(prefix + '-fu-preview-list');
+          listContainer.innerHTML = ''; // Очищаем
+          const files = fileStores[prefix].files;
+
+          for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const itemHtml = `<div class="fu-preview-wrap active">
+                  <span class="fu-filename">${file.name}</span>
+                  <button type="button" class="fu-clear" onclick="removeFile(${i}, '${prefix}')">✕</button>
+              </div>`;
+              listContainer.insertAdjacentHTML('beforeend', itemHtml);
+          }
+      }
+      function removeFile(index, prefix) {
+          const store = fileStores[prefix];
+          const newStore = new DataTransfer();
+
+          // Копируем все файлы, кроме удаляемого
+          for (let i = 0; i < store.files.length; i++) {
+              if (i !== index) newStore.items.add(store.files[i]);
+          }
+          fileStores[prefix] = newStore;
+
+          // Обновляем input и перерисовываем
+          document.getElementById(prefix + '-file-input').files = newStore.files;
+          renderPreviews(prefix);
+      }
+
       const statusField = document.getElementById('editTaskStatus');
       if (statusField) {
           statusField.value = button.getAttribute('data-task-status') || 'NEW';
@@ -685,7 +727,11 @@
             behavior: 'smooth'
         });
     }
-
+    function fuClear(prefix) {
+        fileStores[prefix] = new DataTransfer();
+        document.getElementById(prefix + '-file-input').value = '';
+        document.getElementById(prefix + '-fu-preview-list').innerHTML = '';
+    }
 
   document.addEventListener('DOMContentLoaded', function() {
     const addModal = document.getElementById('addTaskModal');
@@ -770,19 +816,26 @@ function fuSetFile(file, prefix) {
     }
 
     document.addEventListener('paste', function(e) {
-        let prefix = null;
-        if (document.getElementById('editTaskModal')?.classList.contains('show')) prefix = 'edit';
-        else if (document.getElementById('addTaskModal')?.classList.contains('show')) prefix = 'add';
-        if (!prefix) return;
+    let prefix = null;
+    if (document.getElementById('editTaskModal')?.classList.contains('show')) prefix = 'edit';
+    else if (document.getElementById('addTaskModal')?.classList.contains('show')) prefix = 'add';
+    if (!prefix) return;
 
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (const item of items) {
-            if (item.kind === 'file') {
-                fuSetFile(item.getAsFile(), prefix);
-                break;
-            }
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+        if (item.kind === 'file') {
+            const rawFile = item.getAsFile();
+
+            // Если вставлена картинка из буфера — делаем ей красивое имя
+            const ext = rawFile.type.split('/')[1] || 'png';
+            const prettyName = `screenshot_${Date.now()}.${ext}`;
+            const screenshotFile = new File([rawFile], prettyName, { type: rawFile.type });
+
+            fuSetFile(screenshotFile, prefix);
+            break;
         }
-    });
+    }
+});
 
     document.addEventListener('DOMContentLoaded', function() {
         ['editTaskModal', 'addTaskModal'].forEach(function(id) {

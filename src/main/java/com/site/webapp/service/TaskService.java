@@ -1,6 +1,7 @@
 package com.site.webapp.service;
 
 import com.site.webapp.models.Task;
+import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
@@ -29,11 +30,13 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final TaskAttachmentService taskAttachmentService;
 
-    public TaskService(TaskRepository taskRepository, UserRepository userRepository,NotificationService notificationService) {
+    public TaskService(TaskRepository taskRepository, UserRepository userRepository,NotificationService notificationService,TaskAttachmentService taskAttachmentService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.taskAttachmentService = taskAttachmentService;
     }
 
 
@@ -179,6 +182,9 @@ public class TaskService {
                 notificationService.send(artist, msg);
             });
         }
+
+        taskAttachmentService.deleteAllByTaskId(id);
+
         notificationService.deleteAllByTaskId(id);
 
         taskRepository.deleteById(id);

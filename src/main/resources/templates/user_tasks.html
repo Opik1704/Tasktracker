@@ -262,8 +262,8 @@
                                 th:data-task-status="${el.status}">
                             Редактировать
                         </button>
-                        <form th:action="@{/all-tasks/delete/{id}(id=${el.id}, sort=${currentSort})}" method="post"
-                              onsubmit="return confirm('Удалить задачу?');">
+                        <form th:action="@{/all-tasks/delete/{id}(id=${el.id}, sort=${currentSort})}" method="post" onsubmit="return confirm('Удалить задачу?');">
+                            <input type="hidden" name="returnUrl" th:value="${#httpServletRequest.requestURI}" />
                             <button type="submit" class="btn btn-danger btn-sm" style="min-width: 120px;">Удалить</button>
                         </form>
                     </div>

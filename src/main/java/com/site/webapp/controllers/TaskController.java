@@ -60,7 +60,7 @@ public class TaskController extends LoggingController{
     @PostMapping("/all-tasks")
     public String addTask(@Valid Task task,
                           BindingResult bindingResult,
-                          @RequestParam(value = "file", required = false) MultipartFile file,
+                          @RequestParam(value = "files", required = false) List<MultipartFile> files,
                           Model model) throws IOException {
         addUserToMDC();
         try {
@@ -77,56 +77,69 @@ public class TaskController extends LoggingController{
 
             Task savedTask = taskService.createTask(task,currentUser);
 
-            if (file != null && !file.isEmpty()) {
-                taskAttachmentService.addAttachment( file,savedTask.getId());
+            if (files != null && !files.isEmpty()) {
+                for(MultipartFile file : files){
+                    if (!file.isEmpty()) {
+                        taskAttachmentService.addAttachment(file, savedTask.getId());
+                    }
+                }
             }
 
             log.info("Задача ID {} успешно создана", savedTask.getId());
             return "redirect:/all-tasks";
+
         }finally {
             clearMDC();
         }
     }
+    @PostMapping("/all-tasks/update")
+    public String updateTask(@Valid Task task,
+                             BindingResult bindingResult,
+                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                             @RequestParam(value = "files", required = false) List<MultipartFile> files,
+                             @RequestParam(defaultValue = "id_asc") String sort,
+                             Model model) throws IOException {
+        addUserToMDC();
+        String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
+        try {
+            if (bindingResult.hasErrors()) {
+                log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
+                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
+            }
 
-        @PostMapping("/all-tasks/update")
-        public String updateTask(@Valid Task task,
-                                 BindingResult bindingResult,
-                                 @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                                 @RequestParam(value = "file", required = false) MultipartFile file,
-                                 @RequestParam(defaultValue = "id_asc") String sort,
-                                 Model model) throws IOException {
-            addUserToMDC();
-            String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
-            try {
-                if (bindingResult.hasErrors()) {
-                    log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
-                    return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
+            User currentUser = getCurrentUser();
+            taskService.updateTask(task, currentUser);
+
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
+                    if (!file.isEmpty()) {
+                        taskAttachmentService.addAttachment(file, task.getId());
+                    }
                 }
-
-                User currentUser = getCurrentUser();
-
-                String originalName = null;
-                String storedName = null;
-
-                return "redirect:" + finalRedirect;
             }
-            catch (Exception e){
-                log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
-                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
-            }
-            finally {
-                clearMDC();
-            }
+            log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getEmail());
+            return "redirect:" + finalRedirect;
         }
+        catch (Exception e){
+            log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
+            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
+        }
+        finally {
+            clearMDC();
+        }
+    }
 
     @PostMapping("/all-tasks/delete/{id}")
-    public String deleteTask(@PathVariable Long id, @RequestParam(defaultValue = "id_asc") String sort){
+    public String deleteTask(@PathVariable Long id, @RequestParam(value = "returnUrl", required = false) String returnUrl,@RequestParam(defaultValue = "id_asc") String sort){
         addUserToMDC();
         try {
             User currentUser = getCurrentUser();
             log.info("Удаление задачи");
             taskService.deleteTask(id,currentUser);
             log.info("Задача id {} удалена",id);
+            if (returnUrl != null && returnUrl.startsWith("/")) {
+                return "redirect:" + returnUrl;
+            }
             return "redirect:/all-tasks?sort=" + sort;
         }
         finally {

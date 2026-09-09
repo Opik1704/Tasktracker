@@ -22,6 +22,7 @@ public class TaskAttachmentService {
     private final FileStorageService fileStorageService;
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final TaskRepository taskRepository;
+
     public TaskAttachmentService(FileStorageService fileStorageService,TaskAttachmentRepository taskAttachmentRepository,TaskRepository taskRepository) {
         this.fileStorageService = fileStorageService;
         this.taskAttachmentRepository = taskAttachmentRepository;
@@ -36,6 +37,7 @@ public class TaskAttachmentService {
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new IllegalArgumentException("Невозможно найти задачу с ID: " + taskId));
 
         String s3Key = fileStorageService.uploadFile(file, "task-attachents");
+
 
         TaskAttachment taskAttachment = new TaskAttachment();
         taskAttachment.setTask(task);
@@ -78,5 +80,14 @@ public class TaskAttachmentService {
 
         taskAttachmentRepository.delete(taskAttachment);
         log.info("Вложение  '{}' успешно удалено из S3 и БД",taskAttachment.getFileName());
+    }
+
+    @Transactional
+    public void deleteAllByTaskId(Long taskId) {
+        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
+        for (TaskAttachment attachment : attachments) {
+            deleteAttachment(attachment.getId());
+        }
+        log.info("Все вложения для задачи ID {} успешно удалены", taskId);
     }
 }
