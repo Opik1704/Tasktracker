@@ -1,5 +1,6 @@
 package com.site.webapp.service;
 
+import com.site.webapp.exception.TaskNotFoundException;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.models.User;
@@ -92,7 +93,7 @@ public class TaskService {
     @Transactional
     public void updateTask(Task updatedTask, User initiator) {
 
-        Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new TaskNotFoundException(updatedTask.getId()));
         if (updatedTask.getVersion() != null) {
             task.setVersion(updatedTask.getVersion());
         }
@@ -174,7 +175,7 @@ public class TaskService {
 
     @Transactional
     public void deleteTask(Long id, User initiator) {
-        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        Task task = taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
 
         String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail()  : "Система";
         if (task.getArtistId() != null) {
@@ -202,7 +203,7 @@ public class TaskService {
         User user = userRepository.findByEmail(email);
         if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
 
-        Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Задача не найдена"));
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
         if (user.getFavouriteTasks().contains(task)) {
             user.getFavouriteTasks().remove(task);
             log.info("Пользователь {} удалил задачу {} из избранного", email, taskId);

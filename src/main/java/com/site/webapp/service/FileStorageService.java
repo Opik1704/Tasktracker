@@ -1,5 +1,6 @@
 package com.site.webapp.service;
 
+import com.site.webapp.exception.FileStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +38,7 @@ public class FileStorageService {
             log.info("Successfully uploaded file '{}' to S3 with key '{}'", file.getOriginalFilename(), s3Key);
         } catch (Exception e) {
             log.error("Error uploading file '{}' with key '{}' to S3", file.getOriginalFilename(), s3Key, e);
-            throw new RuntimeException("Failed to upload file to S3", e);
+            throw new FileStorageException("Failed to upload file to S3", e);
         }
 
         return s3Key;
@@ -50,7 +51,7 @@ public class FileStorageService {
             return s3Client.getObject(request);
         }catch (Exception e){
             log.error("Error downloading file with key '{}' from S3", s3Key, e);
-            throw new RuntimeException("Failed to download file from S3", e);
+            throw new FileStorageException("Failed to download file from S3", e);
         }
 
     }
@@ -62,7 +63,7 @@ public class FileStorageService {
         }
         catch (Exception e){
             log.error("Error deleting file with key '{}' from S3", s3Key, e);
-            throw new RuntimeException("Failed to delete file from S3", e);
+            throw new FileStorageException("Failed to delete file from S3", e);
         }
     }
 }

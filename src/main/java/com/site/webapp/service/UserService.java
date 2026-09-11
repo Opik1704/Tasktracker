@@ -1,6 +1,8 @@
 package com.site.webapp.service;
 
 import com.site.webapp.dto.RegistrationDto;
+import com.site.webapp.exception.RoleNotFoundException;
+import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
@@ -55,7 +57,7 @@ public class UserService implements UserDetailsService {
             user.setEmail(registrationDto.getEmail());
             user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
 
-            Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RuntimeException("Роль EMPLOYEE не найдена"));
+            Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RoleNotFoundException("Роль EMPLOYEE не найдена"));
             user.setRoles(Collections.singleton(employeeRole));
 
             userRepository.save(user);
@@ -125,7 +127,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void updateUserInfo(Long userId,String firstName,String lastName, Long version){
         log.info("Обновление данных для пользователя ID: {}", userId);
-        User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("Пользователь не найден"));
+        User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
         if(user != null){
             log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
             if (version != null) {
@@ -161,7 +163,7 @@ public class UserService implements UserDetailsService {
     public void updateUserRoles(Long userId, List<Long> roleIds,Long version) {
         log.info("Обновление ролей для пользователя ID: {}", userId);
 
-        User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("Пользователь не найден"));
+        User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
         if (version != null) {
             user.setVersion(version);
         }
@@ -190,7 +192,7 @@ public class UserService implements UserDetailsService {
             return;
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         if (user.getAvatarS3Key() != null) {
             try {
                 fileStorageService.deleteFile(user.getAvatarS3Key());
