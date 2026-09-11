@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     original_avatar_file_name VARCHAR(512),
     avatar_s3_key VARCHAR(255) UNIQUE,
     deleted BOOLEAN NOT NULL DEFAULT false
+    version BIGINT NOT NULL DEFAULT 0
 );
 
 -- 3. Таблица ролей
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at TIMESTAMP(6) NOT NULL,
     updated_at TIMESTAMP(6),
     deleted BOOLEAN NOT NULL DEFAULT false
+    version BIGINT NOT NULL DEFAULT 0
 );
 
 -- 5. Таблица вложений

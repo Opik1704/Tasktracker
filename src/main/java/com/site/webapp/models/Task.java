@@ -67,6 +67,9 @@ public class Task {
         NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
     }
 
+    @Version
+    private Long version;
+
     // Constructors
 
     public Task() {
@@ -173,6 +176,14 @@ public class Task {
         this.deleted = deleted;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     public List<TaskAttachment> getAttachments() {
         return attachments;
     }
@@ -184,10 +195,14 @@ public class Task {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Task task = (Task) o;
-        return Objects.equals(id, task.id);
+        return id != null && Objects.equals(id, task.id);
     }
 
     @Override

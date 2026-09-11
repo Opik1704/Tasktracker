@@ -73,6 +73,9 @@ public class User implements UserDetails {
     )
     private Set<Task> favouriteTasks = new HashSet<>();
 
+    @Version
+    private Long version;
+
     // Constructors
 
     public User() {
@@ -165,6 +168,14 @@ public class User implements UserDetails {
     }
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public Set<Role> getRoles() {
