@@ -38,46 +38,34 @@ public class UserService implements UserDetailsService {
         this.fileStorageService = fileStorageService;
     }
 
-
+    @Transactional
     public String registerNewUser(RegistrationDto registrationDto) {
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
             return "passwordError";
         }
         if (userRepository.findByEmail(registrationDto.getEmail()) != null) {
+            log.warn("Регистрация невозможна: email {} уже существует", registrationDto.getEmail());
             return "emailError";
-        }
-        User user = new User();
-        user.setFirstName(registrationDto.getFirstName());
-        user.setLastName(registrationDto.getLastName());
-        user.setEmail(registrationDto.getEmail());
-        user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-
-        if (saveUser(user)) {
-            log.info("Пользователь {} успешно зарегистрирован", user.getEmail());
-            return "success";
-        } else {
-            log.warn("Пользователь {} не зарегистрирован", user.getEmail());
-            return "emailError";
-        }
-    }
-    @Transactional
-    public boolean saveUser(User user){
-        User userFromDB = userRepository.findByEmail(user.getEmail());
-        if (userFromDB != null){
-            log.warn("Регистрация невозможна email {} уже существует",user.getEmail());
-            return false;
         }
         try{
+            User user= new User();
+
+            user.setFirstName(registrationDto.getFirstName());
+            user.setLastName(registrationDto.getLastName());
+            user.setEmail(registrationDto.getEmail());
+            user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
+
             Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RuntimeException("Роль EMPLOYEE не найдена"));
             user.setRoles(Collections.singleton(employeeRole));
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+
             userRepository.save(user);
-            log.info("Пользователь {} успешно зарегистрирован с ID: {}",user.getEmail(), user.getId());
-            return true;
+            log.info("Пользователь {} успешно зарегистрирован", user.getEmail());
+            return "success";
         }catch (Exception e){
-            log.error("Ошибка при регистрации пользователя {}",e.getMessage(),e);
-            return false;
+            log.error("Ошибка при регистрации пользователя {}: {}", registrationDto.getEmail(), e.getMessage(), e);
+            return "emailError";
         }
+
     }
 
 
