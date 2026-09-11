@@ -115,7 +115,7 @@
                 <!-- Форма для изменения ролей -->
                 <form th:action="@{/admin/update-roles}" method="post">
                     <input type="hidden" name="userId" th:value="${user.id}">
-
+                    <input type="hidden" name="version" th:value="${user.version}">
                     <div class="role-selector">
                         <div th:each="role : ${allRoles}" class="role-option">
                             <input type="checkbox"

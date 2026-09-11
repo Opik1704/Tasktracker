@@ -93,7 +93,9 @@ public class TaskService {
     public void updateTask(Task updatedTask, User initiator) {
 
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new RuntimeException("Задача не найдена"));
-
+        if (updatedTask.getVersion() != null) {
+            task.setVersion(updatedTask.getVersion());
+        }
         String authorName = initiator != null ? initiator.getFullName() : "Система";
 
         if (!Objects.equals(task.getArtistId(), updatedTask.getArtistId())) {

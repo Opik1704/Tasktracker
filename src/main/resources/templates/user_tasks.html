@@ -260,6 +260,7 @@
                                 th:data-task-comment="${el.comment}" onclick="fillEditModal(this)"
                                 th:data-task-artist="${el.artistId}"
                                 th:data-task-status="${el.status}">
+                                th:data-task-version="${el.version}"
                             Редактировать
                         </button>
                         <form th:action="@{/all-tasks/delete/{id}(id=${el.id}, sort=${currentSort})}" method="post" onsubmit="return confirm('Удалить задачу?');">
@@ -271,6 +272,7 @@
                         <input type="hidden" name="returnUrl" value="/user-tasks" />
 
                         <input type="hidden" name="id" th:value="${task.id}" />
+                        <input type="hidden" name="version" id="editTaskVersion">
 
                         <div class="mb-3">
                             <label for="taskFiles" class="form-label">Прикрепить файлы</label>
@@ -323,6 +325,7 @@
           }
 
         document.getElementById('editTaskReturnUrl').value = currentPath;
+        document.getElementById('editTaskVersion').value = button.getAttribute('data-task-version') || 0;
 
         document.getElementById('editTaskId').value = button.getAttribute('data-task-id');
         document.getElementById('editTaskTitle').value = button.getAttribute('data-task-title');

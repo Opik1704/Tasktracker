@@ -13,10 +13,11 @@ public class ChangeProfileDto {
     @Size(min = 2, max = 50, message = "Фамилия должна быть от 2 до 50 символов")
     private String lastName;
 
+    private Long version;
+
     public String getLastName() {
         return lastName;
     }
-
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
@@ -24,8 +25,10 @@ public class ChangeProfileDto {
     public String getFirstName() {
         return firstName;
     }
-
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

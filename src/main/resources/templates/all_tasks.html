@@ -545,6 +545,7 @@
                   th:data-task-deadline="${el.deadline != null ? #temporals.format(el.deadline, &quot;yyyy-MM-dd'T'HH:mm&quot;) : ''}"
                   th:data-task-comment="${el.comment} ?: ''"
                   th:data-current-sort="${currentSort}"
+                  th:data-task-version="${el.version}"
                   onclick="fillEditModal(this)">
             Редактировать
           </button>
@@ -659,7 +660,7 @@
       document.getElementById('editTaskArtist').value = button.getAttribute('data-task-artist');
       document.getElementById('editTaskDeadline').value = button.getAttribute('data-task-deadline');
       document.getElementById('editTaskComment').value = button.getAttribute('data-task-comment') || '';
-
+      document.getElementById('editTaskVersion').value = button.getAttribute('data-task-version') || 0;
       const fileStores = {
         add: new DataTransfer(),
         edit: new DataTransfer()

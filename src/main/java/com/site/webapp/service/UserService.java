@@ -135,11 +135,14 @@ public class UserService implements UserDetailsService {
 
 
     @Transactional
-    public void updateUserInfo(Long userId,String firstName,String lastName){
+    public void updateUserInfo(Long userId,String firstName,String lastName, Long version){
         log.info("Обновление данных для пользователя ID: {}", userId);
         User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("Пользователь не найден"));
         if(user != null){
             log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
+            if (version != null) {
+                user.setVersion(version);
+            }
             user.setFirstName(firstName);
             user.setLastName(lastName);
             userRepository.save(user);
@@ -167,11 +170,13 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateUserRoles(Long userId, List<Long> roleIds) {
+    public void updateUserRoles(Long userId, List<Long> roleIds,Long version) {
         log.info("Обновление ролей для пользователя ID: {}", userId);
 
         User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("Пользователь не найден"));
-
+        if (version != null) {
+            user.setVersion(version);
+        }
         Set<Role> newRoles = new HashSet<>();
         if (roleIds != null && !roleIds.isEmpty()){
             for(Long roleId : roleIds){

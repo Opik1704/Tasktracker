@@ -267,6 +267,7 @@
             <div class="form-section">
                 <h2>Редактировать данные</h2>
                 <form th:action="@{/profile/update-info}" method="post">
+                    <input type="hidden" name="version" th:value="${user.version}">
                     <div class="form-group">
                         <label>Имя</label>
                         <input type="text" name="firstName" th:value="${user.firstName}" class="form-control" required>

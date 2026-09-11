@@ -89,6 +89,7 @@
             <div class="modal-body">
                 <form id="editTaskForm" th:action="@{/all-tasks/update}" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editTaskId">
+                    <input type="hidden" name="version" id="editTaskVersion">
                     <input type="hidden" name="returnUrl" id="editTaskReturnUrl" value="">
 
 <!--                    <input type="hidden" name="redirectUrl" value="/user-tasks">-->

@@ -58,13 +58,19 @@ public class AdminController extends LoggingController{
         }
     }
     @PostMapping("/update-roles")
-    public String editUsersRole(@RequestParam Long userId, @RequestParam(required = false) List<Long> roleIds, HttpServletRequest request){
+    public String editUsersRole(@RequestParam Long userId,
+                                @RequestParam(required = false) Long version,
+                                @RequestParam(required = false) List<Long> roleIds,
+                                HttpServletRequest request){
         addUserToMDC();
         try {
             log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
-            userService.updateUserRoles(userId,roleIds);
+            userService.updateUserRoles(userId,roleIds,version);
             log.info("Роли пользователя ID {} обновлены", userId);
             return "redirect:/admin";
+        }catch (org.springframework.orm.ObjectOptimisticLockingFailureException e){
+            log.warn("Конфликт оптимистичной блокировки при изменении ролей пользователя ID {}", userId);
+            return "redirect:/admin?error=optimistic_lock";
         }
         finally {
             clearMDC();

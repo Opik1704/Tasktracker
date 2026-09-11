@@ -45,8 +45,11 @@ public class ProfileController extends LoggingController {
         addUserToMDC();
         try {
             log.info("Пользователь {} обновляет данные", currentUser.getEmail());
-            userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName());
+            userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName(),changeProfileDto.getVersion());
             return "redirect:/profile";
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            log.warn("Конфликт редактирования профиля пользователя {} данные успели измениться", currentUser.getEmail());
+            return "redirect:/profile?error=optimistic_lock";
         } finally {
             clearMDC();
         }

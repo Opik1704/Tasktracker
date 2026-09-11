@@ -119,6 +119,9 @@ public class TaskController extends LoggingController{
             }
             log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getEmail());
             return "redirect:" + finalRedirect;
+        }catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            log.warn("Конфликт оптимистичной блокировки при обновлении задачи ID {}: данные устарели", task.getId());
+            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=optimistic_lock";
         }
         catch (Exception e){
             log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
