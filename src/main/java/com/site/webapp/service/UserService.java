@@ -144,7 +144,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public String updatePassword(Long userId, String oldPassword,String newPassword,String confirmPassword){
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             log.warn("Неверный старый пароль для пользователя: {}", user.getEmail());
             return "oldPasswordError";

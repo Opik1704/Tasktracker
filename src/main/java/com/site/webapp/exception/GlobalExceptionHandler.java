@@ -32,6 +32,33 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
+    public String handleUserNotFoundException(UserNotFoundException e,HttpServletRequest request,RedirectAttributes redirectAttributes){
+        log.error("User not found id: {}", e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найть пользователя" + e.getMessage());
+
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null ? referer : "/all-tasks");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public String handleTaskNotFoundException(TaskNotFoundException e,HttpServletRequest request, RedirectAttributes redirectAttributes){
+        log.error("Task not found {}", e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найти задачу" + e.getMessage());
+
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null ? referer : "/all-tasks");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public String handleRoleNotFoundException(RoleNotFoundException e, HttpServletRequest request, RedirectAttributes redirectAttributes){
+        log.error("Role not found {}", e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найти роль" + e.getMessage());
+
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null ? referer : "/all-tasks");
+    }
+
+    @ExceptionHandler(Exception.class)
     public String handleGeneralException(Exception e) {
         log.error("Unexpected error", e);
         return "error";

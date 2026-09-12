@@ -57,6 +57,7 @@ public class AdminController extends LoggingController{
             clearMDC();
         }
     }
+
     @PostMapping("/update-roles")
     public String editUsersRole(@RequestParam Long userId,
                                 @RequestParam(required = false) Long version,
