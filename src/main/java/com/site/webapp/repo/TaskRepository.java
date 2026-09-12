@@ -2,12 +2,12 @@ package com.site.webapp.repo;
 
 import com.site.webapp.models.Task;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface TaskRepository extends CrudRepository<Task,Long> {
+public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findAll(Sort sort);
     List<Task> findByArtistId(Long artistId, Sort sort);
