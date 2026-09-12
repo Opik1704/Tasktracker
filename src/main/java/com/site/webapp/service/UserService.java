@@ -8,6 +8,7 @@ import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.RoleRepository;
 import com.site.webapp.repo.UserRepository;
+import com.site.webapp.security.CustomUserDetails;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found" + email);
         }
         log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
-        return user;
+        return new CustomUserDetails(user);
     }
 
     public User findUserById(Long userId){

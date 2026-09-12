@@ -1,6 +1,6 @@
 package com.site.webapp.interceptor;
 
-import com.site.webapp.models.User;
+import com.site.webapp.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
@@ -21,9 +21,9 @@ public class MdcLoggingInterceptor implements HandlerInterceptor {
         MDC.put("traceId", traceId);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User user) {
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails user) {
             MDC.put("userId", user.getId().toString());
-            MDC.put("userEmail", user.getEmail());
+            MDC.put("userEmail", user.getUsername());
         }
         return true;
     }
