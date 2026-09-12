@@ -24,16 +24,14 @@ public class ProfileController extends LoggingController {
 
     @GetMapping
     public String profile(@AuthenticationPrincipal User currentUser, Model model) {
-        if (currentUser == null) return "redirect:/authorization";
-        addUserToMDC();
-        try {
-            User freshUser = userService.findUserById(currentUser.getId());
-            log.info("Пользователь {} открыл свой профиль", getCurrentUserEmail());
-            model.addAttribute("user", freshUser);
-            return "profile";
-        } finally {
-            clearMDC();
-        }
+
+    if (currentUser == null) return "redirect:/authorization";
+        User freshUser = userService.findUserById(currentUser.getId());
+
+        log.info("Пользователь {} открыл свой профиль", getCurrentUserEmail());
+        model.addAttribute("user", freshUser);
+
+        return "profile";
     }
 
     @PostMapping("/update-info")
@@ -42,17 +40,10 @@ public class ProfileController extends LoggingController {
                                 BindingResult bindingResult) {
         if (currentUser == null) return "redirect:/authorization";
 
-        addUserToMDC();
-        try {
-            log.info("Пользователь {} обновляет данные", currentUser.getEmail());
-            userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName(),changeProfileDto.getVersion());
-            return "redirect:/profile";
-        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
-            log.warn("Конфликт редактирования профиля пользователя {} данные успели измениться", currentUser.getEmail());
-            return "redirect:/profile?error=optimistic_lock";
-        } finally {
-            clearMDC();
-        }
+        log.info("Пользователь {} обновляет данные", currentUser.getEmail());
+        userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName(),changeProfileDto.getVersion());
+        return "redirect:/profile";
+
     }
 
     @PostMapping("/change-password")
@@ -60,22 +51,17 @@ public class ProfileController extends LoggingController {
                                  @Valid @ModelAttribute ChangePasswordDto changePasswordDto) {
         if (currentUser == null) return "redirect:/authorization";
 
-        addUserToMDC();
-        try {
-            String result = userService.updatePassword(
-                    currentUser.getId(),
-                    changePasswordDto.getOldPassword(),
-                    changePasswordDto.getNewPassword(),
-                    changePasswordDto.getConfirmPassword()
-            );
+        String result = userService.updatePassword(
+                currentUser.getId(),
+                changePasswordDto.getOldPassword(),
+                changePasswordDto.getNewPassword(),
+                changePasswordDto.getConfirmPassword()
+        );
 
-            if ("success".equals(result)) {
-                return "redirect:/profile?passwordSuccess";
-            } else {
-                return "redirect:/profile?" + result;
-            }
-        } finally {
-            clearMDC();
+        if ("success".equals(result)) {
+            return "redirect:/profile?passwordSuccess";
+        } else {
+            return "redirect:/profile?" + result;
         }
     }
 
@@ -83,25 +69,21 @@ public class ProfileController extends LoggingController {
     public String updateAvatar(@AuthenticationPrincipal User currentUser,
                                @RequestParam("avatar") MultipartFile file,
                                RedirectAttributes redirectAttributes){
-        addUserToMDC();
-        try{
-            log.info("Пользователь {} обновляет аватарку", currentUser.getEmail());
-            if (file.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Файл не выбран");
-                return "redirect:/profile";
-            }
 
-            userService.updateAvatar(currentUser.getId(), file);
-            redirectAttributes.addFlashAttribute("success", "Аватарка успешно обновлена!");
-            return "redirect:/profile";
+        if (currentUser == null) return "redirect:/authorization";
 
-        }catch (Exception e) {
-            log.error("Ошибка при обновлении аватарки для {}: {}", currentUser.getEmail(), e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Ошибка при сохранении файла: " + e.getMessage());
+        log.info("Пользователь {} обновляет аватарку", currentUser.getEmail());
+
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Файл не выбран");
             return "redirect:/profile";
-        }finally {
-            clearMDC();
         }
+
+        userService.updateAvatar(currentUser.getId(), file);
+
+        redirectAttributes.addFlashAttribute("success", "Аватарка успешно обновлена!");
+        return "redirect:/profile";
+
     }
 
 }

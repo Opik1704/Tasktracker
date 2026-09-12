@@ -10,9 +10,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public abstract class LoggingController {
+
     @Autowired
     UserRepository userRepository;
+
     protected final Logger log = LoggerFactory.getLogger(getClass());
+
     protected User getCurrentUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth != null && auth.getPrincipal() instanceof User){
@@ -21,22 +24,25 @@ public abstract class LoggingController {
         }
         return null;
     }
+
     protected Long getCurrentId(){
         User user = getCurrentUser();
         return user != null ? user.getId() : null;
     }
+
     protected String getCurrentUserEmail(){
         User user = getCurrentUser();
         return user != null ? user.getEmail() : "anonim";
     }
-    protected void addUserToMDC() {
-        User user = getCurrentUser();
-        if (user != null) {
-            MDC.put("userId", user.getId().toString());
-            MDC.put("userEmail", user.getEmail());
-        }
-    }
-    protected void clearMDC() {
-        MDC.clear();
-    }
+
+//    protected void addUserToMDC() {
+//        User user = getCurrentUser();
+//        if (user != null) {
+//            MDC.put("userId", user.getId().toString());
+//            MDC.put("userEmail", user.getEmail());
+//        }
+//    }
+//    protected void clearMDC() {
+//        MDC.clear();
+//    }
 }

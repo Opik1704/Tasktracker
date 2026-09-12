@@ -26,7 +26,9 @@ public class RegistrationController extends LoggingController {
     @GetMapping
     public String registration(Model model){
         log.info("Открыта страница регистрации");
+
         model.addAttribute("userForm",new RegistrationDto());
+
         return "registration";
     }
 
@@ -38,15 +40,19 @@ public class RegistrationController extends LoggingController {
         if (bindingResult.hasErrors()) {
             return "registration";
         }
+
         String result = userService.registerNewUser(registrationDto);
+
         if ("passwordError".equals(result)) {
             model.addAttribute("passwordError", "Пароли не совпадают");
             return "registration";
         }
+
         if ("emailError".equals(result)) {
             model.addAttribute("emailError", "Пользователь с таким email уже существует");
             return "registration";
         }
+
         return "redirect:/authorization?registered=true";
     }
 }

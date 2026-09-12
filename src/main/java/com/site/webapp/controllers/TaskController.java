@@ -36,25 +36,21 @@ public class TaskController extends LoggingController{
     public String allTasks(@RequestParam(defaultValue = "id") String sort,
                            @RequestParam(required = false) String search,
                            Model model){
-        addUserToMDC();
-        try {
-            log.info("Пользователь,запросил список всех задач");
-            log.debug("Параметры: sort = {}",sort);
 
-            List<Task> tasks = taskService.getAllTasks(sort,search);
-            User currentUser = getCurrentUser();
+        log.info("Пользователь,запросил список всех задач");
+        log.debug("Параметры: sort = {}",sort);
 
-            model.addAttribute("tasks", tasks);
-            model.addAttribute("users",userService.allUsers());
-            model.addAttribute("currentSort", sort);
-            model.addAttribute("search",search);
-            model.addAttribute("currentUser", currentUser);
+        List<Task> tasks = taskService.getAllTasks(sort,search);
+        User currentUser = getCurrentUser();
 
-            return "all_tasks";
-        }
-        finally {
-            clearMDC();
-        }
+        model.addAttribute("tasks", tasks);
+        model.addAttribute("users",userService.allUsers());
+        model.addAttribute("currentSort", sort);
+        model.addAttribute("search",search);
+        model.addAttribute("currentUser", currentUser);
+
+        return "all_tasks";
+
     }
 
     @PostMapping("/all-tasks")
@@ -62,36 +58,33 @@ public class TaskController extends LoggingController{
                           BindingResult bindingResult,
                           @RequestParam(value = "files", required = false) List<MultipartFile> files,
                           Model model) throws IOException {
-        addUserToMDC();
-        try {
-            User currentUser = getCurrentUser();
-            if (bindingResult.hasErrors()) {
-                log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
-                model.addAttribute("tasks", taskService.getAllTasks("id", null));
-                model.addAttribute("users", userService.allUsers());
-                model.addAttribute("currentSort", "id");
-                model.addAttribute("search", "");
 
-                return "all_tasks";
-            }
+        User currentUser = getCurrentUser();
+        if (bindingResult.hasErrors()) {
+            log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
+            model.addAttribute("tasks", taskService.getAllTasks("id", null));
+            model.addAttribute("users", userService.allUsers());
+            model.addAttribute("currentSort", "id");
+            model.addAttribute("search", "");
 
-            Task savedTask = taskService.createTask(task,currentUser);
+            return "all_tasks";
+        }
 
-            if (files != null && !files.isEmpty()) {
-                for(MultipartFile file : files){
-                    if (!file.isEmpty()) {
-                        taskAttachmentService.addAttachment(file, savedTask.getId());
-                    }
+        Task savedTask = taskService.createTask(task,currentUser);
+
+        if (files != null && !files.isEmpty()) {
+            for(MultipartFile file : files){
+                if (!file.isEmpty()) {
+                    taskAttachmentService.addAttachment(file, savedTask.getId());
                 }
             }
-
-            log.info("Задача ID {} успешно создана", savedTask.getId());
-            return "redirect:/all-tasks";
-
-        }finally {
-            clearMDC();
         }
+
+        log.info("Задача ID {} успешно создана", savedTask.getId());
+        return "redirect:/all-tasks";
+
     }
+
     @PostMapping("/all-tasks/update")
     public String updateTask(@Valid Task task,
                              BindingResult bindingResult,
@@ -99,55 +92,44 @@ public class TaskController extends LoggingController{
                              @RequestParam(value = "files", required = false) List<MultipartFile> files,
                              @RequestParam(defaultValue = "id_asc") String sort,
                              Model model) throws IOException {
-        addUserToMDC();
+
         String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
-        try {
-            if (bindingResult.hasErrors()) {
-                log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
-                return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
-            }
 
-            User currentUser = getCurrentUser();
-            taskService.updateTask(task, currentUser);
+        if (bindingResult.hasErrors()) {
+            log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());
+            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
+        }
 
-            if (files != null && !files.isEmpty()) {
-                for (MultipartFile file : files) {
-                    if (!file.isEmpty()) {
-                        taskAttachmentService.addAttachment(file, task.getId());
-                    }
+        User currentUser = getCurrentUser();
+        taskService.updateTask(task, currentUser);
+
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    taskAttachmentService.addAttachment(file, task.getId());
                 }
             }
-            log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getEmail());
-            return "redirect:" + finalRedirect;
-        }catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
-            log.warn("Конфликт оптимистичной блокировки при обновлении задачи ID {}: данные устарели", task.getId());
-            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=optimistic_lock";
         }
-        catch (Exception e){
-            log.error("Ошибка при обновлении задачи {}",e.getMessage(),e);
-            return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=true";
-        }
-        finally {
-            clearMDC();
-        }
+
+        log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getEmail());
+        return "redirect:" + finalRedirect;
+
     }
 
     @PostMapping("/all-tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(value = "returnUrl", required = false) String returnUrl,@RequestParam(defaultValue = "id_asc") String sort){
-        addUserToMDC();
-        try {
-            User currentUser = getCurrentUser();
-            log.info("Удаление задачи");
-            taskService.deleteTask(id,currentUser);
-            log.info("Задача id {} удалена",id);
-            if (returnUrl != null && returnUrl.startsWith("/")) {
-                return "redirect:" + returnUrl;
-            }
-            return "redirect:/all-tasks?sort=" + sort;
+        User currentUser = getCurrentUser();
+
+        log.info("Удаление задачи");
+        taskService.deleteTask(id,currentUser);
+        log.info("Задача id {} удалена",id);
+
+        if (returnUrl != null && returnUrl.startsWith("/")) {
+            return "redirect:" + returnUrl;
         }
-        finally {
-            clearMDC();
-        }
+
+        return "redirect:/all-tasks?sort=" + sort;
+
     }
 
 
@@ -156,18 +138,16 @@ public class TaskController extends LoggingController{
                             Principal principal,
                             Model model) {
         if (principal == null) return "redirect:/authorization";
-        addUserToMDC();
-        try {
-            String email = principal.getName();
-            log.info("Пользователь {} просматривает избранное (сортировка: {})", email, sort);
 
-            model.addAttribute("tasks", taskService.getSortedFavorites(email, sort));
-            model.addAttribute("users", userService.allUsers());
-            model.addAttribute("pageTitle", "Избранные задачи");
-            return "favorites";
-        } finally {
-            clearMDC();
-        }
+        String email = principal.getName();
+        log.info("Пользователь {} просматривает избранное (сортировка: {})", email, sort);
+
+        model.addAttribute("tasks", taskService.getSortedFavorites(email, sort));
+        model.addAttribute("users", userService.allUsers());
+        model.addAttribute("pageTitle", "Избранные задачи");
+
+        return "favorites";
+
     }
     @PostMapping("/favorites/toggle/{taskId}")
     public String toggleFavorite(@PathVariable Long taskId,
@@ -177,19 +157,20 @@ public class TaskController extends LoggingController{
             log.warn("Попытка изменить избранное без авторизации");
             return "redirect:/authorization";
         }
-        addUserToMDC();
-        try {
-            String email = principal.getName();
-            log.info("Пользователь {} переключает избранное для задачи {}",email, taskId);
-            taskService.toggleFavorite(principal.getName(),taskId);
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                return "redirect:" + referer;
-            }
-            return "redirect:/all-tasks";
-        }finally {
-            clearMDC();
+
+        String email = principal.getName();
+
+        log.info("Пользователь {} переключает избранное для задачи {}",email, taskId);
+        taskService.toggleFavorite(principal.getName(),taskId);
+
+        String referer = request.getHeader("Referer");
+
+        if (referer != null) {
+            return "redirect:" + referer;
         }
+
+        return "redirect:/all-tasks";
+
     }
 
     @GetMapping("/user-tasks")
@@ -198,22 +179,18 @@ public class TaskController extends LoggingController{
                             Model model){
         User currentUser = getCurrentUser();
         if (currentUser == null) return "redirect:/authorization";
-        addUserToMDC();
-        try {
-            log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
-            List<Task> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
-            List<User> allUsers = userService.allUsers();
+        log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
 
-            model.addAttribute("tasks", tasks);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("currentSort",sort);
-            model.addAttribute("search",search);
-            model.addAttribute("users", allUsers);
-            return "user_tasks";
-        }
-        finally {
-            clearMDC();
-        }
+        List<Task> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
+        List<User> allUsers = userService.allUsers();
+
+        model.addAttribute("tasks", tasks);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("currentSort",sort);
+        model.addAttribute("search",search);
+        model.addAttribute("users", allUsers);
+        return "user_tasks";
+
     }
 }

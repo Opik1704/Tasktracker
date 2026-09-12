@@ -25,37 +25,30 @@ public class AdminController extends LoggingController{
 
     @GetMapping
     public String userList(Model model) {
-        addUserToMDC();
-        try{
-            log.info("Администратор {} открыл панель управления",getCurrentUserEmail());
+        log.info("Администратор {} открыл панель управления",getCurrentUserEmail());
 
-            List<User> users = userService.allUsers();
-            List<Role> allRoles = userService.getAllRoles();
-            log.debug("Найдено {} пользователей",users.size());
+        List<User> users = userService.allUsers();
+        List<Role> allRoles = userService.getAllRoles();
+        log.debug("Найдено {} пользователей",users.size());
 
-            model.addAttribute("users", users);
-            model.addAttribute("allRoles", allRoles);
-            return "admin";
-        }
-        finally {
-            clearMDC();
-        }
+        model.addAttribute("users", users);
+        model.addAttribute("allRoles", allRoles);
+        return "admin";
+
     }
 
     @PostMapping("/delete")
     public String deleteUser(@RequestParam Long userId,@AuthenticationPrincipal User currentAdmin) {
-        addUserToMDC();
-        try {
-            log.info("Администратор {} удаляет пользователя ID: {}", getCurrentUserEmail(), userId);
-            boolean deleted = userService.deleteUser(userId, currentAdmin.getId(),currentAdmin.getEmail());
-            if (!deleted) {
-                log.warn("Не удалось удалить пользователя ID: {}", userId);
-            }
-            return "redirect:/admin";
+        log.info("Администратор {} удаляет пользователя ID: {}", getCurrentUserEmail(), userId);
+
+        boolean deleted = userService.deleteUser(userId, currentAdmin.getId(),currentAdmin.getEmail());
+
+        if (!deleted) {
+            log.warn("Не удалось удалить пользователя ID: {}", userId);
         }
-        finally {
-            clearMDC();
-        }
+
+        return "redirect:/admin";
+
     }
 
     @PostMapping("/update-roles")
@@ -63,18 +56,11 @@ public class AdminController extends LoggingController{
                                 @RequestParam(required = false) Long version,
                                 @RequestParam(required = false) List<Long> roleIds,
                                 HttpServletRequest request){
-        addUserToMDC();
-        try {
-            log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
-            userService.updateUserRoles(userId,roleIds,version);
-            log.info("Роли пользователя ID {} обновлены", userId);
-            return "redirect:/admin";
-        }catch (org.springframework.orm.ObjectOptimisticLockingFailureException e){
-            log.warn("Конфликт оптимистичной блокировки при изменении ролей пользователя ID {}", userId);
-            return "redirect:/admin?error=optimistic_lock";
-        }
-        finally {
-            clearMDC();
-        }
+
+        log.info("Администратор {} изменяет роли пользователя ID: {}", getCurrentUserEmail(), userId);
+        userService.updateUserRoles(userId,roleIds,version);
+        log.info("Роли пользователя ID {} обновлены", userId);
+        return "redirect:/admin";
+
     }
 }

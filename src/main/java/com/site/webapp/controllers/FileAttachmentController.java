@@ -29,32 +29,25 @@ public class FileAttachmentController extends LoggingController{
 
     @GetMapping("/attachments/{id}")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable Long id) {
-        addUserToMDC();
-        try {
-            ResourceDownloadDto dto = taskAttachmentService.downloadAttachment(id);
+        ResourceDownloadDto dto = taskAttachmentService.downloadAttachment(id);
 
-            String encodedFileName = URLEncoder.encode(dto.fileName(), StandardCharsets.UTF_8)
-                    .replace("+", "%20");
+        String encodedFileName = URLEncoder.encode(dto.fileName(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
-                    .contentType(MediaType.parseMediaType(dto.contentType()))
-                    .contentLength(dto.fileSize())
-                    .body(new InputStreamResource(dto.inputStream()));
-        } finally {
-            clearMDC();
-        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
+                .contentType(MediaType.parseMediaType(dto.contentType()))
+                .contentLength(dto.fileSize())
+                .body(new InputStreamResource(dto.inputStream()));
+
     }
     @PostMapping("/attachments/{id}/delete")
     public String deleteAttachment(@PathVariable Long id, @RequestParam Long taskId) {
-        addUserToMDC();
-        try {
-            taskAttachmentService.deleteAttachment(id);
-            log.info("Вложение ID {} удалено из задачи ID {}", id, taskId);
-            return "redirect:/all-tasks";
-        } finally {
-            clearMDC();
-        }
-    }
 
+        taskAttachmentService.deleteAttachment(id);
+        log.info("Вложение ID {} удалено из задачи ID {}", id, taskId);
+
+        return "redirect:/all-tasks";
+
+    }
 }
