@@ -1,9 +1,7 @@
 package com.site.webapp.controllers;
 
 import com.site.webapp.dto.RegistrationDto;
-import com.site.webapp.models.User;
 import com.site.webapp.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import jakarta.validation.Valid;

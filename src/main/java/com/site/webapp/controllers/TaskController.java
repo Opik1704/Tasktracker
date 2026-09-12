@@ -2,11 +2,13 @@ package com.site.webapp.controllers;
 
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
+import com.site.webapp.security.CustomUserDetails;
 import com.site.webapp.service.TaskAttachmentService;
 import com.site.webapp.service.TaskService;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -35,13 +37,13 @@ public class TaskController extends LoggingController{
     @GetMapping("/all-tasks")
     public String allTasks(@RequestParam(defaultValue = "id") String sort,
                            @RequestParam(required = false) String search,
+                           @AuthenticationPrincipal CustomUserDetails currentUser,
                            Model model){
 
         log.info("Пользователь,запросил список всех задач");
         log.debug("Параметры: sort = {}",sort);
 
         List<Task> tasks = taskService.getAllTasks(sort,search);
-        User currentUser = getCurrentUser();
 
         model.addAttribute("tasks", tasks);
         model.addAttribute("users",userService.allUsers());
@@ -57,9 +59,9 @@ public class TaskController extends LoggingController{
     public String addTask(@Valid Task task,
                           BindingResult bindingResult,
                           @RequestParam(value = "files", required = false) List<MultipartFile> files,
+                          @AuthenticationPrincipal CustomUserDetails currentUser,
                           Model model) throws IOException {
 
-        User currentUser = getCurrentUser();
         if (bindingResult.hasErrors()) {
             log.warn("Ошибки валидации при создании задачи: {}", bindingResult.getAllErrors());
             model.addAttribute("tasks", taskService.getAllTasks("id", null));
@@ -70,7 +72,7 @@ public class TaskController extends LoggingController{
             return "all_tasks";
         }
 
-        Task savedTask = taskService.createTask(task,currentUser);
+        Task savedTask = taskService.createTask(task,currentUser.getId());
 
         if (files != null && !files.isEmpty()) {
             for(MultipartFile file : files){
@@ -91,6 +93,7 @@ public class TaskController extends LoggingController{
                              @RequestParam(value = "returnUrl", required = false) String returnUrl,
                              @RequestParam(value = "files", required = false) List<MultipartFile> files,
                              @RequestParam(defaultValue = "id_asc") String sort,
+                             @AuthenticationPrincipal CustomUserDetails currentUser,
                              Model model) throws IOException {
 
         String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
@@ -100,8 +103,7 @@ public class TaskController extends LoggingController{
             return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
         }
 
-        User currentUser = getCurrentUser();
-        taskService.updateTask(task, currentUser);
+        taskService.updateTask(task, currentUser.getId());
 
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -111,17 +113,20 @@ public class TaskController extends LoggingController{
             }
         }
 
-        log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getEmail());
+        log.info("Задача ID {} успешно обновлена пользователем {}", task.getId(), currentUser.getUsername());
         return "redirect:" + finalRedirect;
 
     }
 
     @PostMapping("/all-tasks/delete/{id}")
-    public String deleteTask(@PathVariable Long id, @RequestParam(value = "returnUrl", required = false) String returnUrl,@RequestParam(defaultValue = "id_asc") String sort){
-        User currentUser = getCurrentUser();
+    public String deleteTask(@PathVariable Long id,
+                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                             @RequestParam(defaultValue = "id_asc") String sort,
+                             @AuthenticationPrincipal CustomUserDetails currentUser
+    ){
 
         log.info("Удаление задачи");
-        taskService.deleteTask(id,currentUser);
+        taskService.deleteTask(id,currentUser.getId());
         log.info("Задача id {} удалена",id);
 
         if (returnUrl != null && returnUrl.startsWith("/")) {
@@ -135,33 +140,29 @@ public class TaskController extends LoggingController{
 
     @GetMapping("/favorites")
     public String favorites(@RequestParam(required = false) String sort,
-                            Principal principal,
+                            @AuthenticationPrincipal CustomUserDetails currentUser,
+
                             Model model) {
-        if (principal == null) return "redirect:/authorization";
+        if (currentUser == null) return "redirect:/authorization";
 
-        String email = principal.getName();
-        log.info("Пользователь {} просматривает избранное (сортировка: {})", email, sort);
+        log.info("Пользователь {} просматривает избранное (сортировка: {})", currentUser.getUsername(), sort);
 
-        model.addAttribute("tasks", taskService.getSortedFavorites(email, sort));
+        model.addAttribute("tasks", taskService.getSortedFavorites(currentUser.getUsername(), sort));
         model.addAttribute("users", userService.allUsers());
         model.addAttribute("pageTitle", "Избранные задачи");
 
         return "favorites";
-
     }
+
     @PostMapping("/favorites/toggle/{taskId}")
     public String toggleFavorite(@PathVariable Long taskId,
-                                 Principal principal,
+                                 @AuthenticationPrincipal CustomUserDetails currentUser,
                                  HttpServletRequest request) {
-        if (principal == null) {
-            log.warn("Попытка изменить избранное без авторизации");
-            return "redirect:/authorization";
-        }
+        if (currentUser == null) return "redirect:/authorization";
 
-        String email = principal.getName();
 
-        log.info("Пользователь {} переключает избранное для задачи {}",email, taskId);
-        taskService.toggleFavorite(principal.getName(),taskId);
+        log.info("Пользователь {} переключает избранное для задачи {}",currentUser.getUsername(), taskId);
+        taskService.toggleFavorite(currentUser.getUsername(),taskId);
 
         String referer = request.getHeader("Referer");
 
@@ -170,14 +171,14 @@ public class TaskController extends LoggingController{
         }
 
         return "redirect:/all-tasks";
-
     }
 
     @GetMapping("/user-tasks")
     public String userTasks(@RequestParam(defaultValue = "id_asc") String sort,
                             @RequestParam(required = false) String search,
+                            @AuthenticationPrincipal CustomUserDetails currentUser,
                             Model model){
-        User currentUser = getCurrentUser();
+
         if (currentUser == null) return "redirect:/authorization";
 
         log.info("Запрос задачей пользователя {}",getCurrentUserEmail());

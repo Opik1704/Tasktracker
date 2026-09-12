@@ -2,12 +2,10 @@ package com.site.webapp.controllers;
 
 import com.site.webapp.models.Role;
 import com.site.webapp.models.User;
+import com.site.webapp.security.CustomUserDetails;
 import com.site.webapp.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -38,10 +36,10 @@ public class AdminController extends LoggingController{
     }
 
     @PostMapping("/delete")
-    public String deleteUser(@RequestParam Long userId,@AuthenticationPrincipal User currentAdmin) {
+    public String deleteUser(@RequestParam Long userId,@AuthenticationPrincipal CustomUserDetails currentAdmin) {
         log.info("Администратор {} удаляет пользователя ID: {}", getCurrentUserEmail(), userId);
 
-        boolean deleted = userService.deleteUser(userId, currentAdmin.getId(),currentAdmin.getEmail());
+        boolean deleted = userService.deleteUser(userId, currentAdmin.getId(),currentAdmin.getUsername());
 
         if (!deleted) {
             log.warn("Не удалось удалить пользователя ID: {}", userId);

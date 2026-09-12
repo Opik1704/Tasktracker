@@ -3,7 +3,6 @@ package com.site.webapp.controllers;
 import com.site.webapp.models.Notification;
 import com.site.webapp.repo.NotificationRepository;
 import com.site.webapp.security.CustomUserDetails;
-import com.site.webapp.service.NotificationService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;

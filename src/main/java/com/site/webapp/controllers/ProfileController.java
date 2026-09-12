@@ -3,9 +3,9 @@ package com.site.webapp.controllers;
 import com.site.webapp.dto.ChangePasswordDto;
 import com.site.webapp.dto.ChangeProfileDto;
 import com.site.webapp.models.User;
+import com.site.webapp.security.CustomUserDetails;
 import com.site.webapp.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +23,7 @@ public class ProfileController extends LoggingController {
     }
 
     @GetMapping
-    public String profile(@AuthenticationPrincipal User currentUser, Model model) {
+    public String profile(@AuthenticationPrincipal CustomUserDetails currentUser, Model model) {
 
     if (currentUser == null) return "redirect:/authorization";
         User freshUser = userService.findUserById(currentUser.getId());
@@ -35,19 +35,19 @@ public class ProfileController extends LoggingController {
     }
 
     @PostMapping("/update-info")
-    public String updateProfile(@AuthenticationPrincipal User currentUser,
+    public String updateProfile(@AuthenticationPrincipal CustomUserDetails currentUser,
                                 @Valid @ModelAttribute ChangeProfileDto changeProfileDto,
                                 BindingResult bindingResult) {
         if (currentUser == null) return "redirect:/authorization";
 
-        log.info("Пользователь {} обновляет данные", currentUser.getEmail());
+        log.info("Пользователь {} обновляет данные", currentUser.getUsername());
         userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName(),changeProfileDto.getVersion());
         return "redirect:/profile";
 
     }
 
     @PostMapping("/change-password")
-    public String changePassword(@AuthenticationPrincipal User currentUser,
+    public String changePassword(@AuthenticationPrincipal CustomUserDetails currentUser,
                                  @Valid @ModelAttribute ChangePasswordDto changePasswordDto) {
         if (currentUser == null) return "redirect:/authorization";
 
@@ -66,13 +66,13 @@ public class ProfileController extends LoggingController {
     }
 
     @PostMapping("/update-avatar")
-    public String updateAvatar(@AuthenticationPrincipal User currentUser,
+    public String updateAvatar(@AuthenticationPrincipal CustomUserDetails currentUser,
                                @RequestParam("avatar") MultipartFile file,
                                RedirectAttributes redirectAttributes){
 
         if (currentUser == null) return "redirect:/authorization";
 
-        log.info("Пользователь {} обновляет аватарку", currentUser.getEmail());
+        log.info("Пользователь {} обновляет аватарку", currentUser.getUsername());
 
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Файл не выбран");

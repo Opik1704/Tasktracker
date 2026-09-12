@@ -1,38 +1,32 @@
 package com.site.webapp.controllers;
 
-import com.site.webapp.models.User;
-import com.site.webapp.repo.UserRepository;
+
+import com.site.webapp.security.CustomUserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public abstract class LoggingController {
 
-    @Autowired
-    UserRepository userRepository;
-
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected User getCurrentUser(){
+    protected CustomUserDetails getCurrentUserDetails() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth != null && auth.getPrincipal() instanceof User){
-            String email = auth.getName();
-            return userRepository.findWithFavouriteTasksByEmail(email).orElse(null);
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails user) {
+            return user;
         }
         return null;
     }
 
-    protected Long getCurrentId(){
-        User user = getCurrentUser();
+    protected Long getCurrentUserId() {
+        CustomUserDetails user = getCurrentUserDetails();
         return user != null ? user.getId() : null;
     }
 
-    protected String getCurrentUserEmail(){
-        User user = getCurrentUser();
-        return user != null ? user.getEmail() : "anonim";
+    protected String getCurrentUserEmail() {
+        CustomUserDetails user = getCurrentUserDetails();
+        return user != null ? user.getUsername() : "anonym";
     }
 
 //    protected void addUserToMDC() {

@@ -1,9 +1,11 @@
 package com.site.webapp.service;
 
+import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.models.Notification;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.NotificationRepository;
+import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,9 +20,11 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
-    public NotificationService(NotificationRepository notificationRepository){
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository){
         this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -42,18 +46,21 @@ public class NotificationService {
         send(user, null, message);
     }
 
-    public void markAllAsRead(User user) {
-        if (user == null) {
-            throw new UsernameNotFoundException("Пользователь не найден");
+    public void markAllAsRead(Long userId) {
+        if (userId == null) {
+            log.warn("Попытка отметить сообщения прочитанными для null userId");
+            return;
         }
 
-        List<Notification> unread = notificationRepository.findAllByUserIdAndReadFalse(user.getId());
+        List<Notification> unread = notificationRepository.findAllByUserIdAndReadFalse(userId);
+
         if(unread.isEmpty()){
             return;
         }
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
-        log.info("Пользователю {} отметил сообщения как прочитанные", user.getEmail());
+
+        log.info("Пользователь ID {} отметил сообщения как прочитанные", userId);
     }
 
     public long getUnreadCount(Long userId) {

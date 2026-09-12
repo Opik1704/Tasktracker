@@ -1,6 +1,7 @@
 package com.site.webapp.service;
 
 import com.site.webapp.exception.TaskNotFoundException;
+import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.models.User;
@@ -42,7 +43,10 @@ public class TaskService {
 
 
     @Transactional
-    public Task createTask(Task task, User initiator) {
+    public Task createTask(Task task, Long userId) {
+        User initiator = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
         task.setStatus(Task.TaskStatus.NEW);
 
         String authorName;
@@ -91,9 +95,11 @@ public class TaskService {
 
 
     @Transactional
-    public void updateTask(Task updatedTask, User initiator) {
+    public void updateTask(Task updatedTask, Long userId) {
 
+        User initiator = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new TaskNotFoundException(updatedTask.getId()));
+
         if (updatedTask.getVersion() != null) {
             task.setVersion(updatedTask.getVersion());
         }
@@ -174,7 +180,10 @@ public class TaskService {
 //    }
 
     @Transactional
-    public void deleteTask(Long id, User initiator) {
+    public void deleteTask(Long id, Long userId) {
+
+        User initiator = userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException(userId));
+
         Task task = taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
 
         String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail()  : "Система";

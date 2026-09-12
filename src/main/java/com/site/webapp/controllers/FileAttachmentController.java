@@ -1,8 +1,7 @@
 package com.site.webapp.controllers;
 
 import com.site.webapp.dto.ResourceDownloadDto;
-import com.site.webapp.models.TaskAttachment;
-import com.site.webapp.service.FileStorageService;
+
 import com.site.webapp.service.TaskAttachmentService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
