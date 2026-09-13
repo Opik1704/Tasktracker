@@ -7,6 +7,7 @@ import com.site.webapp.repo.UserRepository;
 import com.site.webapp.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -26,6 +27,7 @@ public class NotificationEventListener {
         this.notificationService = notificationService;
     }
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTaskCreatedEvent(TaskCreatedEvent event) {
         log.debug("Task created event received: {}", event);
@@ -39,6 +41,7 @@ public class NotificationEventListener {
         notificationService.createNotification(event.artistId(), event.taskId(), message);
     }
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTaskUpdatedEvent(TaskUpdatedEvent event){
         log.debug("Task updated event received: {}", event);
@@ -72,6 +75,7 @@ public class NotificationEventListener {
 
     }
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTaskDeletedEvent(TaskDeletedEvent event){
         log.debug("Task deleted event received: {}", event);
