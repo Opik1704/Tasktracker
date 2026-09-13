@@ -25,7 +25,7 @@ public class TaskReminder {
         this.notificationService = notificationService;
     }
 
-    @Scheduled(cron = "0 0 9 * * MON")
+    @Scheduled(cron = "${app.scheduling.cron.weekly-plan:0 0 9 * * MON}")
     public void sendWeeklyPlan() {
         log.info("Формирование плана на неделю");
         LocalDateTime start = LocalDateTime.now();
@@ -34,7 +34,7 @@ public class TaskReminder {
         processTasks(start, end, "Ваш план на неделю: у вас {} задач(и)");
     }
 
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "${app.scheduling.cron.daily-plan:0 0 9 * * *}")
     public void sendDailyPlan(){
         log.info("Формирование списка задач на день");
         LocalDateTime start = LocalDateTime.now();
@@ -43,7 +43,7 @@ public class TaskReminder {
         processTasks(start, end, "Сегодня нужно завершить {} задач");
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "${app.scheduling.cron.urgent-reminders:0 0 * * * *}")
     public void sendUrgentReminders(){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime twoHoursLater = now.plusHours(2);
@@ -62,7 +62,7 @@ public class TaskReminder {
         }
     }
 
-    @Scheduled(cron = "0 0 2 * * *")
+    @Scheduled(cron = "${app.scheduling.cron.cleanup-notifications:0 0 2 * * *}")
     public void cleanOldNotifications() {
         notificationService.deleteOldNotifications();
     }
