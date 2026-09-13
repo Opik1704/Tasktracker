@@ -1,5 +1,9 @@
 package com.site.webapp.events;
 
+import com.site.webapp.models.Task;
+
+import java.time.LocalDateTime;
+
 /**
  * @param taskId
  * @param taskTitle
@@ -11,8 +15,8 @@ package com.site.webapp.events;
 public record TaskCreatedEvent(
         Long taskId,
         String taskTitle,
-        String deadline,
-        String priority,
+        LocalDateTime deadline,
+        Task.Priority priority,
         Long artistId,
         String creatorFullName
 ) {}

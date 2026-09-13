@@ -498,7 +498,7 @@
     <div th:unless="${#lists.isEmpty(tasks)}" th:each="el : ${tasks}" class="card mb-2" th:id="'task-' + ${el.id}">
       <div class="card-body">
         <div class="title-wrapper mb-2" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+          <div style="Аdisplay: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
             <h2 class="card-title mb-0" th:text="${el.title}" style="margin-right: 0 !important;"></h2>
 
             <span class="status-badge"

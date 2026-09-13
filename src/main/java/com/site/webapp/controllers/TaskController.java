@@ -72,7 +72,7 @@ public class TaskController extends LoggingController{
             return "all_tasks";
         }
 
-        Task savedTask = taskService.createTask(task,currentUser.getId());
+        Task savedTask = taskService.createTask(task,currentUser);
 
         if (files != null && !files.isEmpty()) {
             for(MultipartFile file : files){
@@ -103,7 +103,7 @@ public class TaskController extends LoggingController{
             return "redirect:" + finalRedirect + (finalRedirect.contains("?") ? "&" : "?") + "error=validation";
         }
 
-        taskService.updateTask(task, currentUser.getId());
+        taskService.updateTask(task, currentUser);
 
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -126,7 +126,7 @@ public class TaskController extends LoggingController{
     ){
 
         log.info("Удаление задачи");
-        taskService.deleteTask(id,currentUser.getId());
+        taskService.deleteTask(id,currentUser);
         log.info("Задача id {} удалена",id);
 
         if (returnUrl != null && returnUrl.startsWith("/")) {

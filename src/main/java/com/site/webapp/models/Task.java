@@ -29,10 +29,12 @@ public class Task {
     @Column(nullable = false)
     private String title;
 
-    @NotBlank(message = "Укажите приоритет")
+    @NotNull(message = "Укажите приоритет")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String priority;
+    private Priority priority;
 
+    @NotNull(message = "Укажите статус")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status = TaskStatus.NEW;
@@ -67,6 +69,10 @@ public class Task {
         NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
     }
 
+    public enum Priority {
+        TRIVIAL, MEDIUM, HIGH, CRITICAL
+    }
+
     @Version
     private Long version;
 
@@ -75,7 +81,7 @@ public class Task {
     public Task() {
     }
 
-    public Task(String title, String priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment){
+    public Task(String title, Priority priority, Long artistId,Long ownerId, LocalDateTime deadline,TaskStatus status, String comment){
         this.title = title;
         this.priority = priority;
         this.artistId = artistId;
@@ -113,10 +119,10 @@ public class Task {
         this.title = title;
     }
 
-    public String getPriority() {
+    public Priority getPriority() {
         return priority;
     }
-    public void setPriority(String priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 

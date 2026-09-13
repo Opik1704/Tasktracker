@@ -31,6 +31,16 @@ public class CustomUserDetails implements UserDetails {
     public String getLastName() { return lastName; }
     public String getAvatarS3Key() { return avatarS3Key; }
 
+    public String getFullName() {
+        if (firstName == null && lastName == null) {
+            return email;
+        }
+        if (firstName == null) return lastName;
+        if (lastName == null) return firstName;
+
+        return firstName + " " + lastName;
+    }
+
     @Override public String getUsername() { return email; }
     @Override public String getPassword() { return password; }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }

@@ -1,16 +1,22 @@
 package com.site.webapp.service;
 
+import com.site.webapp.events.TaskCreatedEvent;
+import com.site.webapp.events.TaskDeletedEvent;
+import com.site.webapp.events.TaskUpdatedEvent;
 import com.site.webapp.exception.TaskNotFoundException;
 import com.site.webapp.exception.UserNotFoundException;
+import com.site.webapp.listeners.NotificationEventListener;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
+import com.site.webapp.security.CustomUserDetails;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -22,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -31,38 +38,35 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
-    private final NotificationService notificationService;
     private final TaskAttachmentService taskAttachmentService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public TaskService(TaskRepository taskRepository, UserRepository userRepository,NotificationService notificationService,TaskAttachmentService taskAttachmentService) {
+    public TaskService(TaskRepository taskRepository,
+                       UserRepository userRepository,
+                       TaskAttachmentService taskAttachmentService,
+                       ApplicationEventPublisher eventPublisher) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
-        this.notificationService = notificationService;
         this.taskAttachmentService = taskAttachmentService;
+        this.eventPublisher = eventPublisher;
     }
 
 
     @Transactional
-    public Task createTask(Task task, Long userId) {
-        User initiator = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+    public Task createTask(Task task, CustomUserDetails userDetails) {
 
         task.setStatus(Task.TaskStatus.NEW);
-
-        String authorName;
-        if (initiator != null) {
-            task.setOwnerId(initiator.getId());
-            authorName = initiator.getFullName();
-        } else {
-            authorName = "Система";
-        }
-
-        String msg = authorName + " назначил(а) вам задачу " + task.getTitle() + " с дедлайном " + task.getDeadline() + " с приоритетом " + task.getPriority();
-        if (task.getArtistId() != null) {
-            notificationService.send(userRepository.findById(task.getArtistId()).orElse(null), msg);
-        }
         taskRepository.save(task);
-        log.info("Задача создана с ID: {} пользователем {}", task.getId(), authorName);
+        eventPublisher.publishEvent(new TaskCreatedEvent(
+                task.getId(),
+                task.getTitle(),
+                task.getDeadline(),
+                task.getPriority(),
+                task.getArtistId(),
+                userDetails.getFullName())
+        );
+
+        log.info("Задача создана с ID: {} пользователем {}", task.getId(), userDetails.getFullName());
         return task;
     }
 
@@ -95,48 +99,17 @@ public class TaskService {
 
 
     @Transactional
-    public void updateTask(Task updatedTask, Long userId) {
+    public void updateTask(Task updatedTask, CustomUserDetails userDetails) {
 
-        User initiator = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new TaskNotFoundException(updatedTask.getId()));
 
         if (updatedTask.getVersion() != null) {
             task.setVersion(updatedTask.getVersion());
         }
-        String authorName = initiator != null ? initiator.getFullName() : "Система";
 
-        if (!Objects.equals(task.getArtistId(), updatedTask.getArtistId())) {
-            if (task.getArtistId() != null) {
-                userRepository.findById(task.getArtistId()).ifPresent(oldUser ->{
-                    String msg = authorName + " передал вашу задачу '" + task.getTitle() + "' пользователю " + userRepository.findById(updatedTask.getArtistId()).map(User::getEmail).orElse("не назначен");
-                    log.info("Уведомление старому исполнителю (ID {}): {}", task.getArtistId(), msg);
-                    notificationService.send(oldUser, msg);
-                });
-            }
-            if (updatedTask.getArtistId() != null) {
-                userRepository.findById(updatedTask.getArtistId()).ifPresent(newUser ->
-                {
-                    String msg = authorName + " назначил вам задачу '" + task.getTitle() + "' (ранее у: " + userRepository.findById(task.getArtistId()).map(User::getFullName).orElse("никто");
-                    notificationService.send(newUser, msg);
-                });
-            }
-        }
-
-        if (!Objects.equals(task.getDeadline(), updatedTask.getDeadline()) && Objects.equals(task.getArtistId(), updatedTask.getArtistId()) && task.getArtistId() != null) {
-            userRepository.findById(task.getArtistId()).ifPresent(currentArtist -> {
-                String msg = authorName + " изменил дедлайн задачи '" + task.getTitle() + "' на " + updatedTask.getDeadline();
-                log.info("Лог изменения дедлайна {}", msg);
-                notificationService.send(currentArtist, msg);
-            });
-        }
-
-        if(!Objects.equals(task.getPriority(),updatedTask.getPriority()) && task.getArtistId() != null  ){
-            userRepository.findById(task.getArtistId()).ifPresent(currentArtist ->{
-                String msg = authorName + " изменил приоритет задачи '" + task.getTitle() + " '  на " + updatedTask.getPriority();
-                log.info("Лог изменения приоритета {}", msg);
-                notificationService.send(currentArtist,msg);
-            });
-        }
+        Long oldArtistId = task.getArtistId();
+        LocalDateTime oldDeadline = task.getDeadline();
+        Task.Priority oldPriority = task.getPriority();
 
         task.setTitle(updatedTask.getTitle());
         task.setPriority(updatedTask.getPriority());
@@ -145,7 +118,20 @@ public class TaskService {
         task.setComment(updatedTask.getComment());
         task.setStatus(updatedTask.getStatus());
 
+        eventPublisher.publishEvent(new TaskUpdatedEvent(
+                task.getId(),
+                task.getTitle(),
+                userDetails.getFullName(),
+                oldArtistId,
+                task.getArtistId(),
+                oldDeadline,
+                task.getDeadline(),
+                oldPriority,
+                task.getPriority()
+        ));
+
         taskRepository.save(task);
+
         log.info("Задача id {} успешно обновлена", task.getId());
     }
 
@@ -180,28 +166,23 @@ public class TaskService {
 //    }
 
     @Transactional
-    public void deleteTask(Long id, Long userId) {
+    public void deleteTask(Long taskId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
 
-        User initiator = userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException(userId));
+        String authorName = userDetails.getFullName();
 
-        Task task = taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
+        eventPublisher.publishEvent(new TaskDeletedEvent(
+                task.getId(),
+                task.getTitle(),
+                task.getArtistId(),
+                userDetails.getFullName()
+        ));
 
-        String author = (initiator != null && initiator.getEmail() != null) ? initiator.getEmail()  : "Система";
-        if (task.getArtistId() != null) {
-            userRepository.findById(task.getArtistId()).ifPresent(artist -> {
-                String msg = author + " удалил задачу '" + task.getTitle() + "', которая была назначена вам";
-                log.info("Уведомление об удалении задачи ID {}: {}", id, msg);
-                notificationService.send(artist, msg);
-            });
-        }
+        taskAttachmentService.deleteAllByTaskId(taskId);
+        taskRepository.deleteById(taskId);
 
-        taskAttachmentService.deleteAllByTaskId(id);
-
-        notificationService.deleteAllByTaskId(id);
-
-        taskRepository.deleteById(id);
-
-        log.info("Задача id {} удалена пользователем {}",id,author);
+        log.info("Задача id {} удалена пользователем {}",taskId, userDetails.getFullName());
     }
 
 
