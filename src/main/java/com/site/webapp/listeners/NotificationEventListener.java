@@ -1,5 +1,6 @@
 package com.site.webapp.listeners;
 
+import com.site.webapp.events.FileAttachedEvent;
 import com.site.webapp.events.TaskCreatedEvent;
 import com.site.webapp.events.TaskDeletedEvent;
 import com.site.webapp.events.TaskUpdatedEvent;
@@ -72,6 +73,16 @@ public class NotificationEventListener {
             notificationService.createNotification(event.newArtistId(), event.taskId(), msg);
         }
 
+
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleFileAttachedEvent(FileAttachedEvent event){
+        log.info("Обработка прикрепления файла '{}' к задаче ID {}", event.fileName(), event.taskId());
+
+        String message = "К вашей задаче прикреплен новый файл: " + event.fileName();
+        notificationService.createNotification(event.artistId(), event.taskId(), message);
 
     }
 

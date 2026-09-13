@@ -1,12 +1,17 @@
 package com.site.webapp.service;
 
 import com.site.webapp.dto.ResourceDownloadDto;
+import com.site.webapp.events.FileAttachedEvent;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.repo.TaskAttachmentRepository;
 import com.site.webapp.repo.TaskRepository;
+import com.site.webapp.security.CustomUserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,11 +27,16 @@ public class TaskAttachmentService {
     private final FileStorageService fileStorageService;
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final TaskRepository taskRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public TaskAttachmentService(FileStorageService fileStorageService,TaskAttachmentRepository taskAttachmentRepository,TaskRepository taskRepository) {
+    public TaskAttachmentService(FileStorageService fileStorageService,
+                                 TaskAttachmentRepository taskAttachmentRepository,
+                                 TaskRepository taskRepository,
+                                 ApplicationEventPublisher eventPublisher) {
         this.fileStorageService = fileStorageService;
         this.taskAttachmentRepository = taskAttachmentRepository;
         this.taskRepository = taskRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -36,7 +46,7 @@ public class TaskAttachmentService {
         }
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new IllegalArgumentException("Невозможно найти задачу с ID: " + taskId));
 
-        String s3Key = fileStorageService.uploadFile(file, "task-attachents");
+        String s3Key = fileStorageService.uploadFile(file, "task-attachments");
 
         TaskAttachment taskAttachment = new TaskAttachment();
         taskAttachment.setTask(task);
@@ -46,6 +56,18 @@ public class TaskAttachmentService {
         taskAttachment.setFileSize(file.getSize());
 
         taskAttachmentRepository.save(taskAttachment);
+
+        Long currentUserId = getCurrentUserId();
+
+        boolean isUploadedByArtist = currentUserId != null && currentUserId.equals(task.getArtistId());
+
+        if(task.getArtistId()!= null && !isUploadedByArtist){
+            eventPublisher.publishEvent(new FileAttachedEvent(
+                    taskId,
+                    task.getArtistId(),
+                    file.getOriginalFilename()
+            ));
+        }
         log.info("Вложение успешно сохранено для задачи ID: {}, s3Key: {}", taskId, s3Key);
         return s3Key;
     }
@@ -88,5 +110,13 @@ public class TaskAttachmentService {
             deleteAttachment(attachment.getId());
         }
         log.info("Все вложения для задачи ID {} успешно удалены", taskId);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+            return userDetails.getId();
+        }
+        return null;
     }
 }
