@@ -87,6 +87,16 @@ public class TaskController extends LoggingController{
 
     }
 
+    @GetMapping("/api/artists/{id}/active-tasks")
+    public String checkArtistLoad(@PathVariable Long id, Model model) {
+        int activeTasks = userService.getActiveTaskCount(id);
+        if (activeTasks >= 5) { // ваш лимит
+            model.addAttribute("warning", "Внимание: у исполнителя уже " + activeTasks + " активных задач");
+        }
+        return "all_tasks :: warning";
+
+    }
+
     @PostMapping("/all-tasks/update")
     public String updateTask(@Valid Task task,
                              BindingResult bindingResult,

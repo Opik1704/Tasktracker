@@ -17,4 +17,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findAllByDeadlineBetween(LocalDateTime now, LocalDateTime twoHoursLater);
     List<Task> findAllByArtistIdAndDeadlineBetween(Long artistId,LocalDateTime start,LocalDateTime end);
+
+    long countByArtistIdAndStatusNot(Long artistId, Task.TaskStatus status);
+
 }

@@ -7,6 +7,7 @@ import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.RoleRepository;
+import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import com.site.webapp.security.CustomUserDetails;
 import org.jspecify.annotations.NonNull;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -31,12 +33,18 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, FileStorageService fileStorageService){
+    public UserService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       TaskRepository taskRepository,
+                       PasswordEncoder passwordEncoder,
+                       FileStorageService fileStorageService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
         this.fileStorageService = fileStorageService;
     }
@@ -124,8 +132,13 @@ public class UserService implements UserDetailsService {
         return new ArrayList<>(user.getFavouriteTasks());
     }
 
+    public int getActiveTaskCount(Long artistId) {
+        if (artistId == null) return 0;
+        LocalDateTime limitDate = LocalDateTime.now().plusDays(14);
+        return taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
+    }
 
-    @Transactional
+        @Transactional
     public void updateUserInfo(Long userId,String firstName,String lastName, Long version){
         log.info("Обновление данных для пользователя ID: {}", userId);
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));

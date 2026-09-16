@@ -586,13 +586,17 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Исполнитель</label>
-            <select name="artistId" class="form-select" required>
+            <select onchange="checkArtistLoad(this.value)" name="artistId">
               <option value="" disabled selected>Выберите исполнителя</option>
               <option th:each="user :${users}"
                       th:value="${user.id}"
                       th:text="${user.firstName + ' ' + user.lastName}">
               </option>
             </select>
+          </div>
+          <div id="artist-warning" th:fragment="warning" th:if="${warning}"
+               class="alert alert-warning" role="alert">
+            <span th:text="${warning}"></span>
           </div>
           <div class="mb-3">
             <label class="form-label">Дедлайн</label>
@@ -848,7 +852,18 @@ function fuSetFile(file, prefix) {
             }
         });
     });
+    function checkArtistLoad(artistId) {
+        if (!artistId) {
+            document.getElementById('artist-warning').innerHTML = '';
+            return;
+        }
 
+        fetch('/api/artists/' + artistId + '/active-tasks')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('artist-warning').innerHTML = html;
+            });
+    }
     function fuOpenLightbox(prefix) {
         const thumb = document.getElementById(prefix + '-fu-thumb');
         const src = thumb?.dataset?.fullSrc || thumb?.src;
@@ -863,6 +878,7 @@ function fuSetFile(file, prefix) {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') fuCloseLightbox();
     });
+
 </script>
 
 </body>
