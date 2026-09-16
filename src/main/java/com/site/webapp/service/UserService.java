@@ -135,7 +135,7 @@ public class UserService implements UserDetailsService {
     public int getActiveTaskCount(Long artistId) {
         if (artistId == null) return 0;
         LocalDateTime limitDate = LocalDateTime.now().plusDays(14);
-        return taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
+        return (taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
     }
 
         @Transactional
