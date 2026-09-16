@@ -132,10 +132,10 @@ public class UserService implements UserDetailsService {
         return new ArrayList<>(user.getFavouriteTasks());
     }
 
-    public int getActiveTaskCount(Long artistId) {
+    public long getActiveTaskCount(Long artistId) {
         if (artistId == null) return 0;
         LocalDateTime limitDate = LocalDateTime.now().plusDays(14);
-        return (taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
+        return taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
     }
 
         @Transactional
