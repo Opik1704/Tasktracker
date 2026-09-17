@@ -156,6 +156,7 @@ public class RegistrationService {
         User savedUser = userService.saveRegisteredUser(user);
 
         invite.setUsedAt(LocalDateTime.now());
+        inviteTokenRepository.save(invite);
         log.info("Пользователь ID {} ({}) успешно зарегистрирован по токену инвайта", savedUser.getId(), savedUser.getEmail());
         return savedUser;
     }
