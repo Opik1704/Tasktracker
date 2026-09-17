@@ -1,11 +1,12 @@
 package com.site.webapp.service;
 
-import com.site.webapp.dto.RegistrationDto;
-import com.site.webapp.exception.RoleNotFoundException;
+
 import com.site.webapp.exception.UserNotFoundException;
+import com.site.webapp.models.ArchivedUser;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
+import com.site.webapp.repo.ArchivedUserRepository;
 import com.site.webapp.repo.RoleRepository;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
@@ -35,79 +36,58 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FileStorageService fileStorageService;
+    private final ArchivedUserRepository archivedUserRepository;
+    private final UserAvatarService  userAvatarService;
 
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
                        TaskRepository taskRepository,
                        PasswordEncoder passwordEncoder,
-                       FileStorageService fileStorageService){
+                       ArchivedUserRepository archivedUserRepository,
+                       UserAvatarService  userAvatarService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
-        this.fileStorageService = fileStorageService;
+        this.archivedUserRepository = archivedUserRepository;
+        this.userAvatarService = userAvatarService;
     }
 
     @Transactional
-    public String registerNewUser(RegistrationDto registrationDto) {
-        if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
-            return "passwordError";
+    public User saveRegisteredUser(User user) {
+        if(user == null){
+            throw new IllegalArgumentException("User cannot be null");
         }
-        if (userRepository.findByEmail(registrationDto.getEmail()) != null) {
-            log.warn("Регистрация невозможна: email {} уже существует", registrationDto.getEmail());
-            return "emailError";
-        }
-        try{
-            User user= new User();
-
-            user.setFirstName(registrationDto.getFirstName());
-            user.setLastName(registrationDto.getLastName());
-            user.setEmail(registrationDto.getEmail());
-            user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-
-            Role employeeRole = roleRepository.findById(1L).orElseThrow(() -> new RoleNotFoundException("Роль EMPLOYEE не найдена"));
-            user.setRoles(Collections.singleton(employeeRole));
-
-            userRepository.save(user);
-            log.info("Пользователь {} успешно зарегистрирован", user.getEmail());
-            return "success";
-        }catch (Exception e){
-            log.error("Ошибка при регистрации пользователя {}: {}", registrationDto.getEmail(), e.getMessage(), e);
-            return "emailError";
-        }
-
+        return userRepository.save(user);
     }
 
 
     @Override
     @NonNull
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException{
         log.info("Попытка входа пользователя с email: {}", email);
-        User user = userRepository.findByEmail(email);
+
+        User user = userRepository.findByEmail(email).orElseThrow(() ->new UserNotFoundException(email));
+
         if (user == null){
             log.warn("Пользователь с email {} не найден",email);
             throw new UsernameNotFoundException("User not found" + email);
         }
+
         log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
         return new CustomUserDetails(user);
     }
 
+    @Transactional(readOnly = true)
     public User findUserById(Long userId){
         log.debug("Поиск пользователя по ID: {}", userId);
-        Optional<User> userFromDb = userRepository.findById(userId);
-        if (userFromDb.isPresent()) {
-            log.debug("Пользователь найден: {}", userFromDb.get().getEmail());
-            return userFromDb.get();
-        } else {
-            log.debug("Пользователь с ID {} не найден", userId);
-            return null;
-        }
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     public User findByEmail(String email) {
         log.debug("Поиск пользователя по email: {}", email);
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Пользователь с email " + email + " не найден"));
     }
 
     public List<User> allUsers(){
@@ -126,8 +106,10 @@ public class UserService implements UserDetailsService {
     public List<Task> getFavoriteTasksForUser(String email) {
         log.info("Взятие избранных задач для пользователя с email: {}", email);
 
-        User user = userRepository.findByEmail(email);
-        if (user == null) return new ArrayList<>();
+        User user = userRepository.findByEmail(email).orElseThrow(() ->new UserNotFoundException(email));
+        if (user == null){
+            return new ArrayList<>();
+        }
 
         return new ArrayList<>(user.getFavouriteTasks());
     }
@@ -138,22 +120,18 @@ public class UserService implements UserDetailsService {
         return taskRepository.countByArtistIdAndStatusNot(artistId, Task.TaskStatus.COMPLETED);
     }
 
-        @Transactional
+    @Transactional
     public void updateUserInfo(Long userId,String firstName,String lastName, Long version){
         log.info("Обновление данных для пользователя ID: {}", userId);
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
-        if(user != null){
-            log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
-            if (version != null) {
-                user.setVersion(version);
-            }
-            user.setFirstName(firstName);
-            user.setLastName(lastName);
-            userRepository.save(user);
+
+        log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
+        if (version != null) {
+            user.setVersion(version);
         }
-        else{
-            log.warn("Пользователь ID {} не найден", userId);
-        }
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        userRepository.save(user);
     }
 
     @Transactional
@@ -200,48 +178,105 @@ public class UserService implements UserDetailsService {
     @Value("${app.upload.dir}")
     private String uploadPath;
 
+//    @Transactional
+//    public void updateAvatar(Long userId, MultipartFile file) {
+//        if (file == null || file.isEmpty()) {
+//            return;
+//        }
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new UserNotFoundException(userId));
+//        if (user.getAvatarS3Key() != null) {
+//            try {
+//                fileStorageService.deleteFile(user.getAvatarS3Key());
+//            } catch (Exception e) {
+//                log.warn("Не удалось удалить старую аватарку пользователя ID {}: {}", userId, e.getMessage());
+//            }
+//        }
+//        String s3Key = fileStorageService.uploadFile(file, "avatars");
+//        user.setOriginalAvatarFileName(file.getOriginalFilename());
+//        user.setAvatarS3Key(s3Key);
+//        userRepository.save(user);
+//        log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
+//    }
+
+
+//    public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
+//        log.info("Удаление пользователя с ID: {} админом: {}", userId, adminEmail);
+//
+//        if (userId.equals(currentAdminId)) {
+//            log.warn("Блокировка: админ {} пытался удалить сам себя", adminEmail);
+//            return false;
+//        }
+//
+//        User user = userRepository.findById(userId).orElse(null);
+//        if (user == null) {
+//            log.warn("Удаление не удалось: пользователь с ID {} не существует", userId);
+//            return false;
+//        }
+//        try {
+//            userRepository.delete(user);
+//            log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, adminEmail);
+//            return true;
+//        } catch (Exception e) {
+//            log.error("Ошибка при удалении пользователя ID {}: {}", userId, e.getMessage());
+//            return false;
+//        }
+//    }
+
     @Transactional
-    public void updateAvatar(Long userId, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
+    public void softDeleteTask(Long userId, CustomUserDetails initiator){
+
+        if (initiator == null) {
+            throw new IllegalArgumentException("Инициатор действия не может быть null");
+        }
+
+        log.info("Удаление пользователя с ID: {} пользователем {}", userId, initiator.getUsername() );
+
+        if(Objects.equals(userId, initiator.getId())){
+            log.warn("Пользователь {} с id {} пытался удалить себя", initiator.getUsername(), initiator.getId());
             return;
         }
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        if (user.getAvatarS3Key() != null) {
-            try {
-                fileStorageService.deleteFile(user.getAvatarS3Key());
-            } catch (Exception e) {
-                log.warn("Не удалось удалить старую аватарку пользователя ID {}: {}", userId, e.getMessage());
-            }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
+        if (user.isDeleted()) {
+            log.warn("Пользователь ID {} уже деактивирован", userId);
+            return;
         }
-        String s3Key = fileStorageService.uploadFile(file, "avatars");
-        user.setOriginalAvatarFileName(file.getOriginalFilename());
-        user.setAvatarS3Key(s3Key);
+
+        user.setDeleted(true);
+
+        log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, initiator.getUsername());
+    }
+
+    @Transactional
+    public void archiveUser(Long userId, CustomUserDetails initiator){
+        if (initiator == null) {
+            throw new IllegalArgumentException("Инициатор действия не может быть null");
+        }
+
+        log.info("Архивирование пользователя с ID: {} пользователем {}", userId, initiator.getUsername());
+
+        if (Objects.equals(userId,initiator.getId())){
+            log.warn("Пользователь {} с id {} пытался удалить себя", initiator.getUsername(), initiator.getId());
+            return;
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        ArchivedUser archivedUser = new ArchivedUser(user,initiator.getUsername());
+        archivedUserRepository.save(archivedUser);
+
+//        userAvatarService.deleteExistingAvatarFile(user);
+
+        user.setFirstName("Ghost");
+        user.setLastName("User");
+        user.setEmail("deleted_user_" + user.getId() + "@deleted.local");
+        user.setPassword("{noop}DELETED_" + UUID.randomUUID());
+        user.getRoles().clear();
+        user.setDeleted(true);
+
         userRepository.save(user);
-        log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
     }
 
 
-    public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
-        log.info("Удаление пользователя с ID: {} админом: {}", userId, adminEmail);
-
-        if (userId.equals(currentAdminId)) {
-            log.warn("Блокировка: админ {} пытался удалить сам себя", adminEmail);
-            return false;
-        }
-
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            log.warn("Удаление не удалось: пользователь с ID {} не существует", userId);
-            return false;
-        }
-        try {
-            userRepository.delete(user);
-            log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, adminEmail);
-            return true;
-        } catch (Exception e) {
-            log.error("Ошибка при удалении пользователя ID {}: {}", userId, e.getMessage());
-            return false;
-        }
-    }
 }

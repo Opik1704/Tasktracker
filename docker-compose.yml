@@ -16,6 +16,8 @@ services:
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       S3_BUCKET_NAME: ${MINIO_BUCKET_NAME:-taskmanager-uploads}
       S3_REGION: ${S3_REGION:-ru-central1}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     depends_on:
       - postgres
       - minio

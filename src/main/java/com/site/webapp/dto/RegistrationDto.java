@@ -51,6 +51,7 @@ public class RegistrationDto {
     public void setPassword(String password) {
         this.password = password;
     }
+
     public String getConfirmPassword() {
         return confirmPassword;
     }
