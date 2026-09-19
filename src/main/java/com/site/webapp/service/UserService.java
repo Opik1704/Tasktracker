@@ -3,6 +3,7 @@ package com.site.webapp.service;
 
 import com.site.webapp.exception.SelfDeleteException;
 import com.site.webapp.exception.UserNotFoundException;
+import com.site.webapp.exception.RoleNotFoundException;
 import com.site.webapp.models.ArchivedUser;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;
@@ -15,15 +16,13 @@ import com.site.webapp.security.CustomUserDetails;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -157,27 +156,33 @@ public class UserService implements UserDetailsService {
         log.info("Обновление ролей для пользователя ID: {}", userId);
 
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
-        if (version != null) {
-            user.setVersion(version);
+
+        if (version != null && !version.equals(user.getVersion())) {
+            log.warn("Конфликт версий при обновлении ролей пользователя ID {}: версия в форме {}, в БД {}", userId, version, user.getVersion());
+            throw new ObjectOptimisticLockingFailureException(User.class, userId);
         }
+
         Set<Role> newRoles = new HashSet<>();
+
         if (roleIds != null && !roleIds.isEmpty()){
-            for(Long roleId : roleIds){
-                Role role = roleRepository.findById(roleId).orElse(null);
-                if(role != null){
-                    newRoles.add(role);
-                }
+            List<Role> foundRoles = roleRepository.findAllById(roleIds);
+
+            if (foundRoles.size() != new HashSet<>(roleIds).size()) {
+                throw new RoleNotFoundException("Некоторые из указанных ролей не существуют");
             }
+
+            newRoles.addAll(foundRoles);
         }
         log.debug("Пользователь {}: роли изменены с {} на {}", user.getEmail(), user.getRoles(), newRoles);
+
         user.setRoles(newRoles);
-        userRepository.save(user);
+
         log.info("Роли пользователя ID {} обновлены", userId);
     }
 
 
-    @Value("${app.upload.dir}")
-    private String uploadPath;
+//    @Value("${app.upload.dir}")
+//    private String uploadPath;
 
 //    @Transactional
 //    public void updateAvatar(Long userId, MultipartFile file) {

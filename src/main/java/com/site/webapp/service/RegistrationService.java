@@ -3,7 +3,7 @@ package com.site.webapp.service;
 import com.site.webapp.dto.AcceptInviteDto;
 import com.site.webapp.dto.RegistrationDto;
 import com.site.webapp.exception.InvalidInviteTokenException;
-import com.site.webapp.exception.RoleNotFoundExceptionException;
+import com.site.webapp.exception.RoleNotFoundException;
 import com.site.webapp.exception.UserAlreadyExistsException;
 import com.site.webapp.models.InviteToken;
 import com.site.webapp.models.Role;
@@ -70,7 +70,7 @@ public class RegistrationService {
         user.setLastName(registrationDto.getLastName());
 
         Role employeeRole = roleRepository.findByName(SecurityRoles.EMPLOYEE)
-                .orElseThrow(() -> new RoleNotFoundExceptionException("EMPLOYEE role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("EMPLOYEE role not found"));
         user.setRoles(Set.of(employeeRole));
 
         User savedUser = userService.saveRegisteredUser(user);
@@ -107,7 +107,7 @@ public class RegistrationService {
         user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
 
         Role employeeRole = roleRepository.findByName(SecurityRoles.EMPLOYEE)
-                .orElseThrow(() -> new RoleNotFoundExceptionException("EMPLOYEE role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("EMPLOYEE role not found"));
         user.setRoles(Set.of(employeeRole));
 
         User savedUser = userRepository.save(user);
@@ -147,7 +147,7 @@ public class RegistrationService {
         user.setLastName(registrationDto.getLastName());
 
         Role defaultRole = roleRepository.findByName(SecurityRoles.EMPLOYEE)
-                .orElseThrow(() -> new RoleNotFoundExceptionException("EMPLOYEE role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("EMPLOYEE role not found"));
 
         Role roleToAssign = invite.getRole() != null ? invite.getRole() : defaultRole;
 
