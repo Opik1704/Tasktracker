@@ -19,6 +19,9 @@ public class AcceptInviteDto{
         @Size(min = 4, message = "Пароль должен содержать не менее 4 символов")
         String password;
 
+        @NotBlank(message = "Подтверждение пароля обязательно")
+        private String confirmPassword;
+
 
         public String getToken() {
                 return token;
@@ -49,5 +52,13 @@ public class AcceptInviteDto{
         }
         public void setPassword(String password) {
                 this.password = password;
+        }
+
+        public String getConfirmPassword() {
+                return confirmPassword;
+        }
+
+        public void setConfirmPassword(String confirmPassword) {
+                this.confirmPassword = confirmPassword;
         }
 }

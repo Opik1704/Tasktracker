@@ -25,7 +25,7 @@ public class ProfileController extends LoggingController {
     @GetMapping
     public String profile(@AuthenticationPrincipal CustomUserDetails currentUser, Model model) {
 
-    if (currentUser == null) return "redirect:/authorization";
+//    if (currentUser == null) return "redirect:/authorization";
         User freshUser = userService.findUserById(currentUser.getId());
 
         log.info("Пользователь {} открыл свой профиль", getCurrentUserEmail());
@@ -37,32 +37,46 @@ public class ProfileController extends LoggingController {
     @PostMapping("/update-info")
     public String updateProfile(@AuthenticationPrincipal CustomUserDetails currentUser,
                                 @Valid @ModelAttribute ChangeProfileDto changeProfileDto,
-                                BindingResult bindingResult) {
-        if (currentUser == null) return "redirect:/authorization";
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes) {
+//        if (currentUser == null) return "redirect:/authorization";
+
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.changeProfileDto", bindingResult);
+            redirectAttributes.addFlashAttribute("changeProfileDto", changeProfileDto);
+            return "redirect:/profile";
+        }
 
         log.info("Пользователь {} обновляет данные", currentUser.getUsername());
+
         userService.updateUserInfo(currentUser.getId(),changeProfileDto.getFirstName(),changeProfileDto.getLastName(),changeProfileDto.getVersion());
+        redirectAttributes.addFlashAttribute("successMessage", "Профиль успешно обновлен!");
         return "redirect:/profile";
 
     }
 
     @PostMapping("/change-password")
     public String changePassword(@AuthenticationPrincipal CustomUserDetails currentUser,
-                                 @Valid @ModelAttribute ChangePasswordDto changePasswordDto) {
-        if (currentUser == null) return "redirect:/authorization";
+                                 @Valid @ModelAttribute ChangePasswordDto changePasswordDto,
+                                 BindingResult bindingResult,
+                                 RedirectAttributes redirectAttributes) {
+//        if (currentUser == null) return "redirect:/authorization";
 
-        String result = userService.updatePassword(
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.changePasswordDto", bindingResult);
+            redirectAttributes.addFlashAttribute("changePasswordDto", changePasswordDto);
+            return "redirect:/profile";
+        }
+
+        userService.updatePassword(
                 currentUser.getId(),
                 changePasswordDto.getOldPassword(),
                 changePasswordDto.getNewPassword(),
                 changePasswordDto.getConfirmPassword()
         );
 
-        if ("success".equals(result)) {
-            return "redirect:/profile?passwordSuccess";
-        } else {
-            return "redirect:/profile?" + result;
-        }
+        redirectAttributes.addFlashAttribute("successMessage", "Пароль успешно изменен!");
+        return "redirect:/profile";
     }
 
     @PostMapping("/update-avatar")
@@ -70,7 +84,7 @@ public class ProfileController extends LoggingController {
                                @RequestParam("avatar") MultipartFile file,
                                RedirectAttributes redirectAttributes){
 
-        if (currentUser == null) return "redirect:/authorization";
+//        if (currentUser == null) return "redirect:/authorization";
 
         log.info("Пользователь {} обновляет аватарку", currentUser.getUsername());
 
@@ -79,7 +93,7 @@ public class ProfileController extends LoggingController {
             return "redirect:/profile";
         }
 
-        userService.updateAvatar(currentUser.getId(), file);
+        //userService.updateAvatar(currentUser.getId(), file);
 
         redirectAttributes.addFlashAttribute("success", "Аватарка успешно обновлена!");
         return "redirect:/profile";

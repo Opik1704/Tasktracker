@@ -1,6 +1,7 @@
 package com.site.webapp.service;
 
 
+import com.site.webapp.exception.InvalidPasswordException;
 import com.site.webapp.exception.SelfDeleteException;
 import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.exception.RoleNotFoundException;
@@ -135,20 +136,21 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public String updatePassword(Long userId, String oldPassword,String newPassword,String confirmPassword){
+    public void updatePassword(Long userId, String oldPassword, String newPassword,String confirmPassword){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             log.warn("Неверный старый пароль для пользователя: {}", user.getEmail());
-            return "oldPasswordError";
+            throw new InvalidPasswordException("Неверный текущий пароль");
         }
+
         if (!newPassword.equals(confirmPassword)) {
             log.warn("Новые пароли не совпадают для пользователя {}", user.getEmail());
-            return "matchError";
+            throw new InvalidPasswordException("Новый пароль и подтверждение не совпадают");
         }
+
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
         log.info("Пароль для пользователя {} успешно обновлен", user.getEmail());
-        return "success";
     }
 
     @Transactional
