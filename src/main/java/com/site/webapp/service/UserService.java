@@ -1,6 +1,7 @@
 package com.site.webapp.service;
 
 
+import com.site.webapp.exception.SelfDeleteException;
 import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.models.ArchivedUser;
 import com.site.webapp.models.Role;
@@ -224,7 +225,7 @@ public class UserService implements UserDetailsService {
 //    }
 
     @Transactional
-    public void softDeleteTask(Long userId, CustomUserDetails initiator){
+    public void softDeleteUser(Long userId, CustomUserDetails initiator){
 
         if (initiator == null) {
             throw new IllegalArgumentException("Инициатор действия не может быть null");
@@ -234,7 +235,8 @@ public class UserService implements UserDetailsService {
 
         if(Objects.equals(userId, initiator.getId())){
             log.warn("Пользователь {} с id {} пытался удалить себя", initiator.getUsername(), initiator.getId());
-            return;
+            throw new SelfDeleteException("Нельзя удалить самого себя");
+
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
@@ -259,7 +261,8 @@ public class UserService implements UserDetailsService {
 
         if (Objects.equals(userId,initiator.getId())){
             log.warn("Пользователь {} с id {} пытался удалить себя", initiator.getUsername(), initiator.getId());
-            return;
+            throw new SelfDeleteException("Нельзя удалить самого себя");
+
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));

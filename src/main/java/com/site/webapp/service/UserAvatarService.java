@@ -28,7 +28,7 @@ public class UserAvatarService {
         }
         User user = userService.findUserById(userId);
 
-        deleteExistingAvatar(user);
+        //deleteExistingAvatar(user);
 
         String s3Key = fileStorageService.uploadFile(file, "avatars");
 
@@ -42,15 +42,15 @@ public class UserAvatarService {
     public void deleteAvatar(Long userId){
         User user = userService.findUserById(userId);
 
-        deleteExistingAvatarFile(user);
+        //deleteExistingAvatarFile(user);
 
         user.setOriginalAvatarFileName(null);
         user.setAvatarS3Key(null);
-        userRepository.save(user);
+        //userRepository.save(user);
     }
     @Transactional
     public String deleteExistingAvatar(Long userId) {
-
+        return "a";
     }
 
 }

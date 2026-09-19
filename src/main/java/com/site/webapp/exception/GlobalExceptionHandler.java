@@ -11,56 +11,53 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public String handleEntityNotFound(EntityNotFoundException e,HttpServletRequest request, RedirectAttributes redirectAttributes){
+        log.warn("Ресурс не найден {}: {}", request.getRequestURI(), e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        return redirectToReferer(request, "/all-tasks");
+    }
+
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public String handleBusinessRuleViolation(BusinessRuleViolationException e,HttpServletRequest request,RedirectAttributes redirectAttributes){
+        log.warn("Нарушение бизнес-правила [{}]: {}", request.getRequestURI(), e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        return redirectToReferer(request, "/all-tasks");
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public String handleEntityAlreadyExists(EntityAlreadyExistsException e, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        log.warn("Попытка дублирования данных [{}]: {}", request.getRequestURI(), e.getMessage());
+        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        return redirectToReferer(request, "/all-tasks");
+}
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public String handleOptimisticLock(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         log.warn("Конфликт одновременно редактируемых данных по адресу: {}", request.getRequestURI());
         redirectAttributes.addFlashAttribute("errorMessage", "Данные были изменены другим пользователем. Попробуйте снова.");
-
-        String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/all-tasks");
+        return redirectToReferer(request, "/all-tasks");
     }
 
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         log.error("Ошибка при работе с файлом: {}", e.getMessage(), e);
         redirectAttributes.addFlashAttribute("errorMessage", "Не удалось обработать файл: " + e.getMessage());
-
-        String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/all-tasks");
+        return redirectToReferer(request, "/all-tasks");
     }
 
-    @ExceptionHandler(Exception.class)
-    public String handleUserNotFoundException(UserNotFoundException e,HttpServletRequest request,RedirectAttributes redirectAttributes){
-        log.error("User not found id: {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найть пользователя" + e.getMessage());
-
-        String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/all-tasks");
-    }
 
     @ExceptionHandler(Exception.class)
-    public String handleTaskNotFoundException(TaskNotFoundException e,HttpServletRequest request, RedirectAttributes redirectAttributes){
-        log.error("Task not found {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найти задачу" + e.getMessage());
-
-        String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/all-tasks");
-    }
-
-    @ExceptionHandler(Exception.class)
-    public String handleRoleNotFoundException(RoleNotFoundException e, HttpServletRequest request, RedirectAttributes redirectAttributes){
-        log.error("Role not found {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("errorMessage","Не удалось найти роль" + e.getMessage());
-
-        String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/all-tasks");
-    }
-
-    @ExceptionHandler(Exception.class)
-    public String handleGeneralException(Exception e) {
-        log.error("Unexpected error", e);
+    public String handleGeneralException(Exception e, HttpServletRequest request) {
+        log.error("Непредвиденная критическая ошибка по адресу: {}", request.getRequestURI(), e);
         return "error";
+    }
+
+    private String redirectToReferer(HttpServletRequest request, String fallbackPath) {
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null && !referer.isBlank() ? referer : fallbackPath);
     }
 }
