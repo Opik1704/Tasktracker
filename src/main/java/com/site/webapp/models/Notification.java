@@ -6,7 +6,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications",indexes = {
+        @Index(name = "idx_notifications_user_read_created", columnList = "user_id, is_read, created_at DESC"),
+        @Index(name = "idx_notifications_task_id", columnList = "task_id"),
+        @Index(name = "idx_notifications_created_at", columnList = "created_at")
+})
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

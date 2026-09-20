@@ -6,7 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "archived_users")
+@Table(name = "archived_users",indexes = {
+        @Index(name = "idx_archived_users_original_id", columnList = "originalUserId"), //[cite: 8]
+        @Index(name = "idx_archived_users_email", columnList = "originalEmail") //[cite: 8]
+})
 public class ArchivedUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

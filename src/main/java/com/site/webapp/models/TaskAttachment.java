@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task_attachments")
+@Table(name = "task_attachments",indexes = {
+        @Index(name = "idx_attachments_task_id", columnList = "task_id"),
+})
 public class TaskAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

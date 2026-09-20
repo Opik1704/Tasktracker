@@ -7,7 +7,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "invite_tokens")
+@Table(name = "invite_tokens",indexes = {
+                @Index(name = "idx_invite_tokens_email", columnList = "email"),
+                @Index(name = "idx_invite_tokens_expires_used", columnList = "expiresAt, usedAt")
+        })
 public class InviteToken {
 
     @Id

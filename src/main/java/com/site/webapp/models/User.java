@@ -17,7 +17,9 @@ import java.util.Set;
 
 
 @Entity
-@Table(name = "users")
+@Table(name = "users",indexes = {
+@Index(name = "idx_users_deleted", columnList = "deleted")
+})
 @SQLRestriction("deleted = false")
 public class User implements UserDetails {
 

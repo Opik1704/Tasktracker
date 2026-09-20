@@ -15,7 +15,16 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "tasks",indexes = {
+        @Index(name = "idx_tasks_owner_id", columnList = "owner_id"),
+
+        @Index(name = "idx_tasks_artist_deleted", columnList = "artist_id, deleted"),
+        @Index(name = "idx_tasks_deadline", columnList = "deadline"),
+
+// пусть будет
+        @Index(name = "idx_tasks_title", columnList = "title"),
+        @Index(name = "idx_tasks_comment", columnList = "comment")
+})
 @SQLDelete(sql = "UPDATE tasks SET deleted = true WHERE id = ?")
 @SQLRestriction("deleted = false")
 public class Task {
