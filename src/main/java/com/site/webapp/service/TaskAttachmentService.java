@@ -2,6 +2,7 @@ package com.site.webapp.service;
 
 import com.site.webapp.dto.ResourceDownloadDto;
 import com.site.webapp.events.FileAttachedEvent;
+import com.site.webapp.events.FileDeletedEvent;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.repo.TaskAttachmentRepository;
@@ -97,9 +98,20 @@ public class TaskAttachmentService {
         TaskAttachment taskAttachment = taskAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Не найдено вложение с ID: " + attachmentId));
 
+        Long taskId = taskAttachment.getTask().getId();
+        Long artistId = taskAttachment.getTask().getArtistId();
+
         fileStorageService.deleteFile(taskAttachment.getS3Key());
 
         taskAttachmentRepository.delete(taskAttachment);
+
+        if (artistId != null) {
+            eventPublisher.publishEvent(new FileDeletedEvent(
+                    taskId,
+                    artistId,
+                    taskAttachment.getFileName()
+            ));
+        }
         log.info("Вложение  '{}' успешно удалено из S3 и БД",taskAttachment.getFileName());
     }
 

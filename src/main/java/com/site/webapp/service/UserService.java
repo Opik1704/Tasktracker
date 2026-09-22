@@ -38,20 +38,17 @@ public class UserService implements UserDetailsService {
     private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
     private final ArchivedUserRepository archivedUserRepository;
-    private final UserAvatarService  userAvatarService;
 
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
                        TaskRepository taskRepository,
                        PasswordEncoder passwordEncoder,
-                       ArchivedUserRepository archivedUserRepository,
-                       UserAvatarService  userAvatarService){
+                       ArchivedUserRepository archivedUserRepository){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
         this.archivedUserRepository = archivedUserRepository;
-        this.userAvatarService = userAvatarService;
     }
 
     @Transactional
