@@ -68,6 +68,9 @@ public class Task {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Column(nullable = false)
     private boolean deleted = false;
 
@@ -75,7 +78,7 @@ public class Task {
     private List<TaskAttachment> attachments = new ArrayList<>();
 
     public enum TaskStatus {
-        NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED
+        NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED, CANCELLED, ARCHIVED
     }
 
     public enum Priority {
@@ -189,6 +192,14 @@ public class Task {
     }
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public Long getVersion() {

@@ -4,30 +4,21 @@ import com.site.webapp.events.TaskCreatedEvent;
 import com.site.webapp.events.TaskDeletedEvent;
 import com.site.webapp.events.TaskUpdatedEvent;
 import com.site.webapp.exception.TaskNotFoundException;
-import com.site.webapp.exception.UserNotFoundException;
-import com.site.webapp.listeners.NotificationEventListener;
+import com.site.webapp.exception.UnauthorizedAccessException;
 import com.site.webapp.models.Task;
-import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.models.User;
 import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import com.site.webapp.security.CustomUserDetails;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -56,6 +47,7 @@ public class TaskService {
     public Task createTask(Task task, CustomUserDetails userDetails) {
 
         task.setStatus(Task.TaskStatus.NEW);
+        task.setOwnerId(userDetails.getId());
         taskRepository.save(task);
         eventPublisher.publishEvent(new TaskCreatedEvent(
                 task.getId(),
@@ -73,6 +65,7 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<Task> getAllTasks(String sort, String search) {
+        log.debug("Запрос списка всех задач. Фильтр: '{}', Сортировка: '{}'", search, sort);
         if (search != null && !search.trim().isEmpty()) {
             return taskRepository.findByTitleContainingIgnoreCaseOrCommentContainingIgnoreCase(
                     search.trim(), search.trim());
@@ -82,6 +75,7 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<Task> getAllUserTasks(Long userId, String sort, String search){
+        log.debug("Запрос задач исполнителя [User ID: {}]. Фильтр: '{}', Сортировка: '{}'", userId, search, sort);
         if (search != null && !search.trim().isEmpty()) {
             return taskRepository.findByArtistIdAndTitleContainingIgnoreCaseOrArtistIdAndCommentContainingIgnoreCase(
                     userId,search.trim(),userId,search.trim());
@@ -91,8 +85,8 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<Task> getSortedFavorites(String email, String sort) {
+        log.debug("Запрос избранных задач для [Email: {}]", email);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-        if (user == null) return new ArrayList<>();
 
         return getSortedFavoriteTasks(new ArrayList<>(user.getFavouriteTasks()), sort);
     }
@@ -102,6 +96,8 @@ public class TaskService {
     public void updateTask(Task updatedTask, CustomUserDetails userDetails) {
 
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new TaskNotFoundException(updatedTask.getId()));
+
+        validateTaskAccess(task, userDetails, "TASK_EDIT");
 
         if (updatedTask.getVersion() != null) {
             task.setVersion(updatedTask.getVersion());
@@ -135,39 +131,55 @@ public class TaskService {
         log.info("Задача id {} успешно обновлена", task.getId());
     }
 
-//
-//    @PostConstruct
-//    public void init() {
-//        try {
-//            Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
-//            if (!Files.exists(root)) {
-//                Files.createDirectories(root);
-//                System.out.println("Папка для загрузок создана по пути: " + root);
-//            }
-//        } catch (IOException e) {
-//            throw new RuntimeException("Не удалось инициализировать папку для загрузок!", e);
-//        }
-//    }
-//
-//    public String saveFile(MultipartFile file) throws IOException {
-//        if (file == null || file.isEmpty()) return null;
-//
-//        Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
-//        if (!Files.exists(root)) {
-//            Files.createDirectories(root);
-//        }
-//
-//        String resultFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-//        Path filePath = root.resolve(resultFilename);
-//
-//        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//
-//        return resultFilename;
-//    }
+    @Transactional
+    public void softDeleteTask(Long taskId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
+
+        validateTaskAccess(task, userDetails, "TASK_DELETE");
+
+        task.setDeleted(true);
+        task.setDeletedAt(LocalDateTime.now());
+
+        taskRepository.save(task);
+
+        log.info("Задача id {} перемещена в корзину пользователем {}", taskId, userDetails.getFullName());
+    }
 
     @Transactional
-    public void deleteTask(Long taskId, CustomUserDetails userDetails) {
-        Task task = taskRepository.findById(taskId)
+    public void restoreTask(Long taskId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findByIdAndOwnerIdAndDeletedTrue(taskId, userDetails.getId())
+                .orElseThrow(() -> new TaskNotFoundException("Задача в корзине не найдена"));
+
+        validateTaskAccess(task, userDetails, "TASK_DELETE");
+
+        task.setDeleted(false);
+        task.setDeletedAt(null);
+        taskRepository.save(task);
+
+        log.info("Задача id {} успешно восстановлена из корзины пользователем {}", taskId, userDetails.getFullName());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Task> getTrashTasks(Long ownerId, CustomUserDetails userDetails) {
+        Long currentUserId = userDetails.getId();
+
+        boolean isSelf = currentUserId.equals(ownerId);
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isSelf && !isAdmin) {
+            log.warn("Пользователь {} пытался получить доступ к корзине пользователя {}", userDetails.getUsername(), ownerId);
+            throw new UnauthorizedAccessException("У вас нет прав для просмотра корзины этого пользователя");
+        }
+        log.debug("Запрос задач из корзины для владельца Owner ID: {}", ownerId);
+        return taskRepository.findAllByOwnerIdAndDeletedTrue(ownerId);
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TASK_DELETE_PERMANENT') or hasRole('ADMIN')")
+    public void hardDeleteTask(Long taskId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findByIdAndDeletedTrue(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
 
         String authorName = userDetails.getFullName();
@@ -180,9 +192,31 @@ public class TaskService {
         ));
 
         taskAttachmentService.deleteAllByTaskId(taskId);
-        taskRepository.deleteById(taskId);
+
+        taskRepository.deleteByIdAndDeletedTrue(taskId);
 
         log.info("Задача id {} удалена пользователем {}",taskId, userDetails.getFullName());
+    }
+
+
+    private void validateTaskAccess(Task task, CustomUserDetails userDetails, String requiredPermission) {
+        Long userId = userDetails.getId();
+
+        boolean isOwner = task.getOwnerId() != null && task.getOwnerId().equals(userId);
+        boolean isArtist = task.getArtistId() != null && task.getArtistId().equals(userId);
+
+        if (isOwner || isArtist) {
+            return;
+        }
+
+        boolean hasPermission = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(requiredPermission) ||
+                        a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!hasPermission) {
+            log.warn("Отказ в доступе к задаче {} пользователю {}", task.getId(), userDetails.getUsername());
+            throw new UnauthorizedAccessException("У вас нет прав для выполнения этой операции над задачей");
+        }
     }
 
 
@@ -191,9 +225,9 @@ public class TaskService {
         log.info("Переключение избранного для пользователя {} и задачи {}", email, taskId);
 
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-        if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
 
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
+
         if (user.getFavouriteTasks().contains(task)) {
             user.getFavouriteTasks().remove(task);
             log.info("Пользователь {} удалил задачу {} из избранного", email, taskId);

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
@@ -17,6 +18,19 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findAllByDeadlineBetween(LocalDateTime now, LocalDateTime twoHoursLater);
     List<Task> findAllByArtistIdAndDeadlineBetween(Long artistId,LocalDateTime start,LocalDateTime end);
+
+    List<Task> findAllByUserIdAndDeletedFalse(Long userId);
+    List<Task> findAllByUserIdAndDeletedTrue(Long userId);
+
+    List<Task> findAllByOwnerIdAndDeletedTrue(Long ownerId);
+
+    Optional<Task> findByIdAndOwnerIdAndDeletedTrue(Long id, Long ownerId);
+
+    Optional<Task> findByIdAndDeletedTrue(Long id);
+
+    List<Task> findAllByDeletedTrueAndDeletedAtBefore(LocalDateTime thresholdDate);
+
+    void deleteByIdAndDeletedTrue(Long id);
 
     long countByArtistIdAndStatusNot(Long artistId, Task.TaskStatus status);
 
