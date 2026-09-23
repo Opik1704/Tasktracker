@@ -1,6 +1,8 @@
 package com.site.webapp.service;
 
 
+import com.site.webapp.events.AvatarDeletedEvent;
+import com.site.webapp.events.UserArchivedEvent;
 import com.site.webapp.exception.InvalidPasswordException;
 import com.site.webapp.exception.SelfDeleteException;
 import com.site.webapp.exception.UserNotFoundException;
@@ -17,6 +19,7 @@ import com.site.webapp.security.CustomUserDetails;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,18 +40,22 @@ public class UserService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
     private final ArchivedUserRepository archivedUserRepository;
 
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
                        TaskRepository taskRepository,
                        PasswordEncoder passwordEncoder,
+                       ApplicationEventPublisher eventPublisher,
                        ArchivedUserRepository archivedUserRepository){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
         this.archivedUserRepository = archivedUserRepository;
+
     }
 
     @Transactional
@@ -66,12 +73,7 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException{
         log.info("Попытка входа пользователя с email: {}", email);
 
-        User user = userRepository.findByEmail(email).orElseThrow(() ->new UserNotFoundException(email));
-
-        if (user == null){
-            log.warn("Пользователь с email {} не найден",email);
-            throw new UsernameNotFoundException("User not found" + email);
-        }
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email));
 
         log.info("Пользователь {} найден, ID: {}, роли: {}",email, user.getId(), user.getRoles());
         return new CustomUserDetails(user);
@@ -105,9 +107,6 @@ public class UserService implements UserDetailsService {
         log.info("Взятие избранных задач для пользователя с email: {}", email);
 
         User user = userRepository.findByEmail(email).orElseThrow(() ->new UserNotFoundException(email));
-        if (user == null){
-            return new ArrayList<>();
-        }
 
         return new ArrayList<>(user.getFavouriteTasks());
     }
@@ -124,8 +123,8 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
 
         log.debug("Старые данные: {} {}", user.getFirstName(), user.getLastName());
-        if (version != null) {
-            user.setVersion(version);
+        if (version != null && !version.equals(user.getVersion())) {
+            throw new ObjectOptimisticLockingFailureException(User.class, userId);
         }
         user.setFirstName(firstName);
         user.setLastName(lastName);
@@ -180,54 +179,6 @@ public class UserService implements UserDetailsService {
     }
 
 
-//    @Value("${app.upload.dir}")
-//    private String uploadPath;
-
-//    @Transactional
-//    public void updateAvatar(Long userId, MultipartFile file) {
-//        if (file == null || file.isEmpty()) {
-//            return;
-//        }
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new UserNotFoundException(userId));
-//        if (user.getAvatarS3Key() != null) {
-//            try {
-//                fileStorageService.deleteFile(user.getAvatarS3Key());
-//            } catch (Exception e) {
-//                log.warn("Не удалось удалить старую аватарку пользователя ID {}: {}", userId, e.getMessage());
-//            }
-//        }
-//        String s3Key = fileStorageService.uploadFile(file, "avatars");
-//        user.setOriginalAvatarFileName(file.getOriginalFilename());
-//        user.setAvatarS3Key(s3Key);
-//        userRepository.save(user);
-//        log.info("Аватарка для пользователя ID {} успешно обновлена в S3: {}", userId, s3Key);
-//    }
-
-
-//    public boolean deleteUser(Long userId,Long currentAdminId,String adminEmail){
-//        log.info("Удаление пользователя с ID: {} админом: {}", userId, adminEmail);
-//
-//        if (userId.equals(currentAdminId)) {
-//            log.warn("Блокировка: админ {} пытался удалить сам себя", adminEmail);
-//            return false;
-//        }
-//
-//        User user = userRepository.findById(userId).orElse(null);
-//        if (user == null) {
-//            log.warn("Удаление не удалось: пользователь с ID {} не существует", userId);
-//            return false;
-//        }
-//        try {
-//            userRepository.delete(user);
-//            log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, adminEmail);
-//            return true;
-//        } catch (Exception e) {
-//            log.error("Ошибка при удалении пользователя ID {}: {}", userId, e.getMessage());
-//            return false;
-//        }
-//    }
-
     @Transactional
     public void softDeleteUser(Long userId, CustomUserDetails initiator){
 
@@ -251,7 +202,6 @@ public class UserService implements UserDetailsService {
         }
 
         user.setDeleted(true);
-
         log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, initiator.getUsername());
     }
 
@@ -260,29 +210,35 @@ public class UserService implements UserDetailsService {
         if (initiator == null) {
             throw new IllegalArgumentException("Инициатор действия не может быть null");
         }
-
         log.info("Архивирование пользователя с ID: {} пользователем {}", userId, initiator.getUsername());
 
         if (Objects.equals(userId,initiator.getId())){
             log.warn("Пользователь {} с id {} пытался удалить себя", initiator.getUsername(), initiator.getId());
             throw new SelfDeleteException("Нельзя удалить самого себя");
-
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
         ArchivedUser archivedUser = new ArchivedUser(user,initiator.getUsername());
         archivedUserRepository.save(archivedUser);
 
-//        userAvatarService.deleteExistingAvatarFile(user);
+        String avatarS3Key = user.getAvatarS3Key();
 
         user.setFirstName("Ghost");
         user.setLastName("User");
         user.setEmail("deleted_user_" + user.getId() + "@deleted.local");
         user.setPassword("{noop}DELETED_" + UUID.randomUUID());
         user.getRoles().clear();
+        user.setAvatarS3Key(null);
         user.setDeleted(true);
 
         userRepository.save(user);
+
+        if (avatarS3Key != null && !avatarS3Key.isBlank()) {
+            eventPublisher.publishEvent(new AvatarDeletedEvent(userId, avatarS3Key));
+        }
+
+        eventPublisher.publishEvent(new UserArchivedEvent(user.getId(), avatarS3Key));
     }
 
 

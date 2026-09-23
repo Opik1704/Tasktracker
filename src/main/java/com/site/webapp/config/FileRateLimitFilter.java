@@ -2,7 +2,23 @@ package com.site.webapp.config;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.io.IOException;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+
+@Component
 public class FileRateLimitFilter extends OncePerRequestFilter{
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 

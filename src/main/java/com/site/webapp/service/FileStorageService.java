@@ -4,6 +4,8 @@ import com.site.webapp.exception.FileStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -29,8 +31,15 @@ public class FileStorageService {
         this.s3Client = s3Client;
     }
 
-    public String uploadFile(MultipartFile file, String folder) {
-        String s3Key = folder + "/" + UUID.randomUUID() + "." + StringUtils.getFilenameExtension(file.getOriginalFilename());
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    public String uploadFile(MultipartFile file, String folder, String extension) {
+        String ext = StringUtils.hasText(extension) ? "." + extension : "";
+        String s3Key = folder + "/" + UUID.randomUUID() + "." + ext;
+
         log.debug("Starting upload file '{}' to S3 bucket '{}' with key '{}'",file.getOriginalFilename(), bucketName, s3Key);
         try{
             PutObjectRequest request= PutObjectRequest.builder().bucket(bucketName).key(s3Key).contentType(file.getContentType()).build();
@@ -43,6 +52,12 @@ public class FileStorageService {
 
         return s3Key;
     }
+
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     public InputStream downloadFile(String s3Key){
         log.debug("Downloading file with key '{}' from S3 bucket '{}'", s3Key, bucketName);
         try {
@@ -55,6 +70,12 @@ public class FileStorageService {
         }
 
     }
+
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     public void deleteFile(String s3Key){
         try{
             DeleteObjectRequest request = DeleteObjectRequest.builder().bucket(bucketName).key(s3Key).build();

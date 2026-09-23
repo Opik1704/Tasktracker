@@ -91,7 +91,7 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<Task> getSortedFavorites(String email, String sort) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));;
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
         if (user == null) return new ArrayList<>();
 
         return getSortedFavoriteTasks(new ArrayList<>(user.getFavouriteTasks()), sort);
@@ -190,7 +190,7 @@ public class TaskService {
     public void toggleFavorite(String email, Long taskId) {
         log.info("Переключение избранного для пользователя {} и задачи {}", email, taskId);
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));;
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
         if (user == null) throw new UsernameNotFoundException("Пользователь не найден");
 
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
