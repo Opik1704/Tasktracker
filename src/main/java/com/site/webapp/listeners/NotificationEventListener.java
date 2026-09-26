@@ -79,11 +79,10 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleFileAttachedEvent(FileAttachedEvent event){
-        log.info("Обработка прикрепления файла '{}' к задаче ID {}", event.fileName(), event.taskId());
+        log.info("Обработка прикрепления файла '{}' к задаче ID {}", event.s3Key(), event.taskId());
 
-        String message = "К вашей задаче прикреплен новый файл: " + event.fileName();
+        String message = "К вашей задаче прикреплен новый файл: " + event.s3Key();
         notificationService.createNotification(event.artistId(), event.taskId(), message);
-
     }
 
     @Async
