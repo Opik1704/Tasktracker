@@ -149,6 +149,10 @@ public class UserService implements UserDetailsService {
         log.info("Пароль для пользователя {} успешно обновлен", user.getEmail());
     }
 
+    /**
+     * Обновляет роли пользователя с проверкой оптимистичной блокировки.
+     * Проверяет версию для предотвращения конфликтов одновременного редактирования.
+     */
     @Transactional
     public void updateUserRoles(Long userId, List<Long> roleIds,Long version) {
         log.info("Обновление ролей для пользователя ID: {}", userId);
@@ -205,6 +209,15 @@ public class UserService implements UserDetailsService {
         log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, initiator.getUsername());
     }
 
+    /**
+     * Архивирует пользователя с полной анонимизацией данных.
+     * Сохраняет копию в ArchivedUser, затем анонимизирует оригинал:
+     * - меняет имя на "Ghost User"
+     * - меняет email на deleted_user_{id}@deleted.local
+     * - удаляет роли и аватар
+     * - генерирует случайный пароль
+     * Публикует события UserArchivedEvent и AvatarDeletedEvent.
+     */
     @Transactional
     public void archiveUser(Long userId, CustomUserDetails initiator){
         if (initiator == null) {

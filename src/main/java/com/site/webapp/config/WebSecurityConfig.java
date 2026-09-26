@@ -15,6 +15,15 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Конфигурация безопасности Spring Security.
+ * Настраивает:
+ * - Формы логина/регистрации
+ * - OAuth2 через Google
+ * - Права доступа к /admin/**
+ * - CSRF отключен
+ * - Методную безопасность (@PreAuthorize)
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -73,6 +82,10 @@ public class WebSecurityConfig{
         return authProvider;
     }
 
+    /**
+     * Обрабатывает OAuth2 пользователя от провайдера (Google).
+     * Регистрирует или находит пользователя в системе по данным OAuth2.
+     */
     private OAuth2User processOAuth2User(OAuth2UserRequest userRequest) {
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);

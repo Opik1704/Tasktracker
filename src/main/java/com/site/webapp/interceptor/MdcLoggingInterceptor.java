@@ -11,6 +11,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.UUID;
 
+/**
+ * Interceptor для добавления контекста в MDC для логирования.
+ * Добавляет в MDC:
+ * - traceId: уникальный идентификатор запроса для трассировки
+ * - userId: ID текущего пользователя (если аутентифицирован)
+ * - userEmail: email текущего пользователя (если аутентифицирован)
+ * Позволяет отслеживать логи одного запроса в разных компонентах системы.
+ */
 @Component
 public class MdcLoggingInterceptor implements HandlerInterceptor {
 

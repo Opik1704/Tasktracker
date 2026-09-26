@@ -1,6 +1,5 @@
 package com.site.webapp.exception;
 
-import com.site.webapp.service.FileStorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +7,13 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+/**
+ * Глобальный обработчик исключений.
+
+ * Перехватывает все исключения в приложении и возвращает
+ * пользователю понятные сообщения с редиректом на предыдущую страницу.
+ */
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

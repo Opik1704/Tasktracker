@@ -5,15 +5,18 @@ import com.site.webapp.models.Task;
 import java.time.LocalDateTime;
 
 /**
- *
- * @param taskId
- * @param initiatorName
- * @param oldArtistId
- * @param newArtistId
- * @param oldDeadline
- * @param newDeadline
- * @param oldPriority
- * @param newPriority
+ * Событие обновления задачи.
+ * Содержит старые и новые значения для определения изменений.
+ * Используется для отправки уведомлений при смене исполнителя, дедлайна или приоритета.
+ * @param taskId ID задачи
+ * @param taskTitle название задачи
+ * @param initiatorName имя пользователя, изменившего задачу
+ * @param oldArtistId предыдущий исполнитель
+ * @param newArtistId новый исполнитель
+ * @param oldDeadline предыдущий дедлайн
+ * @param newDeadline новый дедлайн
+ * @param oldPriority предыдущий приоритет
+ * @param newPriority новый приоритет
  */
 public record TaskUpdatedEvent(
         Long taskId,

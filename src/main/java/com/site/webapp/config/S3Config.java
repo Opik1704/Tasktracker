@@ -9,7 +9,14 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.URI;
-
+/**
+ * Конфигурация клиента S3 (MinIO/AWS).
+ * Создает бин S3Client с настройками из application.properties:
+ * - endpoint URL
+ * - access key / secret key
+ * - region
+ * - path style access для MinIO
+ */
 @Configuration
 public class S3Config {
     @Value("${aws.s3.endpoint}")

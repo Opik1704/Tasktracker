@@ -6,6 +6,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * Планировщик для генерации планов задач.
+ * Запускается по расписанию для отправки пользователям:
+ * - Еженедельного плана задач (каждый понедельник в 9:00)
+ * - Ежедневного плана задач (каждый день в 9:00)
+ */
+
 @Component
 public class TaskPlanScheduler {
     private static final Logger log = LoggerFactory.getLogger(TaskPlanScheduler.class);

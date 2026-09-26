@@ -5,6 +5,7 @@ import com.site.webapp.models.Task;
 import java.time.LocalDateTime;
 
 /**
+ *  * Событие создания новой задачи.
  * @param taskId
  * @param taskTitle
  * @param deadline

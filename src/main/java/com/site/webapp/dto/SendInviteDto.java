@@ -3,6 +3,12 @@ package com.site.webapp.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * DTO для отправки приглашения на регистрацию.
+ * Содержит email пользователя и роль, которая будет назначена при регистрации.
+ * Email должен быть уникален и валиден.
+ */
+
 public class SendInviteDto {
 
     @NotBlank(message = "Email обязателен")

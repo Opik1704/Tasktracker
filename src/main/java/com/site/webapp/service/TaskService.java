@@ -198,7 +198,18 @@ public class TaskService {
         log.info("Задача id {} удалена пользователем {}",taskId, userDetails.getFullName());
     }
 
-
+    /**
+     * Проверяет права доступа пользователя к задаче.
+     * Разрешает доступ если пользователь:
+     * - владелец задачи
+     * - исполнитель задачи
+     * - имеет требуемое разрешение или роль ADMIN
+     *
+     * @param task задача для проверки
+     * @param userDetails текущий пользователь
+     * @param requiredPermission требуемое разрешение (TASK_EDIT, TASK_DELETE)
+     * @throws UnauthorizedAccessException если нет прав доступа
+     */
     private void validateTaskAccess(Task task, CustomUserDetails userDetails, String requiredPermission) {
         Long userId = userDetails.getId();
 

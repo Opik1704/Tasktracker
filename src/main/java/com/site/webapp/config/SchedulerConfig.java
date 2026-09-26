@@ -7,6 +7,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Component;
 
+/**
+ * Конфигурация планировщика задач.
+ * Настраивает ThreadPoolTaskScheduler для @Scheduled методов:
+ * - Размер пула: 5 потоков
+ * - Обработка ошибок в фоновых задачах
+ */
+
 @Component
 public class SchedulerConfig implements SchedulingConfigurer {
     private static final Logger log = LoggerFactory.getLogger(SchedulerConfig.class);

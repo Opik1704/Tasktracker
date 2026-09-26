@@ -3,6 +3,14 @@ package com.site.webapp.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO для изменения профиля пользователя.
+ * Содержит имя, фамилию и версию для оптимистичной блокировки.
+ * Валидация:
+ * - Имя и фамилия: 2-50 символов
+ * - Version: используется для предотвращения конфликтов одновременного редактирования
+ */
+
 public class ChangeProfileDto {
 
     @NotBlank(message = "Имя не должно быть пустым")

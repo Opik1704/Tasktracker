@@ -18,6 +18,13 @@ import org.springframework.http.HttpStatus;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 
+/**
+ * Фильтр для rate limiting загрузки файлов.
+ * Ограничивает количество запросов на загрузку файлов с одного IP.
+ * Использует Bucket4j для реализации token bucket алгоритма.
+ * LinkedHashMap с LRU для автоматической очистки старых записей.
+ */
+
 @Component
 public class FileRateLimitFilter extends OncePerRequestFilter{
     private static final int MAX_IP_ENTRIES = 5_000;

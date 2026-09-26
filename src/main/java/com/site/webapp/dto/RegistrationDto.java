@@ -4,6 +4,14 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO для регистрации нового пользователя.
+ * Валидация:
+ * - Имя и фамилия: 1-50 символов
+ * - Email: валидный формат
+ * - Пароль: минимум 4 символа
+ * - Пароль и подтверждение должны совпадать
+ */
 public class RegistrationDto {
     @NotBlank(message = "Имя обязательно")
     @Size(min = 1,max = 50,message = "Имя должно содержать от 1 до 50 символов")

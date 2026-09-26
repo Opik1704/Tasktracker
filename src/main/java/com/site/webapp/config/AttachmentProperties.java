@@ -8,6 +8,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Конфигурация свойств вложений файлов.
+ * Загружает настройки из application.properties с префиксом app.attachment:
+ * - maxSizeBytes: максимальный размер файла (по умолчанию 10MB)
+ * - allowedTypes: разрешенные MIME-типы файлов
+ * - forbiddenExtensions: запрещенные расширения файлов
+ */
+
 @Component
 @ConfigurationProperties(prefix = "app.attachment")
 public class AttachmentProperties {

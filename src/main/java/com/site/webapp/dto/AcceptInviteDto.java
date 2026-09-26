@@ -2,6 +2,16 @@ package com.site.webapp.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO для принятия приглашения и регистрации.
+ * Используется при регистрации по токену приглашения.
+ * Валидация:
+ * - Токен: обязателен
+ * - Имя и фамилия: 1-50 символов
+ * - Пароль: минимум 4 символа
+ * - Пароль и подтверждение должны совпадать
+ */
+
 public class AcceptInviteDto{
 
         @NotBlank(message = "Токен обязателен")

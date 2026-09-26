@@ -3,6 +3,15 @@ package com.site.webapp.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO для смены пароля пользователя.
+ * Требует старый пароль для подтверждения и новый с подтверждением.
+ * Валидация:
+ * - Старый пароль: обязателен
+ * - Новый пароль: минимум 4 символа
+ * - Подтверждение: обязательно и должно совпадать с новым
+ */
+
 public class ChangePasswordDto {
     @NotBlank(message =  "Введите Старый пароль")
     private String oldPassword;

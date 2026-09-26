@@ -11,6 +11,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Конфигурация Spring MVC.
+ * Настраивает:
+ * - Interceptor для логирования MDC
+ * - ViewControllers для авторизации
+ * - ResourceHandlers для статических файлов (/uploads/**)
+ */
+
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
 

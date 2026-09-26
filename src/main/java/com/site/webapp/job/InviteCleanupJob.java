@@ -6,6 +6,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * Фоновая задача для очистки просроченных приглашений.
+
+ * Запускается по расписанию для удаления токенов приглашений,
+ * срок действия которых истек и которые не были использованы.
+ */
+
 @Component
 public class InviteCleanupJob {
     private static final Logger log = LoggerFactory.getLogger(InviteCleanupJob.class);
