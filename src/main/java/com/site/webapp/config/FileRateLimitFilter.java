@@ -1,7 +1,6 @@
 package com.site.webapp.config;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.io.IOException;
