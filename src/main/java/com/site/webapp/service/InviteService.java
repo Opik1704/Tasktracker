@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 public class InviteService {
@@ -43,5 +42,12 @@ public class InviteService {
         InviteToken inviteToken = InviteToken.create(dto.getEmail(), role);
 
         return inviteTokenRepository.save(inviteToken);
+    }
+
+    @Transactional
+    public int deleteExpiredInvites(){
+        int countDeletedInvites = inviteTokenRepository.deleteAllByExpiresAtBeforeAndUsedAtIsNull(LocalDateTime.now());
+        log.info("Очистка инвайтов: удалено {} просроченных токенов", countDeletedInvites);
+        return countDeletedInvites;
     }
 }

@@ -1,7 +1,8 @@
 package com.site.webapp.config;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.io.IOException;
 
@@ -13,14 +14,20 @@ import jakarta.servlet.FilterChain;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 
 @Component
 public class FileRateLimitFilter extends OncePerRequestFilter{
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private static final int MAX_IP_ENTRIES = 5_000;
+
+    private final Map<String, Bucket> buckets = new LinkedHashMap<>(MAX_IP_ENTRIES, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Bucket> eldest) {
+            return size() > MAX_IP_ENTRIES;
+        }
+    };
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -43,7 +50,11 @@ public class FileRateLimitFilter extends OncePerRequestFilter{
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String clientIp = getClientIp(request);
-        Bucket bucket = buckets.computeIfAbsent(clientIp, k -> createNewBucket());
+
+        Bucket bucket;
+        synchronized (buckets) {
+            bucket = buckets.computeIfAbsent(clientIp, k -> createNewBucket());
+        }
 
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
@@ -76,8 +87,4 @@ public class FileRateLimitFilter extends OncePerRequestFilter{
         return xfHeader.split(",")[0].trim();
     }
 
-    @Scheduled(fixedRate = 900000)
-    public void clearBuckets() {
-        buckets.clear();
-    }
 }

@@ -19,9 +19,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findAllByDeadlineBetween(LocalDateTime now, LocalDateTime twoHoursLater);
     List<Task> findAllByArtistIdAndDeadlineBetween(Long artistId,LocalDateTime start,LocalDateTime end);
 
-    List<Task> findAllByUserIdAndDeletedFalse(Long userId);
-    List<Task> findAllByUserIdAndDeletedTrue(Long userId);
-
+    List<Task> findAllByOwnerIdAndDeletedFalse(Long ownerId);
     List<Task> findAllByOwnerIdAndDeletedTrue(Long ownerId);
 
     Optional<Task> findByIdAndOwnerIdAndDeletedTrue(Long id, Long ownerId);

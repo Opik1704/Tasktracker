@@ -1,5 +1,6 @@
 package com.site.webapp.service;
 
+import com.site.webapp.exception.TaskNotFoundException;
 import com.site.webapp.exception.UserNotFoundException;
 import com.site.webapp.models.Notification;
 import com.site.webapp.models.Task;
@@ -37,6 +38,9 @@ public class NotificationService {
             log.warn("Попытка создать уведомление для null userId");
             return;
         }
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId);
+        }
 
         Notification notification = new Notification();
         notification.setUser(userRepository.getReferenceById(userId));
@@ -44,12 +48,16 @@ public class NotificationService {
         notification.setCreatedAt(LocalDateTime.now());
 
         if (taskId != null) {
+            if (!taskRepository.existsById(taskId)) {
+                throw new TaskNotFoundException(taskId);
+            }
             notification.setTask(taskRepository.getReferenceById(taskId));
         }
 
         notificationRepository.save(notification);
         log.info("Создано уведомление для пользователя ID {}: {}", userId, message);
     }
+
     @Transactional
     public void createNotification(Long userId, String message) {
         createNotification(userId, null, message);
@@ -99,15 +107,36 @@ public class NotificationService {
     }
 
     @Transactional
+    public int sendUrgentReminders() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twoHoursLater = now.plusHours(2);
+        List<Task> urgentTasks = taskRepository.findAllByDeadlineBetween(now, twoHoursLater);
+
+        int sentCount = 0;
+        for (Task task : urgentTasks) {
+            try {
+                String message = "До дедлайна задачи '" + task.getTitle() + "' осталось меньше 2 часов";
+                createNotification(task.getArtistId(), task.getId(), message);
+                sentCount++;
+            } catch (Exception e) {
+                log.error("Не удалось отправить напоминание для задачи ID {}: {}", task.getId(), e.getMessage());
+            }
+        }
+        log.info("Обработка срочных напоминаний завершена. Успешно отправлено: {}", sentCount);
+        return sentCount;
+    }
+
+    @Transactional
     public void deleteAllByTaskId(Long taskId){
         notificationRepository.deleteAllByTaskId(taskId);
         log.info("Удалены все уведомления, связанные с задачей ID: {}", taskId);
     }
 
     @Transactional
-    public void deleteOldNotifications() {
+    public long deleteOldNotifications() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(30);
         long deleted = notificationRepository.deleteAllByCreatedAtBefore(threshold);
         log.info("Удалено {} старых уведомлений", deleted);
+        return deleted;
     }
 }

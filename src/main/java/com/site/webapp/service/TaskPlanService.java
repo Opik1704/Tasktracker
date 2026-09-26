@@ -13,68 +13,42 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class TaskReminder {
-    private static final Logger log = LoggerFactory.getLogger(TaskReminder.class);
+public class TaskPlanService {
+    private static final Logger log = LoggerFactory.getLogger(TaskPlanService.class);
 
     private final TaskRepository taskRepository;
     private final NotificationService notificationService;
 
-    public TaskReminder(TaskRepository taskRepository,
-                        NotificationService notificationService) {
+    public TaskPlanService(TaskRepository taskRepository,
+                           NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.notificationService = notificationService;
     }
 
-    @Scheduled(cron = "${app.scheduling.cron.weekly-plan:0 0 9 * * MON}")
-    public void sendWeeklyPlan() {
+    public int sendWeeklyPlan() {
         log.info("Формирование плана на неделю");
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.plusDays(7);
 
-        processTasks(start, end, "Ваш план на неделю: у вас {} задач(и)");
+        return processTasks(start, end, "Ваш план на неделю: у вас {} задач(и)");
     }
 
-    @Scheduled(cron = "${app.scheduling.cron.daily-plan:0 0 9 * * *}")
-    public void sendDailyPlan(){
+    public int sendDailyPlan(){
         log.info("Формирование списка задач на день");
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.with(LocalTime.MAX);
 
-        processTasks(start, end, "Сегодня нужно завершить {} задач");
+        return processTasks(start, end, "Сегодня нужно завершить {} задач");
     }
 
-    @Scheduled(cron = "${app.scheduling.cron.urgent-reminders:0 0 * * * *}")
-    public void sendUrgentReminders(){
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime twoHoursLater = now.plusHours(2);
-        List<Task> urgentTasks = taskRepository.findAllByDeadlineBetween(now, twoHoursLater);
-
-        for (Task task : urgentTasks) {
-            if (task.getArtistId() == null) {
-                continue;
-            }
-            try {
-                String message = "До дедлайна задачи '" + task.getTitle() + "' осталось меньше 2 часов";
-                notificationService.createNotification(task.getArtistId(), task.getId(), message);
-            } catch (Exception e) {
-                log.error("Не удалось отправить напоминание по задаче ID {}: {}", task.getId(), e.getMessage(), e);
-            }
-        }
-    }
-
-    @Scheduled(cron = "${app.scheduling.cron.cleanup-notifications:0 0 2 * * *}")
-    public void cleanOldNotifications() {
-        notificationService.deleteOldNotifications();
-    }
-
-    private void processTasks(LocalDateTime start, LocalDateTime end, String messageTemplate) {
+    private int processTasks(LocalDateTime start, LocalDateTime end, String messageTemplate) {
         log.info("Загрузка задач и пользователей за период {} - {}", start, end);
 
         List<Task> allTasks = taskRepository.findAllByDeadlineBetween(start, end);
 
         if (allTasks.isEmpty()) {
             log.info("Нет задач в этом периоде");
-            return;
+            return 0;
         }
 
         Map<Long, List<Task>> tasksByUserId = allTasks.stream()
@@ -92,5 +66,6 @@ public class TaskReminder {
         }
 
         log.info(" Обработано {} пользователей с задачами", tasksByUserId.size());
+        return tasksByUserId.size();
     }
 }
