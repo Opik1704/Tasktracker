@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
-import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -77,7 +75,7 @@ public class TaskController extends LoggingController{
         if (files != null && !files.isEmpty()) {
             for(MultipartFile file : files){
                 if (!file.isEmpty()) {
-                    taskAttachmentService.addAttachment(file, savedTask.getId());
+                    taskAttachmentService.uploadAttachment(file, savedTask.getId());
                 }
             }
         }
@@ -87,9 +85,9 @@ public class TaskController extends LoggingController{
 
     }
 
-    @GetMapping("/api/artists/{id}/active-tasks")
-    public String checkArtistLoad(@PathVariable Long id, Model model) {
-        long activeTasks = userService.getActiveTaskCount(id);
+    @GetMapping("/all-tasks/check-workload/{userId}")
+    public String checkArtistLoad(@PathVariable Long userId, Model model) {
+        long activeTasks = userService.getActiveTaskCount(userId);
         if (activeTasks >= 5) { // ваш лимит
             model.addAttribute("warning", "Внимание: у исполнителя уже " + activeTasks + " активных задач");
         }
@@ -118,7 +116,7 @@ public class TaskController extends LoggingController{
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    taskAttachmentService.addAttachment(file, task.getId());
+                    taskAttachmentService.uploadAttachment(file, task.getId());
                 }
             }
         }
@@ -134,24 +132,53 @@ public class TaskController extends LoggingController{
                              @RequestParam(defaultValue = "id_asc") String sort,
                              @AuthenticationPrincipal CustomUserDetails currentUser
     ){
-
-        log.info("Удаление задачи");
-        taskService.deleteTask(id,currentUser);
-        log.info("Задача id {} удалена",id);
+        log.info("Пользователь {} перемещает задачу ID {} в корзину", currentUser.getUsername(), id);
+        taskService.softDeleteTask(id, currentUser);
 
         if (returnUrl != null && returnUrl.startsWith("/")) {
             return "redirect:" + returnUrl;
         }
 
         return "redirect:/all-tasks?sort=" + sort;
-
     }
 
+    @GetMapping("/trash")
+    public String trash(
+                        @AuthenticationPrincipal CustomUserDetails currentUser,
+                        Model model){
+        if (currentUser == null) return "redirect:/authorization";
+        log.info("Пользователь {} открыл корзину", currentUser.getUsername());
+        List<Task> trashTasks = taskService.getTrashTasks(currentUser.getId(), currentUser);
+
+        model.addAttribute("tasks", trashTasks);
+        model.addAttribute("users", userService.allUsers());
+        model.addAttribute("currentUser", currentUser);
+
+        return "trash";
+    }
+
+    @PostMapping("/trash/restore/{id}")
+    public String restoreTask(@PathVariable Long id,
+                              @AuthenticationPrincipal CustomUserDetails currentUser){
+        if (currentUser == null) return "redirect:/authorization";
+        log.info("Восстановление задачи ID {} из корзины пользователем {}", id, currentUser.getUsername());
+        taskService.restoreTask(id, currentUser);
+        return "redirect:/trash";
+    }
+
+    @PostMapping("/trash/hard-delete/{id}")
+    public String hardDeleteTask(@PathVariable Long id,
+                                 @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        log.info("Окончательное удаление задачи ID {} пользователем {}", id, currentUser.getUsername());
+        taskService.hardDeleteTask(id, currentUser);
+
+        return "redirect:/trash";
+    }
 
     @GetMapping("/favorites")
     public String favorites(@RequestParam(required = false) String sort,
                             @AuthenticationPrincipal CustomUserDetails currentUser,
-
                             Model model) {
         if (currentUser == null) return "redirect:/authorization";
 
@@ -191,7 +218,7 @@ public class TaskController extends LoggingController{
 
         if (currentUser == null) return "redirect:/authorization";
 
-        log.info("Запрос задачей пользователя {}",getCurrentUserEmail());
+        log.info("Запрос задачей пользователя {}",currentUser.getUsername());
 
         List<Task> tasks = taskService.getAllUserTasks(currentUser.getId(),sort,search);
         List<User> allUsers = userService.allUsers();
