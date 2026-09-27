@@ -12,6 +12,8 @@ import com.site.webapp.repo.UserRepository;
 import com.site.webapp.security.CustomUserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +46,7 @@ public class TaskService {
 
 
     @Transactional
+    @CacheEvict(value = "artistTasks", allEntries = true)
     public Task createTask(Task task, CustomUserDetails userDetails) {
 
         task.setStatus(Task.TaskStatus.NEW);
@@ -74,6 +77,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "artistTasks", key = "#userId", condition = "#search == null || #search.isBlank()")
     public List<Task> getAllUserTasks(Long userId, String sort, String search){
         log.debug("Запрос задач исполнителя [User ID: {}]. Фильтр: '{}', Сортировка: '{}'", userId, search, sort);
         if (search != null && !search.trim().isEmpty()) {
@@ -93,6 +97,7 @@ public class TaskService {
 
 
     @Transactional
+    @CacheEvict(value = "artistTasks", allEntries = true)
     public void updateTask(Task updatedTask, CustomUserDetails userDetails) {
 
         Task task = taskRepository.findById(updatedTask.getId()).orElseThrow(() -> new TaskNotFoundException(updatedTask.getId()));
@@ -132,6 +137,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "artistTasks", key = "#result.artistId", condition = "#result != null && #result.artistId != null")
     public void softDeleteTask(Long taskId, CustomUserDetails userDetails) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
@@ -147,6 +153,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "artistTasks", allEntries = true)
     public void restoreTask(Long taskId, CustomUserDetails userDetails) {
         Task task = taskRepository.findByIdAndOwnerIdAndDeletedTrue(taskId, userDetails.getId())
                 .orElseThrow(() -> new TaskNotFoundException("Задача в корзине не найдена"));
@@ -178,6 +185,7 @@ public class TaskService {
 
     @Transactional
     @PreAuthorize("hasAuthority('TASK_DELETE_PERMANENT') or hasRole('ADMIN')")
+    @CacheEvict(value = "artistTasks", allEntries = true)
     public void hardDeleteTask(Long taskId, CustomUserDetails userDetails) {
         Task task = taskRepository.findByIdAndDeletedTrue(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(taskId));

@@ -19,6 +19,8 @@ import com.site.webapp.security.CustomUserDetails;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -70,6 +72,7 @@ public class UserService implements UserDetailsService {
     @Override
     @NonNull
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#email", unless = "#result == null")
     public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException{
         log.info("Попытка входа пользователя с email: {}", email);
 
@@ -80,6 +83,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#userId", unless = "#result == null")
     public User findUserById(Long userId){
         log.debug("Поиск пользователя по ID: {}", userId);
         return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
@@ -97,6 +101,7 @@ public class UserService implements UserDetailsService {
         return users;
     }
 
+    @Cacheable(value = "roles")
     public List<Role> getAllRoles() {
         log.debug("Запрос списка всех ролей");
         return roleRepository.findAll();
@@ -118,6 +123,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void updateUserInfo(Long userId,String firstName,String lastName, Long version){
         log.info("Обновление данных для пользователя ID: {}", userId);
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
@@ -132,6 +138,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void updatePassword(Long userId, String oldPassword, String newPassword,String confirmPassword){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
@@ -154,6 +161,7 @@ public class UserService implements UserDetailsService {
      * Проверяет версию для предотвращения конфликтов одновременного редактирования.
      */
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void updateUserRoles(Long userId, List<Long> roleIds,Long version) {
         log.info("Обновление ролей для пользователя ID: {}", userId);
 
@@ -184,6 +192,7 @@ public class UserService implements UserDetailsService {
 
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void softDeleteUser(Long userId, CustomUserDetails initiator){
 
         if (initiator == null) {
@@ -219,6 +228,7 @@ public class UserService implements UserDetailsService {
      * Публикует события UserArchivedEvent и AvatarDeletedEvent.
      */
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void archiveUser(Long userId, CustomUserDetails initiator){
         if (initiator == null) {
             throw new IllegalArgumentException("Инициатор действия не может быть null");

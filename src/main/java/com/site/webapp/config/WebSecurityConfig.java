@@ -46,65 +46,64 @@ public class WebSecurityConfig{
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentSecurityPolicy(csp -> csp
-                                .policyDirectives(
-                                        "default-src 'self'; " +
-                                                "script-src 'self' 'unsafe-inline'; " +
-                                                "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; " +
-                                                "img-src 'self' data: blob:; " +
-                                                "font-src 'self'; " +
-                                                "frame-ancestors 'none'; " +
-                                                "form-action 'self';"
-                                )
-                        )
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000) // 1 год
-                        )
+            .headers(headers -> headers
+            .frameOptions(frame -> frame.deny())
+            .contentSecurityPolicy(csp -> csp
+                    .policyDirectives(
+                            "default-src 'self'; " +
+                                    "script-src 'self' 'unsafe-inline'; " +
+                                    "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; " +
+                                    "img-src 'self' data: blob:; " +
+                                    "font-src 'self'; " +
+                                    "frame-ancestors 'none'; " +
+                                    "form-action 'self';"
+                    )
+            )
+            .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000) // 1 год
+            )
 
-                        .contentTypeOptions(Customizer.withDefaults())
+            .contentTypeOptions(Customizer.withDefaults())
 
-                        .referrerPolicy(referrer -> referrer
-                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                        )
+            .referrerPolicy(referrer -> referrer
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+            )
 
-                        .permissionsPolicyHeader(permissions ->
-                                permissions.policy("geolocation=(), microphone=(), camera=()")
-                        )
-                )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**")
-                )
-                .authorizeHttpRequests(auth->auth
+            .permissionsPolicyHeader(permissions ->
+                    permissions.policy("geolocation=(), microphone=(), camera=()")
+            )
+            )
+            .csrf(csrf -> csrf
+                    .ignoringRequestMatchers("/api/**")
+            )
+            .authorizeHttpRequests(auth->auth
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico").permitAll()
                 .requestMatchers("/registration").permitAll()
                 .requestMatchers("/authorization").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-        )
-         .formLogin(form->form
-                 .loginPage("/authorization")
-                 .loginProcessingUrl("/authorization")
-                 .defaultSuccessUrl("/", true)
-                 .failureUrl("/authorization?error=true")
-                 .usernameParameter("email")
-                 .passwordParameter("password")
-                 .permitAll()
-         )
-        .oauth2Login(oauth2 -> oauth2
-                .loginPage("/authorization")
-                .defaultSuccessUrl("/all-tasks", true)
-                .userInfoEndpoint(userInfo -> userInfo
-                    .userService(this::processOAuth2User)
-                )
             )
-         .logout(logout -> logout
+             .formLogin(form->form
+                     .loginPage("/authorization")
+                     .loginProcessingUrl("/authorization")
+                     .defaultSuccessUrl("/", true)
+                     .failureUrl("/authorization?error=true")
+                     .usernameParameter("email")
+                     .passwordParameter("password")
+                     .permitAll()
+             )
+            .oauth2Login(oauth2 -> oauth2
+                    .loginPage("/authorization")
+                    .defaultSuccessUrl("/all-tasks", true)
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(this::processOAuth2User)
+                    )
+                )
+            .logout(logout -> logout
              .logoutUrl("/logout")
              .logoutSuccessUrl("/authorization?logout=true")
-             .permitAll()
-         ).authenticationProvider(authenticationProvider());
-
+             .permitAll()).authenticationProvider(authenticationProvider());
         return http.build();
     }
     @Bean
