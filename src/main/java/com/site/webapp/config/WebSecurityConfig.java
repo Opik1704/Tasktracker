@@ -53,6 +53,7 @@ public class WebSecurityConfig{
                             "default-src 'self'; " +
                                     "script-src 'self' 'unsafe-inline'; " +
                                     "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; " +
+                                    "connect-src 'self' https://stackpath.bootstrapcdn.com; " +
                                     "img-src 'self' data: blob:; " +
                                     "font-src 'self'; " +
                                     "frame-ancestors 'none'; " +
