@@ -2,9 +2,9 @@ package com.site.webapp.service;
 
 import com.site.webapp.dto.AcceptInviteDto;
 import com.site.webapp.dto.RegistrationDto;
-import com.site.webapp.exception.InvalidInviteTokenException;
-import com.site.webapp.exception.RoleNotFoundException;
-import com.site.webapp.exception.UserAlreadyExistsException;
+import com.site.webapp.exception.security.InvalidInviteTokenException;
+import com.site.webapp.exception.user.RoleNotFoundException;
+import com.site.webapp.exception.user.UserAlreadyExistsException;
 import com.site.webapp.models.InviteToken;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.User;

@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.file;
 
-public class FileStorageException extends DomainException{
+import com.site.webapp.exception.DomainException;
+
+public class FileStorageException extends DomainException {
     public FileStorageException(String message) {
         super(message);
     }

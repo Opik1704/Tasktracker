@@ -1,7 +1,8 @@
 package com.site.webapp.validator;
 
-import com.site.webapp.exception.InvalidFileTypeException;
-import com.site.webapp.exception.InvalidImageDimensionsException;
+
+import com.site.webapp.exception.file.InvalidFileTypeException;
+import com.site.webapp.exception.file.InvalidImageDimensionsException;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.task;
 
-public class TaskNotFoundException extends EntityNotFoundException{
+import com.site.webapp.exception.base.EntityNotFoundException;
+
+public class TaskNotFoundException extends EntityNotFoundException {
     public TaskNotFoundException(Long taskId) {
         super("Задача с ID " + taskId + " не найдена");
     }

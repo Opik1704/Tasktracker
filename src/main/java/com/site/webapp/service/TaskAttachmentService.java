@@ -4,7 +4,7 @@ import com.site.webapp.config.AttachmentProperties;
 import com.site.webapp.dto.ResourceDownloadDto;
 import com.site.webapp.events.FileAttachedEvent;
 import com.site.webapp.events.FileDeletedEvent;
-import com.site.webapp.exception.TaskNotFoundException;
+import com.site.webapp.exception.task.TaskNotFoundException;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.TaskAttachment;
 import com.site.webapp.repo.TaskAttachmentRepository;

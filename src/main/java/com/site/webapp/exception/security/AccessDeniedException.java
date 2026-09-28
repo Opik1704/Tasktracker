@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.security;
 
-public class AccessDeniedException extends DomainException{
+import com.site.webapp.exception.DomainException;
+
+public class AccessDeniedException extends DomainException {
     public AccessDeniedException(String message) {
         super(message);
     }

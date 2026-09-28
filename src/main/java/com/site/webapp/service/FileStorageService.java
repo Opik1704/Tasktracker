@@ -1,6 +1,6 @@
 package com.site.webapp.service;
 
-import com.site.webapp.exception.FileStorageException;
+import com.site.webapp.exception.file.FileStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

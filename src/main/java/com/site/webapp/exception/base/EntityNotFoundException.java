@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.base;
 
-public abstract class EntityNotFoundException extends DomainException{
+import com.site.webapp.exception.DomainException;
+
+public abstract class EntityNotFoundException extends DomainException {
     public EntityNotFoundException(String message) {
         super(message);
     }

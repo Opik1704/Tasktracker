@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.base;
 
-public class BusinessRuleViolationException extends DomainException{
+import com.site.webapp.exception.DomainException;
+
+public class BusinessRuleViolationException extends DomainException {
     public BusinessRuleViolationException(String message){
         super(message);
     }

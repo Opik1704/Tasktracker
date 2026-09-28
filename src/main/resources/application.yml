@@ -22,6 +22,8 @@ server:
 app:
   async:
     core-pool-size: 2
+  email:
+    from: ${MAIL_FROM:noreply@tasktracker.com}
   workload:
     max-active-tasks: 5
     deadline-days: 7

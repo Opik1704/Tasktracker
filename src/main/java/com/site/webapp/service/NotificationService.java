@@ -1,7 +1,7 @@
 package com.site.webapp.service;
 
-import com.site.webapp.exception.TaskNotFoundException;
-import com.site.webapp.exception.UserNotFoundException;
+import com.site.webapp.exception.task.TaskNotFoundException;
+import com.site.webapp.exception.user.UserNotFoundException;
 import com.site.webapp.models.Notification;
 import com.site.webapp.models.Task;
 import com.site.webapp.models.User;
@@ -10,7 +10,6 @@ import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

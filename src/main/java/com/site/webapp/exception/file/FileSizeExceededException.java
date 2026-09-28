@@ -1,6 +1,6 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.file;
 
-public class FileSizeExceededException extends FileUploadException{
+public class FileSizeExceededException extends FileUploadException {
     public FileSizeExceededException(String message){
         super(message);
     }

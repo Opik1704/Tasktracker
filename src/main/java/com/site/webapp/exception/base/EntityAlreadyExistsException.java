@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.base;
 
-public class EntityAlreadyExistsException extends DomainException{
+import com.site.webapp.exception.DomainException;
+
+public class EntityAlreadyExistsException extends DomainException {
     public EntityAlreadyExistsException(String message) {
         super(message);
     }

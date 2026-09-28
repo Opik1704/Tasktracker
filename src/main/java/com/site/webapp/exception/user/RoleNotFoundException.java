@@ -1,4 +1,6 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.user;
+
+import com.site.webapp.exception.base.EntityNotFoundException;
 
 public class RoleNotFoundException extends EntityNotFoundException {
     public RoleNotFoundException(Long roleId){

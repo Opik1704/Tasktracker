@@ -1,4 +1,4 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.security;
 
 public class UnauthorizedAccessException extends AccessDeniedException{
     public UnauthorizedAccessException(String message) {

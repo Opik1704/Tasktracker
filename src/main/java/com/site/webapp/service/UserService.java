@@ -3,10 +3,10 @@ package com.site.webapp.service;
 
 import com.site.webapp.events.AvatarDeletedEvent;
 import com.site.webapp.events.UserArchivedEvent;
-import com.site.webapp.exception.InvalidPasswordException;
-import com.site.webapp.exception.SelfDeleteException;
-import com.site.webapp.exception.UserNotFoundException;
-import com.site.webapp.exception.RoleNotFoundException;
+import com.site.webapp.exception.security.InvalidPasswordException;
+import com.site.webapp.exception.user.SelfDeleteException;
+import com.site.webapp.exception.user.UserNotFoundException;
+import com.site.webapp.exception.user.RoleNotFoundException;
 import com.site.webapp.models.ArchivedUser;
 import com.site.webapp.models.Role;
 import com.site.webapp.models.Task;

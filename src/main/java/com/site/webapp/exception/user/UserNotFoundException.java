@@ -1,6 +1,8 @@
-package com.site.webapp.exception;
+package com.site.webapp.exception.user;
 
-public class UserNotFoundException extends EntityNotFoundException{
+import com.site.webapp.exception.base.EntityNotFoundException;
+
+public class UserNotFoundException extends EntityNotFoundException {
 
     public UserNotFoundException(Long userId) {
         super("Пользователь с ID " + userId + " не найден");

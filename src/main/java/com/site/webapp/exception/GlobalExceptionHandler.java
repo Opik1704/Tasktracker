@@ -1,5 +1,8 @@
 package com.site.webapp.exception;
 
+import com.site.webapp.exception.base.BusinessRuleViolationException;
+import com.site.webapp.exception.base.EntityAlreadyExistsException;
+import com.site.webapp.exception.mail.EmailSendException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,6 +10,9 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.site.webapp.exception.base.EntityNotFoundException;
+import com.site.webapp.exception.file.FileStorageException;
+
 
 /**
  * Глобальный обработчик исключений.
@@ -52,6 +58,13 @@ public class GlobalExceptionHandler {
     public String handleFileStorageException(FileStorageException e, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         log.error("Ошибка при работе с файлом: {}", e.getMessage(), e);
         redirectAttributes.addFlashAttribute("errorMessage", "Не удалось обработать файл: " + e.getMessage());
+        return redirectToReferer(request, "/all-tasks");
+    }
+
+    @ExceptionHandler(EmailSendException.class)
+    public String handleEmailSendException(EmailSendException e, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        log.error("Ошибка при отправке письма по адресу {}: {}", request.getRequestURI(), e.getMessage(), e);
+        redirectAttributes.addFlashAttribute("errorMessage", "Не удалось отправить письмо. Попробуйте позже.");
         return redirectToReferer(request, "/all-tasks");
     }
 
