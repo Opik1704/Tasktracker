@@ -1,0 +1,61 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: webapp
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: SPRING_SESSION
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 15MB
+      max-request-size: 15MB
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: strict
+app:
+  async:
+    core-pool-size: 2
+  workload:
+    max-active-tasks: 5
+    deadline-days: 7
+  scheduling:
+    cron:
+      weekly-plan: "0 0 9 * * MON"
+      daily-plan: "0 0 9 * * *"
+      urgent-reminders: "0 0 * * * *"
+      cleanup-notifications: "0 0 2 * * *"
+      cleanup-invites: "0 0 2 * * *"
+  avatar:
+    allowed-types: image/jpeg,image/png,image/webp
+    allowed-extensions: jpg,jpeg,png,webp
+    min-dimension: 64
+    max-dimension: 4096
+  attachment:
+    max-size: 15MB
+  forbidden-extensions: exe,bat,cmd,sh,php,js,jar,vbs,scr,cgi,pl
+  allowed-types:
+    pdf: application/pdf
+    jpg: image/jpeg
+    jpeg: image/jpeg
+    png: image/png
+    webp: image/webp
+    doc: application/msword
+    docx: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    xls: application/vnd.ms-excel
+    xlsx: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  metrics:
+    tags:
+      application: task-tracker

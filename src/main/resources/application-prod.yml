@@ -1,0 +1,61 @@
+server:
+  port: ${PORT:1024}
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+app:
+  upload:
+    dir: ${APP_UPLOAD_DIR:/app/uploads}
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: email,profile
+  aws:
+    s3:
+      endpoint: ${S3_ENDPOINT:https://s3.amazonaws.com}
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+      bucket-name: ${S3_BUCKET_NAME:taskmanager-uploads}
+      region: ${S3_REGION:ru-central1}
+  logging:
+    file:
+      name: /app/logs/taskmanager.log
+    level:
+      root: WARN
+      com.site.webapp: INFO
+      org.springframework.web: WARN
+      org.hibernate.SQL: OFF
+    structured:
+      format:
+        file: json
+        console: json
