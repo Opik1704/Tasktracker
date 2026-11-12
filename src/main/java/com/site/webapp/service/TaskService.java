@@ -1,8 +1,10 @@
 package com.site.webapp.service;
 
+import com.site.webapp.dto.TaskStatisticsDto;
 import com.site.webapp.events.TaskCreatedEvent;
 import com.site.webapp.events.TaskDeletedEvent;
 import com.site.webapp.events.TaskUpdatedEvent;
+import jakarta.validation.ConstraintViolationException;
 import com.site.webapp.exception.security.UnauthorizedAccessException;
 import com.site.webapp.exception.task.TaskNotFoundException;
 import com.site.webapp.models.Task;
@@ -21,7 +23,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -51,6 +56,15 @@ public class TaskService {
 
         task.setStatus(Task.TaskStatus.NEW);
         task.setOwnerId(userDetails.getId());
+
+        if (task.getCreatedAt() == null) {
+            task.setCreatedAt(LocalDateTime.now());
+        }
+
+        if (task.getDeadline() != null && task.getDeadline().isBefore(LocalDateTime.now())) {
+            throw new ConstraintViolationException("Дедлайн не может быть в прошлом", java.util.Collections.emptySet());
+        }
+
         taskRepository.save(task);
         eventPublisher.publishEvent(new TaskCreatedEvent(
                 task.getId(),
@@ -111,6 +125,14 @@ public class TaskService {
         Long oldArtistId = task.getArtistId();
         LocalDateTime oldDeadline = task.getDeadline();
         Task.Priority oldPriority = task.getPriority();
+        Task.TaskStatus oldStatus = task.getStatus();
+
+        // Валидация дедлайна: нельзя установить новый дедлайн в прошлом
+        if (updatedTask.getDeadline() != null
+                && updatedTask.getDeadline().isBefore(LocalDateTime.now())
+                && !updatedTask.getDeadline().equals(oldDeadline)) {
+            throw new ConstraintViolationException("Дедлайн не может быть в прошлом", java.util.Collections.emptySet());
+        }
 
         task.setTitle(updatedTask.getTitle());
         task.setPriority(updatedTask.getPriority());
@@ -118,6 +140,14 @@ public class TaskService {
         task.setDeadline(updatedTask.getDeadline());
         task.setComment(updatedTask.getComment());
         task.setStatus(updatedTask.getStatus());
+
+        // Логика completedAt при смене статуса
+        Task.TaskStatus newStatus = task.getStatus();
+        if (newStatus == Task.TaskStatus.COMPLETED && oldStatus != Task.TaskStatus.COMPLETED && task.getCompletedAt() == null) {
+            task.setCompletedAt(LocalDateTime.now());
+        } else if (newStatus != Task.TaskStatus.COMPLETED && oldStatus == Task.TaskStatus.COMPLETED) {
+            task.setCompletedAt(null);
+        }
 
         eventPublisher.publishEvent(new TaskUpdatedEvent(
                 task.getId(),
@@ -297,5 +327,62 @@ public class TaskService {
         return favorites.stream()
                 .sorted(comparator)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TaskStatisticsDto getStatistics(Long ownerId) {
+        Task.TaskStatus completed = Task.TaskStatus.COMPLETED;
+
+        long totalCompleted = taskRepository.countByOwnerIdAndStatusAndDeletedFalse(ownerId, completed);
+
+        Double avgHours = taskRepository.averageCompletionHoursByOwnerIdAndStatus(ownerId, completed);
+        double averageCompletionHours = avgHours != null ? Math.round(avgHours * 100.0) / 100.0 : 0.0;
+
+        Task fastestCompletedTask = taskRepository.findFastestCompletedTaskByOwnerIdAndStatus(ownerId, completed);
+
+        long completedThisWeek = countCompletedInPeriod(ownerId, completed, getWeekStart(), getWeekEnd());
+        long completedThisMonth = countCompletedInPeriod(ownerId, completed, getMonthStart(), getMonthEnd());
+
+        long onTimeCount = taskRepository.countOnTimeByOwnerIdAndStatus(ownerId, completed);
+        long withDeadlineCount = taskRepository.countCompletedWithDeadlineByOwnerIdAndStatus(ownerId, completed);
+        double onTimePercentage = withDeadlineCount > 0
+                ? Math.round((double) onTimeCount / withDeadlineCount * 100.0 * 100.0) / 100.0
+                : 0.0;
+
+        TaskStatisticsDto dto = new TaskStatisticsDto();
+        dto.setTotalCompleted(totalCompleted);
+        dto.setAverageCompletionHours(averageCompletionHours);
+        dto.setFastestCompletedTask(fastestCompletedTask);
+        dto.setCompletedThisWeek(completedThisWeek);
+        dto.setCompletedThisMonth(completedThisMonth);
+        dto.setOnTimePercentage(onTimePercentage);
+        return dto;
+    }
+
+    private long countCompletedInPeriod(Long ownerId, Task.TaskStatus status, LocalDateTime start, LocalDateTime end) {
+        return taskRepository.findCompletedByOwnerIdAndStatusAndPeriod(ownerId, status, start, end).size();
+    }
+
+    private LocalDateTime getWeekStart() {
+        ZoneId moscow = ZoneId.of("Europe/Moscow");
+        ZonedDateTime now = ZonedDateTime.now(moscow);
+        LocalDateTime monday = now.toLocalDate().with(DayOfWeek.MONDAY).atStartOfDay();
+        return monday;
+    }
+
+    private LocalDateTime getWeekEnd() {
+        return getWeekStart().plusDays(7);
+    }
+
+    private LocalDateTime getMonthStart() {
+        ZoneId moscow = ZoneId.of("Europe/Moscow");
+        ZonedDateTime now = ZonedDateTime.now(moscow);
+        return now.toLocalDate().withDayOfMonth(1).atStartOfDay();
+    }
+
+    private LocalDateTime getMonthEnd() {
+        ZoneId moscow = ZoneId.of("Europe/Moscow");
+        ZonedDateTime now = ZonedDateTime.now(moscow);
+        return now.toLocalDate().withDayOfMonth(1).plusMonths(1).atStartOfDay();
     }
 }

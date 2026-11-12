@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.PrePersist;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +20,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
         @Index(name = "idx_tasks_artist_deleted", columnList = "artist_id, deleted"),
         @Index(name = "idx_tasks_deadline", columnList = "deadline"),
+        @Index(name = "idx_tasks_completed_at", columnList = "completedAt"),
 
 // пусть будет
         @Index(name = "idx_tasks_title", columnList = "title"),
@@ -54,19 +55,19 @@ public class Task {
     @Column(nullable = false, updatable = false)
     private Long ownerId;
 
-    @NotNull(message = "Дата дедлайна обязательна")
-    @Future(message = "Дедлайн не может быть в прошлом")
     private LocalDateTime deadline;
 
     @Size(max = 500, message = "Комментарий слишком длинный")
     private String comment;
 
-    @CreationTimestamp
-    @Column(nullable = false,updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(nullable = true)
+    private LocalDateTime completedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -104,6 +105,13 @@ public class Task {
     }
 
     // Logic
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 
     public void addAttachment(TaskAttachment attachment) {
         attachments.add(attachment);
@@ -185,6 +193,13 @@ public class Task {
     }
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 
     public boolean isDeleted() {

@@ -32,7 +32,35 @@
             <h1>Добро пожаловать,
                 <span th:text="${currentUser != null ? currentUser.firstName + ' ' + currentUser.lastName : 'Гость'}"></span>!
             </h1>
-            <p class="lead">Здесь что то будет Статистика там за месяц, или пожелание отпуска </p>
+            <div th:if="${statistics != null}" class="statistics-card">
+                <h2>Ваша статистика</h2>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Завершено задач:</span>
+                        <span class="stat-value" th:text="${statistics.totalCompleted}">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Среднее время выполнения (ч):</span>
+                        <span class="stat-value" th:text="${statistics.averageCompletionHours}">0.00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Самая быстрая задача:</span>
+                        <span class="stat-value" th:text="${statistics.fastestCompletedTask != null ? statistics.fastestCompletedTask.title : '—'}">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Завершено за неделю:</span>
+                        <span class="stat-value" th:text="${statistics.completedThisWeek}">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Завершено за месяц:</span>
+                        <span class="stat-value" th:text="${statistics.completedThisMonth}">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Выполнено в срок:</span>
+                        <span class="stat-value" th:text="${statistics.onTimePercentage}">0</span>%
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </body>
