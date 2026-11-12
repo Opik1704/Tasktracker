@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои команды</title>
+</head>
+<body>
+<h1>Мои команды</h1>
+<a th:href="@{/teams/new}">Создать команду</a>
+<ul>
+    <li th:each="team : ${teams}">
+        <a th:href="@{/teams/{id}(id=${team.id})}" th:text="${team.name}">Команда</a>
+    </li>
+</ul>
+</body>
+</html>

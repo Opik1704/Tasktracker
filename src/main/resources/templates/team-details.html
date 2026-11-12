@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Команда</title>
+</head>
+<body>
+<h1 th:text="${team.name}">Команда</h1>
+<p>Владелец: <span th:text="${owner != null ? owner.fullName : team.ownerId}">Owner</span></p>
+<h2>Участники</h2>
+<ul>
+    <li th:each="member : ${team.members}" th:text="${member.fullName}">Участник</li>
+</ul>
+<a th:href="@{/teams}">К списку команд</a>
+</body>
+</html>
