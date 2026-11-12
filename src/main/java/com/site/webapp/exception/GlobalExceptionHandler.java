@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.site.webapp.exception.base.EntityNotFoundException;
 import com.site.webapp.exception.file.FileStorageException;
+import com.site.webapp.exception.team.TeamAccessDeniedException;
+import com.site.webapp.exception.team.TeamNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 
 
 /**
@@ -68,6 +72,20 @@ public class GlobalExceptionHandler {
         return redirectToReferer(request, "/all-tasks");
     }
 
+
+    @ExceptionHandler(TeamAccessDeniedException.class)
+    public String handleTeamAccessDenied(TeamAccessDeniedException e, HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
+        log.warn("Доступ к команде запрещён [{}]: {}", request.getRequestURI(), e.getMessage());
+        response.sendError(HttpStatus.FORBIDDEN.value(), e.getMessage());
+        return null;
+    }
+
+    @ExceptionHandler(TeamNotFoundException.class)
+    public String handleTeamNotFound(TeamNotFoundException e, HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
+        log.warn("Команда не найдена [{}]: {}", request.getRequestURI(), e.getMessage());
+        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        return null;
+    }
 
     @ExceptionHandler(Exception.class)
     public String handleGeneralException(Exception e, HttpServletRequest request) {
