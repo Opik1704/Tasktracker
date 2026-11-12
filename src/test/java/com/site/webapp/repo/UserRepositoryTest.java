@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -28,9 +30,9 @@ class UserRepositoryTest {
 
         userRepository.save(user);
 
-        User found = userRepository.findByEmail("test2@email.com");
+        Optional<User> found = userRepository.findByEmail("test2@email.com");
 
-        assertNotNull(found);
-        assertEquals("test2@email.com",found.getEmail());
+        assertTrue(found.isPresent());
+        assertEquals("test2@email.com", found.get().getEmail());
     }
 }

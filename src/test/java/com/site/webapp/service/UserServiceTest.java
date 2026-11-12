@@ -5,6 +5,7 @@ import com.site.webapp.repo.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,15 +19,16 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Test
-    void saveUser() {
+    void saveRegisteredUser() {
         User user = new User();
         user.setEmail("test@mail.ru");
         user.setPassword("password");
         user.setFirstName("Имя");
         user.setLastName("Фамилия");
-        boolean result = userService.saveUser(user);
-        assertTrue(result);
-        assertNotNull(userRepository.findByEmail("test@mail.ru"));
+        User result = userService.saveRegisteredUser(user);
+        assertNotNull(result);
+        assertNotNull(result.getId());
+        assertTrue(userRepository.findByEmail("test@mail.ru").isPresent());
     }
 
     @Test
@@ -36,8 +38,8 @@ class UserServiceTest {
         user.setPassword("password");
         user.setFirstName("Имя");
         user.setLastName("Фамилия");
-        userService.saveUser(user);
-        Long id = user.getId();
+        User saved = userService.saveRegisteredUser(user);
+        Long id = saved.getId();
 
         User found = userService.findUserById(id);
 
@@ -52,28 +54,30 @@ class UserServiceTest {
         user.setPassword("123456");
         user.setFirstName("Имя");
         user.setLastName("Фамилия");
-        userService.saveUser(user);
+        userService.saveRegisteredUser(user);
 
         User found = userService.findByEmail("search@test.com");
 
         assertNotNull(found);
         assertEquals("search@test.com", found.getEmail());
     }
+
     @Test
-    void saveUserDuplicateEmail() {
+    void saveRegisteredUserDuplicateEmail() {
         User user1 = new User();
         user1.setEmail("duplicate@mail.com");
         user1.setPassword("123456");
         user1.setFirstName("Имя");
         user1.setLastName("Фамилия");
-        userService.saveUser(user1);
+        userService.saveRegisteredUser(user1);
 
         User user2 = new User();
         user2.setEmail("duplicate@mail.com");
         user2.setPassword("123456");
+        user2.setFirstName("Имя");
+        user2.setLastName("Фамилия");
 
-        boolean result = userService.saveUser(user2);
-        assertFalse(result);
+        assertThrows(DataIntegrityViolationException.class, () -> userService.saveRegisteredUser(user2));
     }
 //    @Test
 //    void deleteUser() {

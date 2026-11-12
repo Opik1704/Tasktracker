@@ -37,12 +37,11 @@ class RegistrationControllerTest {
         registrationDto.setConfirmPassword("password");
 
         BindingResult bindingResult = new BeanPropertyBindingResult(registrationDto, "userForm");
-        Model model = new org.springframework.ui.ExtendedModelMap();
 
-        String result = registrationController.addUser(registrationDto,bindingResult,model);
+        String result = registrationController.standartRegistration(registrationDto, bindingResult);
 
         assertEquals("redirect:/authorization?registered=true", result);
-        assertNotNull(userRepository.findByEmail("testemail@mail.ru"));
+        assertTrue(userRepository.findByEmail("testemail@mail.ru").isPresent());
     }
     @Test
     void passwordDismatch(){
@@ -52,11 +51,10 @@ class RegistrationControllerTest {
         registrationDto.setConfirmPassword("654321");
 
         BindingResult bindingResult = new BeanPropertyBindingResult(registrationDto, "userForm");
-        Model model = new org.springframework.ui.ExtendedModelMap();
-        String result = registrationController.addUser(registrationDto, bindingResult, model);
+        String result = registrationController.standartRegistration(registrationDto, bindingResult);
 
         assertEquals("registration", result);
-        assertNotNull(model.getAttribute("passwordError"));
-        assertNull(userRepository.findByEmail("testemail@mail.ru"));
+        assertTrue(bindingResult.hasErrors());
+        assertFalse(userRepository.findByEmail("testemail@mail.ru").isPresent());
     }
 }
