@@ -23,7 +23,7 @@ services:
       - minio
     volumes:
       - ./uploads:/app/uploads
-    restart: always
+    restart: unless-stopped
   postgres:
     image: postgres:16
     container_name: taskmanager-db
@@ -35,7 +35,7 @@ services:
       - "1408:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
+    restart:  unless-stopped
   minio:
     image: minio/minio
     ports:
@@ -47,11 +47,11 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
-    restart: always
+    restart: unless-stopped
   postgres-backup:
     image: prodrigestivill/postgres-backup-local:16-alpine
     container_name: taskmanager-db-backup
-    restart: always
+    restart:  unless-stopped
     user: postgres
     volumes:
       - ./backups:/backups
