@@ -8,24 +8,27 @@ import com.site.webapp.security.CustomUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
 class TeamControllerTest {
 
     @Autowired
+    private WebApplicationContext applicationContext;
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -41,6 +44,9 @@ class TeamControllerTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext)
+                .apply(springSecurity())
+                .build();
         teamRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -75,7 +81,6 @@ class TeamControllerTest {
     // AC-1: После редиректа команда доступна на странице /teams/{id}
     @Test
     void createTeam_thenTeamDetailsAccessible() throws Exception {
-        // Создаём команду через репозиторий, чтобы проверить доступность страницы деталей
         Team team = new Team("My Team", owner.getId());
         team.addMember(owner);
         team = teamRepository.save(team);
@@ -87,7 +92,7 @@ class TeamControllerTest {
             .andExpect(model().attributeExists("team"));
     }
 
-    // AC-2: Владелец автоматически становится участником — проверяется на уровне сервиса (TeamServiceTest)
+    // AC-2: Владелец автоматически становится участника — проверяется на уровне сервиса (TeamServiceTest)
 
     // AC-3: Валидация — пустое название
     @Test
