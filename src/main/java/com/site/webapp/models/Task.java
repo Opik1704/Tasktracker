@@ -1,8 +1,10 @@
 package com.site.webapp.models;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
@@ -77,6 +79,12 @@ public class Task {
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<TaskAttachment> attachments = new ArrayList<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "task_tags",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();
 
     public enum TaskStatus {
         NEW, IN_PROGRESS,TESTING, REVIEW, COMPLETED, CANCELLED, ARCHIVED
@@ -230,6 +238,30 @@ public class Task {
     }
     public void setAttachments(List<TaskAttachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(Tag tag) {
+        tags.add(tag);
+    }
+
+    public void removeTag(Tag tag) {
+        tags.remove(tag);
+    }
+
+    public void clearTags() {
+        tags.clear();
+    }
+
+    public boolean hasTag(Tag tag) {
+        return tags.contains(tag);
     }
 
     // Base Method Overrides

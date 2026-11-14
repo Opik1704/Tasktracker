@@ -20,7 +20,7 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 
-        cacheManager.setCacheNames(List.of("users","artistTasks"));
+        cacheManager.setCacheNames(List.of("users","artistTasks","allTags"));
 
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(2000)

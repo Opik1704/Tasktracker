@@ -4,12 +4,15 @@ import com.site.webapp.dto.TaskStatisticsDto;
 import com.site.webapp.events.TaskCreatedEvent;
 import com.site.webapp.events.TaskDeletedEvent;
 import com.site.webapp.events.TaskUpdatedEvent;
+import com.site.webapp.exception.tag.TagNotFoundException;
+import com.site.webapp.models.User;
 import jakarta.validation.ConstraintViolationException;
 import com.site.webapp.exception.security.UnauthorizedAccessException;
 import com.site.webapp.exception.task.TaskNotFoundException;
 import com.site.webapp.models.Task;
-import com.site.webapp.models.User;
+import com.site.webapp.models.Tag;
 import com.site.webapp.repo.TaskRepository;
+import com.site.webapp.repo.TagRepository;
 import com.site.webapp.repo.UserRepository;
 import com.site.webapp.security.CustomUserDetails;
 import org.slf4j.Logger;
@@ -36,15 +39,18 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final TagRepository tagRepository;
     private final TaskAttachmentService taskAttachmentService;
     private final ApplicationEventPublisher eventPublisher;
 
     public TaskService(TaskRepository taskRepository,
                        UserRepository userRepository,
+                       TagRepository tagRepository,
                        TaskAttachmentService taskAttachmentService,
                        ApplicationEventPublisher eventPublisher) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.tagRepository = tagRepository;
         this.taskAttachmentService = taskAttachmentService;
         this.eventPublisher = eventPublisher;
     }
@@ -284,6 +290,59 @@ public class TaskService {
             user.getFavouriteTasks().add(task);
             log.info("Пользователь {} добавил задачу {} в избранное", email, taskId);
         }
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TASK_WRITE') or hasRole('ADMIN')")
+    public void addTagToTask(Long taskId, Long tagId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
+
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new TagNotFoundException("Тег с ID " + tagId + " не найден"));
+
+        validateTaskAccess(task, userDetails, "TASK_EDIT");
+
+        if (!task.hasTag(tag)) {
+            task.addTag(tag);
+            taskRepository.save(task);
+            log.info("Тег {} добавлен к задаче {}", tag.getName(), task.getId());
+        }
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TASK_WRITE') or hasRole('ADMIN')")
+    public void removeTagFromTask(Long taskId, Long tagId, CustomUserDetails userDetails) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
+
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new TagNotFoundException("Тег с ID " + tagId + " не найден"));
+
+        validateTaskAccess(task, userDetails, "TASK_EDIT");
+
+        if (task.hasTag(tag)) {
+            task.removeTag(tag);
+            taskRepository.save(task);
+            log.info("Тег {} снят с задачи {}", tag.getName(), task.getId());
+        }
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TASK_WRITE') or hasRole('ADMIN')")
+    public void setTaskTags(Long taskId, Set<Long> tagIds, CustomUserDetails userDetails) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
+
+        validateTaskAccess(task, userDetails, "TASK_EDIT");
+
+        task.clearTags();
+        List<Tag> tags = tagRepository.findAllById(tagIds);
+        for (Tag tag : tags) {
+            task.addTag(tag);
+        }
+        taskRepository.save(task);
+        log.info("Теги обновлены для задачи {}", task.getId());
     }
 
     private List<Task> getSortedTasks(String sortParam) {

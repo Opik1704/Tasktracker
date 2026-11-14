@@ -1,5 +1,6 @@
 package com.site.webapp.repo;
 
+import com.site.webapp.models.Tag;
 import com.site.webapp.models.Task;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
@@ -77,4 +78,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         return averageCompletionHoursByOwnerIdAndStatus(ownerId, status.name());
     }
 
+    // === Tag filtering methods ===
+
+    @Query("SELECT DISTINCT t FROM Task t JOIN t.tags tag WHERE tag IN :tags")
+    List<Task> findByTagsIn(Collection<Tag> tags);
+
+    @Query("SELECT DISTINCT t FROM Task t JOIN t.tags tag WHERE tag.id IN :tagIds GROUP BY t.id HAVING COUNT(DISTINCT tag.id) = :tagCount")
+    List<Task> findByTagsContainsAll(@Param("tagIds") List<Long> tagIds, @Param("tagCount") long tagCount);
 }
