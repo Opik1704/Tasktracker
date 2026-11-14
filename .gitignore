@@ -61,3 +61,5 @@ $RECYCLE.BIN/
 ### VS Code ###
 .vscode/
 /.idea/
+# Локальные файлы Kilo
+kilo-free-models.json
