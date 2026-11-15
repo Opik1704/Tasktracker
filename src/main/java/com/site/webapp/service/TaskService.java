@@ -42,17 +42,20 @@ public class TaskService {
     private final TagRepository tagRepository;
     private final TaskAttachmentService taskAttachmentService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AuditLogService auditLogService;
 
     public TaskService(TaskRepository taskRepository,
                        UserRepository userRepository,
                        TagRepository tagRepository,
                        TaskAttachmentService taskAttachmentService,
-                       ApplicationEventPublisher eventPublisher) {
+                       ApplicationEventPublisher eventPublisher,
+                       AuditLogService auditLogService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
         this.taskAttachmentService = taskAttachmentService;
         this.eventPublisher = eventPublisher;
+        this.auditLogService = auditLogService;
     }
 
 
@@ -82,6 +85,11 @@ public class TaskService {
         );
 
         log.info("Задача создана с ID: {} пользователем {}", task.getId(), userDetails.getFullName());
+
+        auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                AuditLogService.ACTION_TASK_CREATED, AuditLogService.ENTITY_TASK, task.getId(),
+                "Создана задача '" + task.getTitle() + "'");
+
         return task;
     }
 
@@ -170,6 +178,16 @@ public class TaskService {
         taskRepository.save(task);
 
         log.info("Задача id {} успешно обновлена", task.getId());
+
+        auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                AuditLogService.ACTION_TASK_UPDATED, AuditLogService.ENTITY_TASK, task.getId(),
+                "Обновлена задача '" + task.getTitle() + "'");
+
+        if (oldStatus != task.getStatus()) {
+            auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                    AuditLogService.ACTION_TASK_STATUS_CHANGED, AuditLogService.ENTITY_TASK, task.getId(),
+                    "Статус задачи '" + task.getTitle() + "': " + oldStatus + " -> " + task.getStatus());
+        }
     }
 
     @Transactional
@@ -186,6 +204,10 @@ public class TaskService {
         taskRepository.save(task);
 
         log.info("Задача id {} перемещена в корзину пользователем {}", taskId, userDetails.getFullName());
+
+        auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                AuditLogService.ACTION_TASK_DELETED, AuditLogService.ENTITY_TASK, task.getId(),
+                "Задача '" + task.getTitle() + "' перемещена в корзину");
     }
 
     @Transactional
@@ -240,6 +262,10 @@ public class TaskService {
         taskRepository.deleteByIdAndDeletedTrue(taskId);
 
         log.info("Задача id {} удалена пользователем {}",taskId, userDetails.getFullName());
+
+        auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                AuditLogService.ACTION_TASK_DELETED, AuditLogService.ENTITY_TASK, task.getId(),
+                "Задача '" + task.getTitle() + "' удалена безвозвратно");
     }
 
     /**

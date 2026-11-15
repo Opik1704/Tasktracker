@@ -6,6 +6,7 @@
                 <li><a href="/all-tasks" data-page="all-tasks">Все задачи(тупа список)</a></li>
                 <li><a href="my-projects" data-page="my-projects">Мои проекты(при нажатии на проект будет кабан доска для проекта конкретного)</a></li>
                 <li><a href="/favorites" data-page="favorites">  Избранное</a></li>
+                <li><a href="/audit" data-page="audit">История действий</a></li>
                 <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
                     <a href="/admin" data-page="admin">Панель админа</a>
                 </li>

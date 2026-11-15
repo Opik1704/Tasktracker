@@ -17,17 +17,25 @@ public class TeamService {
 
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
-    public TeamService(TeamRepository teamRepository, UserRepository userRepository) {
+    public TeamService(TeamRepository teamRepository, UserRepository userRepository, AuditLogService auditLogService) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
     public Team createTeam(Team team, CustomUserDetails userDetails) {
         team.setOwnerId(userDetails.getId());
         User owner = userRepository.findById(userDetails.getId()).orElseThrow();
         team.addMember(owner);
-        return teamRepository.save(team);
+        Team saved = teamRepository.save(team);
+
+        auditLogService.record(userDetails.getId(), userDetails.getUsername(),
+                AuditLogService.ACTION_TEAM_CREATED, AuditLogService.ENTITY_TEAM, saved.getId(),
+                "Создана команда '" + saved.getName() + "'");
+
+        return saved;
     }
 
     @Transactional(readOnly = true)

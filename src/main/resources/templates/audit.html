@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История действий</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        th {
+            background: #f5f5f5;
+        }
+        .empty {
+            color: #777;
+            padding: 15px 0;
+        }
+        .pagination {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .pagination a {
+            padding: 6px 12px;
+            background: #9e9e9e;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .pagination span {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 th:text="${isAdminView} ? 'История действий (все пользователи)' : 'Моя история действий'">История действий</h1>
+
+    <div th:if="${auditLogs.empty}" class="empty">
+        Действий пока нет.
+    </div>
+
+    <table th:if="${!auditLogs.empty}">
+        <thead>
+        <tr>
+            <th>Дата</th>
+            <th th:if="${isAdminView}">Пользователь</th>
+            <th>Действие</th>
+            <th>Объект</th>
+            <th>Описание</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="log : ${auditLogs.content}">
+            <td th:text="${#temporals.format(log.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2026 12:00</td>
+            <td th:if="${isAdminView}" th:text="${log.actorEmail}">user@test.com</td>
+            <td th:text="${log.actionType}">TASK_CREATED</td>
+            <td th:text="${log.entityType} + ' #' + ${log.entityId}">Task #1</td>
+            <td th:text="${log.description}">Описание</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination" th:if="${auditLogs.totalPages > 1}">
+        <a th:if="${auditLogs.hasPrevious()}"
+           th:href="@{/audit(page=${auditLogs.number - 1}, size=${auditLogs.size})}">Назад</a>
+        <span th:text="'Страница ' + ${auditLogs.number + 1} + ' из ' + ${auditLogs.totalPages}"></span>
+        <a th:if="${auditLogs.hasNext()}"
+           th:href="@{/audit(page=${auditLogs.number + 1}, size=${auditLogs.size})}">Вперёд</a>
+    </div>
+</div>
+</body>
+</html>
