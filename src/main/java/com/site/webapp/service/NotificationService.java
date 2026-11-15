@@ -1,5 +1,8 @@
 package com.site.webapp.service;
 
+import com.site.webapp.dto.NotificationDto;
+import com.site.webapp.exception.notification.NotificationNotFoundException;
+import com.site.webapp.exception.security.AccessDeniedException;
 import com.site.webapp.exception.task.TaskNotFoundException;
 import com.site.webapp.exception.user.UserNotFoundException;
 import com.site.webapp.models.Notification;
@@ -10,6 +13,8 @@ import com.site.webapp.repo.TaskRepository;
 import com.site.webapp.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -137,5 +142,63 @@ public class NotificationService {
         long deleted = notificationRepository.deleteAllByCreatedAtBefore(threshold);
         log.info("Удалено {} старых уведомлений", deleted);
         return deleted;
+    }
+
+    // === Notification Center ===
+
+    /**
+     * Возвращает уведомления текущего пользователя с пагинацией и фильтром по признаку прочтения.
+     *
+     * @param userId   идентификатор пользователя
+     * @param read     null — все, true — только прочитанные, false — только непрочитанные
+     * @param pageable параметры пагинации
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getNotifications(Long userId, Boolean read, Pageable pageable) {
+        if (userId == null) {
+            log.warn("Запрос уведомлений для null userId");
+            return Page.empty(pageable);
+        }
+
+        Page<Notification> notifications = (read == null)
+                ? notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                : notificationRepository.findByUserIdAndReadOrderByCreatedAtDesc(userId, read, pageable);
+
+        return notifications.map(NotificationDto::from);
+    }
+
+    /**
+     * Отмечает одно уведомление прочитанным. Уведомление должно принадлежать пользователю.
+     */
+    @Transactional
+    public void markAsRead(Long userId, Long notificationId) {
+        Notification notification = findOwnedNotification(userId, notificationId);
+
+        if (!notification.isRead()) {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+            log.info("Уведомление ID {} отмечено прочитанным пользователем ID {}", notificationId, userId);
+        }
+    }
+
+    /**
+     * Удаляет одно уведомление. Уведомление должно принадлежать пользователю.
+     */
+    @Transactional
+    public void deleteNotification(Long userId, Long notificationId) {
+        Notification notification = findOwnedNotification(userId, notificationId);
+        notificationRepository.delete(notification);
+        log.info("Уведомление ID {} удалено пользователем ID {}", notificationId, userId);
+    }
+
+    private Notification findOwnedNotification(Long userId, Long notificationId) {
+        if (userId == null) {
+            throw new AccessDeniedException("Пользователь не аутентифицирован");
+        }
+        if (notificationId == null) {
+            throw new NotificationNotFoundException("Идентификатор уведомления не указан");
+        }
+        return notificationRepository.findByIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> new NotificationNotFoundException("Уведомление с ID " + notificationId + " не найдено"));
     }
 }
