@@ -266,6 +266,41 @@ class TaskRepositoryTest {
     }
 
     @Test
+    void countCompletedByOwnerIdAndStatusAndPeriod_matchesListSizeAndHalfOpenInterval() {
+        Long ownerId = 1L;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start = now.toLocalDate().atStartOfDay();
+        LocalDateTime end = start.plusDays(7);
+
+        Task inside = new Task("Inside", Task.Priority.HIGH, 10L, ownerId,
+                now.minusDays(1), Task.TaskStatus.COMPLETED, null);
+        inside.setCompletedAt(start.plusDays(3));
+        Task atStart = new Task("AtStart", Task.Priority.MEDIUM, 10L, ownerId,
+                now.minusDays(2), Task.TaskStatus.COMPLETED, null);
+        atStart.setCompletedAt(start);
+        Task atEnd = new Task("AtEnd", Task.Priority.TRIVIAL, 10L, ownerId,
+                now.minusDays(3), Task.TaskStatus.COMPLETED, null);
+        atEnd.setCompletedAt(end);
+        Task outside = new Task("Outside", Task.Priority.HIGH, 10L, ownerId,
+                now.minusDays(4), Task.TaskStatus.COMPLETED, null);
+        outside.setCompletedAt(start.minusDays(1));
+
+        taskRepository.save(inside);
+        taskRepository.save(atStart);
+        taskRepository.save(atEnd);
+        taskRepository.save(outside);
+
+        long count = taskRepository.countCompletedByOwnerIdAndStatusAndPeriod(
+                ownerId, Task.TaskStatus.COMPLETED, start, end);
+
+        assertEquals(2, count);
+        assertEquals(
+                taskRepository.findCompletedByOwnerIdAndStatusAndPeriod(
+                        ownerId, Task.TaskStatus.COMPLETED, start, end).size(),
+                count);
+    }
+
+    @Test
     void countByOwnerIdAndStatusAndDeletedFalseAndCompletedAtIsNull_countsCompletedWithoutCompletedAt() {
         Long ownerId = 1L;
         LocalDateTime now = LocalDateTime.now();

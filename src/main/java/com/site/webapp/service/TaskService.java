@@ -1,6 +1,8 @@
 package com.site.webapp.service;
 
 import com.site.webapp.dto.TaskStatisticsDto;
+import com.site.webapp.dto.TaskAnalyticsDto;
+import com.site.webapp.dto.DailyCompletionDto;
 import com.site.webapp.events.TaskCreatedEvent;
 import com.site.webapp.events.TaskDeletedEvent;
 import com.site.webapp.events.TaskUpdatedEvent;
@@ -445,7 +447,49 @@ public class TaskService {
     }
 
     private long countCompletedInPeriod(Long ownerId, Task.TaskStatus status, LocalDateTime start, LocalDateTime end) {
-        return taskRepository.findCompletedByOwnerIdAndStatusAndPeriod(ownerId, status, start, end).size();
+        return taskRepository.countCompletedByOwnerIdAndStatusAndPeriod(ownerId, status, start, end);
+    }
+
+    /**
+     * Аналитика задач пользователя за период [start, end).
+     * Использует SQL-агрегации, не загружая сущности в память.
+     *
+     * @param ownerId владелец задач
+     * @param start   начало периода (включительно)
+     * @param end     конец периода (исключительно)
+     */
+    @Transactional(readOnly = true)
+    public TaskAnalyticsDto getAnalytics(Long ownerId, LocalDateTime start, LocalDateTime end) {
+        long total = taskRepository.countByOwnerIdAndDeletedFalse(ownerId);
+        long active = taskRepository.countActiveByOwnerId(ownerId);
+        long completed = taskRepository.countByOwnerIdAndStatusAndDeletedFalse(ownerId, Task.TaskStatus.COMPLETED);
+        long overdue = taskRepository.countOverdueByOwnerId(ownerId, LocalDateTime.now());
+
+        double completion = total > 0 ? Math.round((double) completed / total * 100.0 * 100.0) / 100.0 : 0.0;
+
+        // Предыдущий период той же длительности: [start - (end - start), start)
+        long periodMillis = java.time.Duration.between(start, end).toMillis();
+        LocalDateTime previousStart = start.minus(periodMillis, java.time.temporal.ChronoUnit.MILLIS);
+        long previousTotal = taskRepository.countCreatedInPeriodByOwnerId(ownerId, previousStart, start);
+        long previousCompleted = countCompletedInPeriod(ownerId, Task.TaskStatus.COMPLETED, previousStart, start);
+
+        List<DailyCompletionDto> daily = taskRepository
+                .countDailyCompletionsByOwnerId(ownerId, start, end).stream()
+                .map(row -> new DailyCompletionDto(
+                        java.time.LocalDate.parse(String.valueOf(row[0])),
+                        ((Number) row[1]).longValue()))
+                .toList();
+
+        TaskAnalyticsDto dto = new TaskAnalyticsDto();
+        dto.setTotalTasks(total);
+        dto.setActiveTasks(active);
+        dto.setCompletedTasks(completed);
+        dto.setOverdueTasks(overdue);
+        dto.setCompletionPercentage(completion);
+        dto.setPreviousPeriodCreated(previousTotal);
+        dto.setPreviousPeriodCompleted(previousCompleted);
+        dto.setDailyCompletions(daily);
+        return dto;
     }
 
     private LocalDateTime getWeekStart() {

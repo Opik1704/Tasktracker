@@ -55,6 +55,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         return findCompletedByOwnerIdAndStatusAndPeriod(ownerId, status.name(), start, end);
     }
 
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND status = :status AND deleted = false AND completed_at IS NOT NULL AND completed_at >= :start AND completed_at < :end")
+    long countCompletedByOwnerIdAndStatusAndPeriod(@Param("ownerId") Long ownerId, @Param("status") String status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    default long countCompletedByOwnerIdAndStatusAndPeriod(Long ownerId, Task.TaskStatus status, LocalDateTime start, LocalDateTime end) {
+        return countCompletedByOwnerIdAndStatusAndPeriod(ownerId, status.name(), start, end);
+    }
+
     long countByOwnerIdAndStatusAndDeletedFalseAndCompletedAtIsNull(Long ownerId, Task.TaskStatus status);
 
     @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND status = :status AND deleted = false AND completed_at IS NOT NULL AND deadline IS NOT NULL AND completed_at <= deadline")
@@ -77,6 +84,23 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     default Double averageCompletionHoursByOwnerIdAndStatus(Long ownerId, Task.TaskStatus status) {
         return averageCompletionHoursByOwnerIdAndStatus(ownerId, status.name());
     }
+
+    // === Analytics (Stage E) ===
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND deleted = false")
+    long countByOwnerIdAndDeletedFalse(@Param("ownerId") Long ownerId);
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND deleted = false AND status <> 'COMPLETED' AND status <> 'CANCELLED' AND status <> 'ARCHIVED'")
+    long countActiveByOwnerId(@Param("ownerId") Long ownerId);
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND deleted = false AND deadline IS NOT NULL AND deadline < :now AND status <> 'COMPLETED' AND status <> 'CANCELLED'")
+    long countOverdueByOwnerId(@Param("ownerId") Long ownerId, @Param("now") LocalDateTime now);
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM tasks WHERE owner_id = :ownerId AND deleted = false AND created_at >= :start AND created_at < :end")
+    long countCreatedInPeriodByOwnerId(@Param("ownerId") Long ownerId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query(nativeQuery = true, value = "SELECT to_char(completed_at, 'YYYY-MM-DD') AS day, COUNT(*) AS cnt FROM tasks WHERE owner_id = :ownerId AND deleted = false AND status = 'COMPLETED' AND completed_at IS NOT NULL AND completed_at >= :start AND completed_at < :end GROUP BY to_char(completed_at, 'YYYY-MM-DD') ORDER BY day")
+    List<Object[]> countDailyCompletionsByOwnerId(@Param("ownerId") Long ownerId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // === Tag filtering methods ===
 
