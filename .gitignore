@@ -63,3 +63,5 @@ $RECYCLE.BIN/
 /.idea/
 # Локальные файлы Kilo
 kilo-free-models.json
+# Kilo Code local configuration
+.kilo/

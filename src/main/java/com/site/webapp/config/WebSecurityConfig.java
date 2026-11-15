@@ -2,6 +2,9 @@ package com.site.webapp.config;
 
 import com.site.webapp.service.RegistrationService;
 import com.site.webapp.service.UserService;
+import com.site.webapp.exception.user.UserAlreadyExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,6 +16,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -30,6 +35,8 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 @EnableWebSecurity
 @EnableMethodSecurity
 public class WebSecurityConfig{
+
+    private static final Logger log = LoggerFactory.getLogger(WebSecurityConfig.class);
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
@@ -124,7 +131,15 @@ public class WebSecurityConfig{
 
         String provider = userRequest.getClientRegistration().getRegistrationId();
 
-        registrationService.registerOAuth2User(oAuth2User, provider);
+        try {
+            registrationService.registerOAuth2User(oAuth2User, provider);
+        } catch (UserAlreadyExistsException e) {
+            // Удалённый/заархивированный аккаунт: контролируемая ошибка входа
+            // вместо HTTP 500. Spring Security перенаправит на страницу логина с ошибкой.
+            log.warn("OAuth2 вход запрещён ({}): {}", provider, e.getMessage());
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("account_deleted", e.getMessage(), null), e);
+        }
 
         return oAuth2User;
     }

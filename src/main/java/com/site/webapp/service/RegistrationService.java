@@ -63,6 +63,12 @@ public class RegistrationService {
             throw new UserAlreadyExistsException("User with email " + registrationDto.getEmail() + " already exists");
         }
 
+        // Удалённый/архивированный аккаунт с тем же email не может быть зарегистрирован повторно
+        if (userRepository.findByEmailIncludingDeleted(registrationDto.getEmail()).isPresent()) {
+            log.warn("Попытка регистрации на email удалённого пользователя: {}", registrationDto.getEmail());
+            throw new UserAlreadyExistsException("Аккаунт с email " + registrationDto.getEmail() + " был удалён. Обратитесь к администратору.");
+        }
+
         User user = new User();
         user.setEmail(registrationDto.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
@@ -97,6 +103,12 @@ public class RegistrationService {
             User user = existingUser.get();
             log.info("Пользователь ID {} ({}) успешно авторизован через OAuth2 ({})", user.getId(), email, provider);
             return user;
+        }
+
+        // Пользователь скрыт @SQLRestriction (deleted = true) — повторная регистрация запрещена
+        if (userRepository.findByEmailIncludingDeleted(email).isPresent()) {
+            log.warn("Попытка повторного входа через OAuth2 ({}) удалённым пользователем с email {}", provider, email);
+            throw new UserAlreadyExistsException("Аккаунт с email " + email + " был удалён. Обратитесь к администратору.");
         }
 
         User user = new User();
@@ -138,6 +150,11 @@ public class RegistrationService {
         if (userRepository.existsByEmail(invite.getEmail())) {
             log.warn("Попытка регистрации по инвайту на уже существующий email: {}", invite.getEmail());
             throw new UserAlreadyExistsException("Пользователь с email " + invite.getEmail() + " уже существует");
+        }
+
+        if (userRepository.findByEmailIncludingDeleted(invite.getEmail()).isPresent()) {
+            log.warn("Попытка регистрации по инвайту на email удалённого пользователя: {}", invite.getEmail());
+            throw new UserAlreadyExistsException("Аккаунт с email " + invite.getEmail() + " был удалён. Обратитесь к администратору.");
         }
 
         User user = new User();

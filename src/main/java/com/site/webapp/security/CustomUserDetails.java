@@ -14,6 +14,7 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final String avatarS3Key;
+    private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user) {
@@ -23,6 +24,7 @@ public class CustomUserDetails implements UserDetails {
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.avatarS3Key = user.getAvatarS3Key();
+        this.enabled = user.isEnabled();
         this.authorities = user.getAuthorities();
     }
 
@@ -47,6 +49,6 @@ public class CustomUserDetails implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
+    @Override public boolean isEnabled() { return enabled; }
 
 }

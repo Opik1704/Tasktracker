@@ -44,19 +44,22 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     private final ArchivedUserRepository archivedUserRepository;
+    private final SessionInvalidationService sessionInvalidationService;
 
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
                        TaskRepository taskRepository,
                        PasswordEncoder passwordEncoder,
                        ApplicationEventPublisher eventPublisher,
-                       ArchivedUserRepository archivedUserRepository){
+                       ArchivedUserRepository archivedUserRepository,
+                       SessionInvalidationService sessionInvalidationService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.archivedUserRepository = archivedUserRepository;
+        this.sessionInvalidationService = sessionInvalidationService;
 
     }
 
@@ -215,6 +218,11 @@ public class UserService implements UserDetailsService {
         }
 
         user.setDeleted(true);
+        userRepository.save(user);
+
+        // Отзываем активные сессии, чтобы удалённый пользователь не мог продолжить работу
+        sessionInvalidationService.invalidateSessionsByPrincipal(user.getEmail());
+
         log.info("Пользователь {} (ID: {}) успешно удален админом {}", user.getEmail(), userId, initiator.getUsername());
     }
 
@@ -241,6 +249,9 @@ public class UserService implements UserDetailsService {
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
+        // Отзываем активные сессии до анонимизации email (principal name = прежний email)
+        sessionInvalidationService.invalidateSessionsByPrincipal(user.getEmail());
 
         ArchivedUser archivedUser = new ArchivedUser(user,initiator.getUsername());
         archivedUserRepository.save(archivedUser);
