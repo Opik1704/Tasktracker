@@ -104,7 +104,7 @@ public class TaskController extends LoggingController{
                              @AuthenticationPrincipal CustomUserDetails currentUser,
                              Model model) throws IOException {
 
-        String finalRedirect = (returnUrl != null && !returnUrl.isEmpty()) ? returnUrl : "/all-tasks";
+        String finalRedirect = isSafeRelativePath(returnUrl) ? returnUrl : "/all-tasks";
 
         if (bindingResult.hasErrors()) {
             log.warn("Ошибки валидации при обновлении задачи ID {}: {}", task.getId(), bindingResult.getAllErrors());

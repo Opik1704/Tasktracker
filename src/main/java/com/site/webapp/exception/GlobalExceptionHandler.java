@@ -95,6 +95,27 @@ public class GlobalExceptionHandler {
 
     private String redirectToReferer(HttpServletRequest request, String fallbackPath) {
         String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null && !referer.isBlank() ? referer : fallbackPath);
+        if (isSafeRelativePath(referer)) {
+            return "redirect:" + referer;
+        }
+        return "redirect:" + fallbackPath;
+    }
+
+    /**
+     * Разрешает только относительные пути внутри приложения.
+     * Защищает от open redirect через подделанный заголовок Referer:
+     * внешние URL, protocol-relative адреса, javascript: и управляющие символы отклоняются.
+     */
+    private boolean isSafeRelativePath(String referer) {
+        if (referer == null || referer.isEmpty()) {
+            return false;
+        }
+        if (!referer.startsWith("/") || referer.startsWith("//") || referer.startsWith("/\\")) {
+            return false;
+        }
+        return !referer.contains("://")
+                && !referer.contains("\\")
+                && !referer.contains("\n")
+                && !referer.contains("\r");
     }
 }

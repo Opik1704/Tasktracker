@@ -29,6 +29,24 @@ public abstract class LoggingController {
         return user != null ? user.getUsername() : "anonym";
     }
 
+    /**
+     * Разрешает только относительные пути внутри приложения.
+     * Защищает от open redirect: внешние URL, protocol-relative адреса,
+     * javascript:, обратные слэши и управляющие символы отклоняются.
+     */
+    protected boolean isSafeRelativePath(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
+            return false;
+        }
+        return !path.contains("://")
+                && !path.contains("\\")
+                && !path.contains("\n")
+                && !path.contains("\r");
+    }
+
 //    protected void addUserToMDC() {
 //        User user = getCurrentUser();
 //        if (user != null) {
